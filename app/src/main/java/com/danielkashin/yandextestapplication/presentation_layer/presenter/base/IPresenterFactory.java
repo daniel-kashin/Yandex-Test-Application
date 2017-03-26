@@ -1,8 +1,10 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.base;
 
 
-public interface IPresenterFactory<T extends IPresenter> {
+import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
-  T create();
+public interface IPresenterFactory<P extends Presenter<V>, V extends IView> {
+
+  P create();
 
 }

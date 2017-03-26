@@ -6,7 +6,13 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.MainActivity">
+    tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.tabs.TabActivity">
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottom_navigation"/>
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/bottom_navigation"

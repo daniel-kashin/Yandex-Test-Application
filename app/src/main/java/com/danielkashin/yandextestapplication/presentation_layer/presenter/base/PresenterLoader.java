@@ -3,14 +3,16 @@ package com.danielkashin.yandextestapplication.presentation_layer.presenter.base
 import android.content.Context;
 import android.support.v4.content.Loader;
 
-
-public class PresenterLoader<T extends IPresenter> extends Loader<T> {
-
-  private final IPresenterFactory<T> factory;
-  private T presenter;
+import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
 
-  public PresenterLoader(Context context, IPresenterFactory<T> factory){
+public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Loader<P> {
+
+  private final IPresenterFactory<P, V> factory;
+  private P presenter;
+
+
+  public PresenterLoader(Context context, IPresenterFactory<P, V> factory){
     super(context);
     this.factory = factory;
   }

@@ -1,11 +1,11 @@
-package com.danielkashin.yandextestapplication.presentation_layer.view;
+package com.danielkashin.yandextestapplication.presentation_layer.view.tabs;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.danielkashin.yandextestapplication.R;
 
-public class MainActivity extends AppCompatActivity {
+public class TabActivity extends AppCompatActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
