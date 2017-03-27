@@ -7,6 +7,7 @@ public abstract class Presenter<V extends IView> implements IPresenter<V> {
 
   private V view;
 
+
   @Override
   public void attachView(V view) {
     this.view = view;

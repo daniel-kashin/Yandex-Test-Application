@@ -19,7 +19,6 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.base.Prese
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
     implements ITranslateView {
 
-
   @Override
   protected ITranslateView getViewInterface() {
     return this;

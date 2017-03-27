@@ -18,6 +18,11 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   private P presenter;
 
+  // ----------------------------------------------------------------------------------------------
+
+  protected final P getPresenter() {
+    return this.presenter;
+  }
 
   // --------------------------------- Lifecycle methods ------------------------------------------
 

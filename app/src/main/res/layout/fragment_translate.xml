@@ -1,13 +1,87 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+   <android.support.v7.widget.Toolbar
+       android:id="@+id/toolbar"
+       android:layout_width="match_parent"
+       android:layout_height="?attr/actionBarSize"
+       android:background="@color/colorPrimary">
+
+       <RelativeLayout
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:layout_alignParentStart="true"
+           android:gravity="center_vertical">
+
+           <TextView
+               android:id="@+id/text_first_language"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_toStartOf="@+id/image_change_languages"
+               android:layout_marginEnd="@dimen/fg_translate_toolbar_margin"
+               android:text="Английский"
+               android:textSize="20sp"
+               android:textColor="@android:color/black"
+               android:ellipsize="end"
+               android:maxLines="1"/>
+
+           <ImageView
+               android:id="@+id/image_change_languages"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:background="@drawable/ic_compare_arrows"
+               android:layout_centerHorizontal="true"/>
+
+           <TextView
+               android:id="@+id/text_second_language"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_toEndOf="@id/image_change_languages"
+               android:layout_marginStart="@dimen/fg_translate_toolbar_margin"
+               android:text="Русский"
+               android:textSize="20sp"
+               android:textColor="@android:color/black"
+               android:ellipsize="end"
+               android:maxLines="1"/>
+
+       </RelativeLayout>
+
+   </android.support.v7.widget.Toolbar>
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment"/>
+        android:layout_margin="@dimen/fg_translate_margin"
+        android:layout_centerHorizontal="true">
 
-</FrameLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/fg_translate_main_layout_height"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/fragment_translate_main_layout_border">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/image_clear"
+                android:layout_marginBottom="@dimen/fg_translate_edit_text_bottom"
+                android:gravity="top"
+                android:hint="@string/hint_translation_edit_text"/>
+
+            <ImageView
+                android:id="@+id/image_clear"
+                android:layout_width="@dimen/icon_size"
+                android:layout_height="@dimen/icon_size"
+                android:layout_alignParentBottom="true"
+                android:background="@mipmap/ic_clear"/>
+
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+</LinearLayout>

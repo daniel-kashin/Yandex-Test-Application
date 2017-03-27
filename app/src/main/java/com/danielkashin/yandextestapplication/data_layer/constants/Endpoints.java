@@ -9,6 +9,10 @@ public class Endpoints {
 
   public static final String V1_5 = "/v1.5";
 
+  public static final String TR_JSON = "/tr.json";
 
+  public static final String GET_LANGS = "/getLangs";
+
+  public static final String TRANSLATE = "/translate";
 
 }

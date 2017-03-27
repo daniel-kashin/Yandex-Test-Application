@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:design="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_main"
@@ -21,6 +22,8 @@
         android:layout_alignParentBottom="true"
         android:layout_gravity="start"
         android:background="@android:color/white"
-        design:menu="@menu/bottom_navigation_items" />
+        app:itemIconTint="@color/bottom_navigation_tab_foreground"
+        app:itemTextColor="@color/bottom_navigation_tab_foreground"
+        app:menu="@menu/bottom_navigation_items" />
 
 </RelativeLayout>
