@@ -1,10 +1,18 @@
 <resources>
     <dimen name="icon_size">24dp</dimen>
 
-    <dimen name="fg_translate_toolbar_margin">15dp</dimen>
-    <dimen name="fg_translate_margin">10dp</dimen>
-    <dimen name="fg_translate_main_layout_padding">8dp</dimen>
-    <dimen name="fg_translate_main_layout_height">150dp</dimen>
-    <dimen name="fg_translate_edit_text_bottom">3dp</dimen>
+    <dimen name="toolbar_end">15dp</dimen>
+
+    <dimen name="fg_tr_toolbar_margin">15dp</dimen>
+    <dimen name="fg_tr_margin">10dp</dimen>
+    <dimen name="fg_tr_main_layout_padding">8dp</dimen>
+    <dimen name="fg_tr_main_layout_height">150dp</dimen>
+    <dimen name="fg_tr_edit_text_bottom">3dp</dimen>
+    <dimen name="fg_tr_result_horizontal">4dp</dimen>
+    <dimen name="fg_tr_result_top">8dp</dimen>
+    <dimen name="fg_tr_result_text_size">18sp</dimen>
+    <dimen name="fg_tr_progress_bar_top">15dp</dimen>
+    <dimen name="fg_tr_landscape_center_separator">30dp</dimen>
+    <dimen name="fg_tr_landscape_result_end">15dp</dimen>
 
 </resources>

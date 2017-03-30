@@ -15,6 +15,7 @@
            android:layout_width="match_parent"
            android:layout_height="match_parent"
            android:layout_alignParentStart="true"
+           android:layout_marginEnd="@dimen/toolbar_end"
            android:gravity="center_vertical">
 
            <TextView
@@ -22,9 +23,10 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:layout_toStartOf="@+id/image_change_languages"
-               android:layout_marginEnd="@dimen/fg_translate_toolbar_margin"
+               android:layout_marginEnd="@dimen/fg_tr_toolbar_margin"
                android:text="Английский"
-               android:textSize="20sp"
+               android:textSize="18sp"
+               android:freezesText="true"
                android:textColor="@android:color/black"
                android:ellipsize="end"
                android:maxLines="1"/>
@@ -41,9 +43,10 @@
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:layout_toEndOf="@id/image_change_languages"
-               android:layout_marginStart="@dimen/fg_translate_toolbar_margin"
+               android:layout_marginStart="@dimen/fg_tr_toolbar_margin"
                android:text="Русский"
-               android:textSize="20sp"
+               android:textSize="18sp"
+               android:freezesText="true"
                android:textColor="@android:color/black"
                android:ellipsize="end"
                android:maxLines="1"/>
@@ -52,24 +55,28 @@
 
    </android.support.v7.widget.Toolbar>
 
-    <RelativeLayout
+    <LinearLayout
+        android:id="@+id/layout_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="@dimen/fg_translate_margin"
-        android:layout_centerHorizontal="true">
+        android:layout_margin="@dimen/fg_tr_margin"
+        android:orientation="vertical">
 
         <RelativeLayout
+            android:id="@+id/layout_input"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/fg_translate_main_layout_height"
+            android:layout_height="@dimen/fg_tr_main_layout_height"
             android:layout_alignParentTop="true"
             android:background="@drawable/fragment_translate_main_layout_border">
 
             <EditText
+                android:id="@+id/edit_translate"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/image_clear"
-                android:layout_marginBottom="@dimen/fg_translate_edit_text_bottom"
+                android:layout_marginBottom="@dimen/fg_tr_edit_text_bottom"
                 android:gravity="top"
+                android:background="@android:color/transparent"
                 android:hint="@string/hint_translation_edit_text"/>
 
             <ImageView
@@ -81,7 +88,32 @@
 
         </RelativeLayout>
 
+        <RelativeLayout
+            android:id="@+id/layout_result"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/fg_tr_result_top"
+            android:layout_marginStart="@dimen/fg_tr_result_horizontal"
+            android:layout_marginEnd="@dimen/fg_tr_result_horizontal">
 
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/text_result"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:freezesText="true"
+                android:textSize="@dimen/fg_tr_result_text_size"
+                android:textColor="@android:color/black"/>
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/fg_tr_progress_bar_top"
+                android:layout_centerHorizontal="true"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

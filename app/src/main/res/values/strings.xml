@@ -1,3 +1,10 @@
 <resources>
+    <string name="app_name">YandexTestApplication</string>
     <string name="hint_translation_edit_text">Введите текст</string>
+    <string name="wrong_key">Ключ Яндекс.Переводчика перестал действовать. Обратитесь к разработчику.</string>
+    <string name="limit_expired">Вы используете пробную версию Яндекс.Переводчика. Количество переводов на сегодня исчерпано.</string>
+    <string name="text_limit_expired">Введен слишком большой текст. Попробуйте перевести по частям.</string>
+    <string name="wrong_text">Введенный текст не подлежит переводу.</string>
+    <string name="wrong_langs">Данное направление перевода не поддерживается.</string>
+    <string name="unknown">На сервере произошла неизвестная ошибка.</string>
 </resources>

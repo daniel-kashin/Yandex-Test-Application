@@ -18,6 +18,14 @@ public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Lo
   }
 
 
+  // ---------------------------------- public methods --------------------------------------------
+
+  public final P getPresenter(){
+    return presenter;
+  }
+
+  // ---------------------------------- Loader methods --------------------------------------------
+
   @Override
   protected void onStartLoading() {
     if (presenter != null) {
@@ -35,7 +43,7 @@ public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Lo
 
   @Override
   protected void onReset() {
-    presenter.onDestroyed();
+    presenter.destroy();
     presenter = null;
   }
 }

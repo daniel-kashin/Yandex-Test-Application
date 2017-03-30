@@ -1,9 +1,9 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.base;
 
 
-public interface IPresenter<T> {
+public interface IPresenter<V> {
 
-  void attachView(T view);
+  void attachView(V view);
 
   void detachView();
 

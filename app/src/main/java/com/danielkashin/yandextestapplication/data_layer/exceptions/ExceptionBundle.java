@@ -45,9 +45,14 @@ public class ExceptionBundle extends Exception {
 
   public enum Reason {
 
-    NO_SESSION(000),
+    UNKNOWN(-001),
+    NETWORK_UNAVAILABLE(000),
 
-    NETWORK_UNAVAILABLE(500);
+    WRONG_KEY(401),
+    LIMIT_EXPIRED(404),
+    TEXT_LIMIT_EXPIRED(413),
+    WRONG_TEXT(422),
+    WRONG_LANGS(501);
 
 
     private final int code;

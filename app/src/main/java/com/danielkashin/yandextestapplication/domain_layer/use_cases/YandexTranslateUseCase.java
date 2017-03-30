@@ -1,20 +1,25 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
+import android.os.AsyncTask;
+
+import com.danielkashin.yandextestapplication.data_layer.entitles.yandex_translate.Translation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.services.yandex_translate.IYandexTranslateNetworkService;
-import com.danielkashin.yandextestapplication.domain_layer.async_task.NetworkAsyncTask;
+import com.danielkashin.yandextestapplication.domain_layer.async_task.YandexNetworkAsyncTask;
+
 import java.util.concurrent.Executor;
+
 import okhttp3.ResponseBody;
 
 
-public class TranslateUseCase implements UseCase {
+public class YandexTranslateUseCase implements UseCase {
 
   private final Executor executor;
   private final IYandexTranslateNetworkService networkService;
-  private NetworkAsyncTask<ResponseBody> asyncTask;
+  private YandexNetworkAsyncTask<Translation> asyncTask;
 
 
-  public TranslateUseCase(Executor executor, IYandexTranslateNetworkService networkService){
+  public YandexTranslateUseCase(Executor executor, IYandexTranslateNetworkService networkService) {
     this.executor = executor;
     this.networkService = networkService;
   }
@@ -27,10 +32,10 @@ public class TranslateUseCase implements UseCase {
   public void run(final Callbacks callbacks, final String text, final String lang) {
     cancel();
 
-    NetworkAsyncTask.PostExecuteListener<ResponseBody> listener =
-        new NetworkAsyncTask.PostExecuteListener<ResponseBody>() {
+    YandexNetworkAsyncTask.PostExecuteListener<Translation> listener =
+        new YandexNetworkAsyncTask.PostExecuteListener<Translation>() {
           @Override
-          public void onResult(ResponseBody result) {
+          public void onResult(Translation result) {
             callbacks.onTranslateSuccess(result);
           }
 
@@ -40,7 +45,7 @@ public class TranslateUseCase implements UseCase {
           }
         };
 
-    asyncTask = new NetworkAsyncTask<>(
+    asyncTask = new YandexNetworkAsyncTask<Translation>(
         networkService.translate(text, lang),
         listener
     );
@@ -48,12 +53,16 @@ public class TranslateUseCase implements UseCase {
     asyncTask.executeOnExecutor(executor);
   }
 
+  public boolean isRunning() {
+    return asyncTask != null && asyncTask.getStatus() == AsyncTask.Status.RUNNING;
+  }
+
 
   public interface Callbacks {
 
-    void onTranslateSuccess(ResponseBody result);
+    void onTranslateSuccess(Translation result);
 
-    void onTranslateError(Exception exception);
+    void onTranslateError(ExceptionBundle exception);
 
   }
 }

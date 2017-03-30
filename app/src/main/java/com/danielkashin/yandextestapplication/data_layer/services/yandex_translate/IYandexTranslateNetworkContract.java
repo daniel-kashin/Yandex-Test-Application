@@ -1,6 +1,8 @@
 package com.danielkashin.yandextestapplication.data_layer.services.yandex_translate;
 
 
+import com.danielkashin.yandextestapplication.data_layer.entitles.yandex_translate.Translation;
+
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.POST;
@@ -22,7 +24,7 @@ public interface IYandexTranslateNetworkContract {
 
 
   @POST(API + V1_5 + TR_JSON + TRANSLATE)
-  Call<ResponseBody> translate(
+  Call<Translation> translate(
       @Query("key") String key,
       @Query("text") String text,
       @Query("lang") String lang

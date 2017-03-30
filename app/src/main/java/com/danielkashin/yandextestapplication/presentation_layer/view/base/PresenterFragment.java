@@ -18,6 +18,7 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   private P presenter;
 
+
   // ----------------------------------------------------------------------------------------------
 
   protected final P getPresenter() {
@@ -39,12 +40,19 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    getActivity().getSupportLoaderManager().initLoader(getFragmentId(), null, this);
+
+    Loader loader = getActivity().getSupportLoaderManager().getLoader(getFragmentId());
+    if (loader != null) {
+      presenter = ((PresenterLoader<P, V>) loader).getPresenter();
+    } else {
+      getActivity().getSupportLoaderManager().initLoader(getFragmentId(), null, this);
+    }
   }
 
   @Override
   public void onStart() {
     super.onStart();
+    setListeners();
     presenter.attachView(getViewInterface());
   }
 
@@ -83,4 +91,5 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   protected abstract void initializeView(View view);
 
+  protected abstract void setListeners();
 }

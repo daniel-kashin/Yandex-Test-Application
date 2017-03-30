@@ -1,12 +1,19 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.base;
 
-
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
+
 
 public abstract class Presenter<V extends IView> implements IPresenter<V> {
 
   private V view;
 
+  // ----------------------------------------------------------------------------------------------
+
+  protected final V getView() {
+    return this.view;
+  }
+
+  // --------------------------------- IPresenter methods -----------------------------------------
 
   @Override
   public void attachView(V view) {
@@ -25,9 +32,7 @@ public abstract class Presenter<V extends IView> implements IPresenter<V> {
     this.onDestroyed();
   }
 
-  protected final V getView() {
-    return this.view;
-  }
+  // ----------------------------------- abstract methods -----------------------------------------
 
   protected abstract void onViewDetached();
 

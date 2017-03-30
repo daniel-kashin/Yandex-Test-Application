@@ -2,18 +2,18 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/menu_home"
+        android:id="@+id/menu_search"
         android:title="Перевод"
         android:icon="@drawable/ic_translate"
         />
     <item
-        android:id="@+id/menu_search"
+        android:id="@+id/menu_history"
         android:title="История"
         android:icon="@drawable/ic_translate"
         />
 
     <item
-        android:id="@+id/menu_notifications"
+        android:id="@+id/menu_settings"
         android:title="Настройки"
         android:icon="@drawable/ic_translate" />
 </menu>
