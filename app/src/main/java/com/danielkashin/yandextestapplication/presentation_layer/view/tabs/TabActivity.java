@@ -2,6 +2,7 @@ package com.danielkashin.yandextestapplication.presentation_layer.view.tabs;
 
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -17,7 +18,8 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.translate.
 public class TabActivity extends AppCompatActivity {
 
   private final static String SELECTED_MENU_ITEM_ID = "selected_tab_id";
-  BottomNavigationView mBottomNavigationView;
+
+  private BottomNavigationView mBottomNavigationView;
 
 
   @Override

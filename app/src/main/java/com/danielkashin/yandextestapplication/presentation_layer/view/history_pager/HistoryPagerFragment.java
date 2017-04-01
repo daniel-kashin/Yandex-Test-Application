@@ -1,12 +1,12 @@
 package com.danielkashin.yandextestapplication.presentation_layer.view.history_pager;
 
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.adapter.HistoryPagerAdapter;
 
@@ -14,6 +14,7 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.history_pa
 public class HistoryPagerFragment extends Fragment {
 
   private ViewPager mViewPager;
+  private TabLayout mTabLayout;
 
 
   public static HistoryPagerFragment getInstance() {
@@ -41,6 +42,8 @@ public class HistoryPagerFragment extends Fragment {
             getResources().getStringArray(R.array.view_pager_labels)
         )
     );
-  }
 
+    mTabLayout = (TabLayout) view.findViewById(R.id.tab_layout);
+    mTabLayout.setupWithViewPager(mViewPager, true);
+  }
 }

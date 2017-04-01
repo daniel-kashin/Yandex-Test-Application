@@ -1,11 +1,10 @@
 package com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.adapter;
 
-
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
+
 
 public class HistoryPagerAdapter extends FragmentPagerAdapter {
 
