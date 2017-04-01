@@ -7,4 +7,9 @@
     <string name="wrong_text">Введенный текст не подлежит переводу.</string>
     <string name="wrong_langs">Данное направление перевода не поддерживается.</string>
     <string name="unknown">На сервере произошла неизвестная ошибка.</string>
+
+    <string-array name="view_pager_labels">
+        <item>История</item>
+        <item>Избранное</item>
+    </string-array>
 </resources>

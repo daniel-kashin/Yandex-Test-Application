@@ -2,14 +2,12 @@ package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
 import android.os.AsyncTask;
 
-import com.danielkashin.yandextestapplication.data_layer.entitles.yandex_translate.Translation;
+import com.danielkashin.yandextestapplication.data_layer.entities.remote.Translation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.data_layer.services.yandex_translate.IYandexTranslateNetworkService;
+import com.danielkashin.yandextestapplication.data_layer.services.remote.IYandexTranslateNetworkService;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.YandexNetworkAsyncTask;
 
 import java.util.concurrent.Executor;
-
-import okhttp3.ResponseBody;
 
 
 public class YandexTranslateUseCase implements UseCase {

@@ -1,6 +1,5 @@
 package com.danielkashin.yandextestapplication.domain_layer.async_task;
 
-
 import android.os.AsyncTask;
 import android.util.Pair;
 

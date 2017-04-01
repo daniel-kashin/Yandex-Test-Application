@@ -52,7 +52,10 @@ public class ExceptionBundle extends Exception {
     LIMIT_EXPIRED(404),
     TEXT_LIMIT_EXPIRED(413),
     WRONG_TEXT(422),
-    WRONG_LANGS(501);
+    WRONG_LANGS(501),
+
+    EMPTY_TRANSLATION(600),
+    EMPTY_TRANSLATIONS(601);
 
 
     private final int code;

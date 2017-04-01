@@ -29,11 +29,13 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   @Override
   public final View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
+    super.onCreateView(inflater, parent, savedInstanceState);
     return inflater.inflate(getLayoutRes(), parent, false);
   }
 
   @Override
   public final void onViewCreated(View view, Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
     initializeView(view);
   }
 

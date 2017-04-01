@@ -1,9 +1,9 @@
 apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-
 
 android {
     compileSdkVersion 25
@@ -24,6 +24,7 @@ android {
     }
     buildTypes.each {
         it.buildConfigField 'String', 'YANDEX_TRANSLATE_API_KEY', keystoreProperties['YandexTranslateApiKey'];
+        it.buildConfigField 'String', 'REALM_CONFIGURATION_NAME', keystoreProperties['RealmConfigurationName']
     }
 }
 

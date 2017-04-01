@@ -4,10 +4,10 @@ package com.danielkashin.yandextestapplication.presentation_layer.presenter.tran
 import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.R;
-import com.danielkashin.yandextestapplication.data_layer.entitles.yandex_translate.Translation;
+import com.danielkashin.yandextestapplication.data_layer.entities.remote.Translation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.data_layer.services.yandex_translate.IYandexTranslateNetworkService;
-import com.danielkashin.yandextestapplication.data_layer.services.yandex_translate.YandexTranslateNetworkService;
+import com.danielkashin.yandextestapplication.data_layer.services.remote.IYandexTranslateNetworkService;
+import com.danielkashin.yandextestapplication.data_layer.services.remote.YandexTranslateNetworkService;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.YandexTranslateUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.Presenter;
@@ -16,7 +16,6 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.translate.
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 
 public class TranslatePresenter extends Presenter<ITranslateView> implements YandexTranslateUseCase.Callbacks {
 

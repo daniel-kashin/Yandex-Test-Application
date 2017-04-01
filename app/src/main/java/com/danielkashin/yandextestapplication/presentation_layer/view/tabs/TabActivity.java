@@ -6,14 +6,17 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.HistoryPagerFragment;
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
 
 
 public class TabActivity extends AppCompatActivity {
 
+  private final static String SELECTED_MENU_ITEM_ID = "selected_tab_id";
   BottomNavigationView mBottomNavigationView;
 
 
@@ -24,9 +27,20 @@ public class TabActivity extends AppCompatActivity {
 
     initializeView();
 
+    if (savedInstanceState != null) {
+      setSelectedMenuItem(savedInstanceState.getInt(SELECTED_MENU_ITEM_ID));
+    }
+
     if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
       tryToAttachFragment(TranslateFragment.class.getSimpleName());
     }
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState){
+    super.onSaveInstanceState(outState);
+
+    outState.putInt(SELECTED_MENU_ITEM_ID, getSelectedMenuItem());
   }
 
   private void initializeView(){
@@ -40,7 +54,7 @@ public class TabActivity extends AppCompatActivity {
           case R.id.menu_search:
             return tryToAttachFragment(TranslateFragment.class.getSimpleName());
           case R.id.menu_history:
-            return false;
+            return tryToAttachFragment(HistoryPagerFragment.class.getSimpleName());
           case R.id.menu_settings:
             return false;
           default:
@@ -95,12 +109,34 @@ public class TabActivity extends AppCompatActivity {
 
   private Fragment getFragmentByFragmentName(String fragmentName){
     String translate = TranslateFragment.class.getSimpleName();
+    String historyPager = HistoryPagerFragment.class.getSimpleName();
 
     if (fragmentName.equals(translate)){
       return TranslateFragment.getInstance();
+    } else if (fragmentName.equals(historyPager)){
+      return HistoryPagerFragment.getInstance();
     } else {
       return null;
     }
+  }
+
+  private int getSelectedMenuItem() {
+    Menu menu = mBottomNavigationView.getMenu();
+    for (int i = 0; i < menu.size(); ++i){
+      if (menu.getItem(i).isChecked()){
+        return i;
+      }
+    }
+
+    return 1; // return default value
+  }
+
+  private void setSelectedMenuItem(int position) {
+    Menu menu = mBottomNavigationView.getMenu();
+
+    if (position > menu.size()) position = 1; // set default value
+
+    menu.getItem(position).setChecked(true);
   }
 
 

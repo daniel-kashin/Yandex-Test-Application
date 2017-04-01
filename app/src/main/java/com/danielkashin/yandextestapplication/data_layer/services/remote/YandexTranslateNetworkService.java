@@ -1,15 +1,13 @@
-package com.danielkashin.yandextestapplication.data_layer.services.yandex_translate;
+package com.danielkashin.yandextestapplication.data_layer.services.remote;
 
 import com.danielkashin.yandextestapplication.BuildConfig;
 import com.danielkashin.yandextestapplication.data_layer.constants.Endpoints;
-import com.danielkashin.yandextestapplication.data_layer.entitles.yandex_translate.Translation;
+import com.danielkashin.yandextestapplication.data_layer.entities.remote.Translation;
 import com.danielkashin.yandextestapplication.data_layer.services.base.NetworkService;
 
 import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Retrofit;
-import retrofit2.http.Query;
 
 
 public class YandexTranslateNetworkService extends NetworkService<IYandexTranslateNetworkContract>
@@ -24,25 +22,18 @@ public class YandexTranslateNetworkService extends NetworkService<IYandexTransla
     return retrofit.create(IYandexTranslateNetworkContract.class);
   }
 
-  // -------------------------- IYandexTranslateNetworkService methods -----------------------------
-
-  @Override
-  public Call<ResponseBody> getLangs(String ui) {
-    return getService().getLangs(BuildConfig.YANDEX_TRANSLATE_API_KEY, ui);
-  }
+  // -------------------------- IYandexTranslateNetworkService methods ----------------------------
 
   @Override
   public Call<Translation> translate(String text, String lang) {
     return getService().translate(BuildConfig.YANDEX_TRANSLATE_API_KEY, text, lang);
   }
 
-  // -----------------------------------------------------------------------------------------------
+  // -------------------------------------- Factory -----------------------------------------------
 
   public static final class Factory {
 
-    private Factory() {
-      // "static class" in Java
-    }
+    private Factory() { }
 
     public static IYandexTranslateNetworkService create(OkHttpClient okHttpClient) {
       return new YandexTranslateNetworkService(okHttpClient);
