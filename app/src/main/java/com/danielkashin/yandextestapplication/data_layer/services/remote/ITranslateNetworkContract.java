@@ -1,6 +1,6 @@
 package com.danielkashin.yandextestapplication.data_layer.services.remote;
 
-import com.danielkashin.yandextestapplication.data_layer.entities.remote.Translation;
+import com.danielkashin.yandextestapplication.data_layer.entities.remote.NetworkTranslation;
 
 import retrofit2.Call;
 import retrofit2.http.POST;
@@ -12,10 +12,10 @@ import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoi
 import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.V1_5;
 
 
-interface IYandexTranslateNetworkContract {
+interface ITranslateNetworkContract {
 
   @POST(API + V1_5 + TR_JSON + TRANSLATE)
-  Call<Translation> translate(
+  Call<NetworkTranslation> translate(
       @Query("key") String key,
       @Query("text") String text,
       @Query("lang") String lang

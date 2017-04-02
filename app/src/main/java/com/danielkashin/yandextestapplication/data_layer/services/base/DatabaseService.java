@@ -8,6 +8,7 @@ import io.realm.RealmConfiguration;
 public class DatabaseService {
 
   private RealmConfiguration configuration;
+  private Realm realm;
 
   public DatabaseService() {
     configuration = new RealmConfiguration.Builder()
@@ -15,10 +16,12 @@ public class DatabaseService {
         .deleteRealmIfMigrationNeeded()
         .schemaVersion(1)
         .build();
+
+    realm = Realm.getInstance(configuration);
   }
 
   protected Realm getService() {
-    return Realm.getInstance(configuration);
+    return realm;
   }
 
 }

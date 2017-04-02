@@ -2,6 +2,7 @@
     <dimen name="icon_size">24dp</dimen>
 
     <dimen name="toolbar_end">15dp</dimen>
+    <dimen name="toolbar_text_size">16sp</dimen>
 
     <dimen name="fg_tr_toolbar_margin">15dp</dimen>
     <dimen name="fg_tr_margin">10dp</dimen>

@@ -2,13 +2,21 @@ package com.danielkashin.yandextestapplication.presentation_layer.presenter.tran
 
 
 import android.os.AsyncTask;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Pair;
 
 import com.danielkashin.yandextestapplication.R;
-import com.danielkashin.yandextestapplication.data_layer.entities.remote.Translation;
+import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseTranslation;
+import com.danielkashin.yandextestapplication.data_layer.entities.remote.NetworkTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.IYandexTranslateNetworkService;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.YandexTranslateNetworkService;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.YandexTranslateUseCase;
+import com.danielkashin.yandextestapplication.data_layer.services.local.ITranslateDatabaseService;
+import com.danielkashin.yandextestapplication.data_layer.services.local.TranslateDatabaseService;
+import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateNetworkService;
+import com.danielkashin.yandextestapplication.data_layer.services.remote.TranslateNetworkService;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.local.GetLastTranslationUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.local.SaveTranslationUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.remote.TranslateUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.Presenter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.ITranslateView;
@@ -17,55 +25,112 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
-public class TranslatePresenter extends Presenter<ITranslateView> implements YandexTranslateUseCase.Callbacks {
+public class TranslatePresenter extends Presenter<ITranslateView>
+    implements TranslateUseCase.Callbacks, SaveTranslationUseCase.Callbacks, GetLastTranslationUseCase.Callbacks {
 
-  private final YandexTranslateUseCase mYandexTranslateUseCase;
+  private final TranslateUseCase mTranslateUseCase;
+  private final SaveTranslationUseCase mSaveTranslationUseCase;
+  private final GetLastTranslationUseCase mGetLastTranslationUseCase;
   private String mLangFrom;
   private String mLangTo;
+  private boolean mLastTranslationInitialized;
+  private TextWatcher mTextWatcher;
 
 
-  public TranslatePresenter(YandexTranslateUseCase yandexTranslateUseCase){
-    mYandexTranslateUseCase = yandexTranslateUseCase;
+  public TranslatePresenter(
+      TranslateUseCase translateUseCase,
+      SaveTranslationUseCase saveTranslationUseCase,
+      GetLastTranslationUseCase getLastTranslationUseCase){
+
+    mTranslateUseCase = translateUseCase;
+    mSaveTranslationUseCase = saveTranslationUseCase;
+    mGetLastTranslationUseCase = getLastTranslationUseCase;
   }
 
 
   public void onInputTextClear() {
     if (getView() != null) {
       getView().hideProgressBar();
-      getView().setResultText("");
+      getView().setTranslatedText("");
     }
-    mYandexTranslateUseCase.cancel();
+    mTranslateUseCase.cancel();
   }
 
   public void onInputTextChanged(String text) {
     getView().showProgressBar();
-    mYandexTranslateUseCase.run(this, text, "ru-en");
+    mTranslateUseCase.cancel();
+    mTranslateUseCase.run(this, text, "ru-en");
   }
 
   // ----------------------------------- Presenter lifecycle --------------------------------------
 
   @Override
   protected void onViewAttached() {
-    if (getView() != null && mYandexTranslateUseCase.isRunning()) {
+    if (getView() != null && mTranslateUseCase.isRunning()) {
       getView().showProgressBar();
+    }
+
+    if (!mLastTranslationInitialized){
+      mGetLastTranslationUseCase.run(this);
+      mLastTranslationInitialized = true;
+    }
+
+    if (mTextWatcher == null) {
+      getView().setInputTextListener(getTextWatcher());
     }
   }
 
   @Override
-  protected void onViewDetached() { }
+  protected void onViewDetached() {
+    if (mTextWatcher != null) {
+      getView().removeInputTextListener(getTextWatcher());
+      mTextWatcher = null;
+    }
+  }
 
   @Override
   protected void onDestroyed() {
-    mYandexTranslateUseCase.cancel();
+    mTranslateUseCase.cancel();
+    mGetLastTranslationUseCase.cancel();
   }
 
-  // -------------------------------- YandexTranslateUseCase callbacks ----------------------------------
+  // ----------------------------- SaveTranslationUseCase callbacks -------------------------------
 
   @Override
-  public void onTranslateSuccess(Translation result) {
+  public void onSaveTranslationError(ExceptionBundle exception) {
+
+  }
+
+  // ---------------------------- GetLastTranslationUseCase callbacks -----------------------------
+
+  @Override
+  public void onGetLastTranslationResult(DatabaseTranslation translation) {
     if (getView() != null) {
+      getView().removeInputTextListener(getTextWatcher());
+      mTextWatcher = null;
+
+      getView().setInputText(translation.getOriginalText());
+
+      getView().setInputTextListener(getTextWatcher());
+
+      getView().setTranslatedText(translation.getTranslatedText());
+    }
+  }
+
+  @Override
+  public void onGetLastTranslationError(ExceptionBundle exception) {
+
+  }
+
+  // -------------------------------- TranslateUseCase callbacks ----------------------------------
+
+  @Override
+  public void onTranslateSuccess(Pair<String, NetworkTranslation> result) {
+    if (getView() != null) {
+      mSaveTranslationUseCase.run(this, result.first, result.second.getText(), result.second.getLanguage());
+
       getView().hideProgressBar();
-      getView().setResultText(result.getText());
+      getView().setTranslatedText(result.second.getText());
     }
   }
 
@@ -101,26 +166,60 @@ public class TranslatePresenter extends Presenter<ITranslateView> implements Yan
     }
   }
 
+  // ----------------------------------- private methods -----------------------------------------
+
+  private TextWatcher getTextWatcher(){
+    if (mTextWatcher == null) {
+      mTextWatcher =  new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable editable) {
+          if (editable.toString().replace(" ", "").isEmpty()) {
+            onInputTextClear();
+          } else {
+            onInputTextChanged(editable.toString());
+          }
+        }
+      };
+    }
+
+    return mTextWatcher;
+  }
 
   // ------------------------------------- Inner classes -----------------------------------------
 
-  public static final class TranslateFactory
+  public static final class Factory
       implements IPresenterFactory<TranslatePresenter, ITranslateView> {
 
     @Override
     public TranslatePresenter create() {
-      // bind networkService
+      // bind network service
       OkHttpClient okHttpClient = new OkHttpClient.Builder()
           .readTimeout(10, TimeUnit.SECONDS)
           .connectTimeout(10, TimeUnit.SECONDS)
           .build();
-      IYandexTranslateNetworkService networkService =
-          YandexTranslateNetworkService.Factory.create(okHttpClient);
+      ITranslateNetworkService networkService = TranslateNetworkService
+          .Factory
+          .create(okHttpClient);
 
-      // bind useCase
-      YandexTranslateUseCase useCase = new YandexTranslateUseCase(AsyncTask.THREAD_POOL_EXECUTOR, networkService);
+      // bind database service
+      ITranslateDatabaseService databaseService = TranslateDatabaseService
+          .Factory
+          .create();
 
-      return new TranslatePresenter(useCase);
+      // bind useCases
+      TranslateUseCase translateUseCase = new TranslateUseCase(AsyncTask.THREAD_POOL_EXECUTOR, networkService);
+      SaveTranslationUseCase saveTranslationUseCase = new SaveTranslationUseCase(databaseService);
+      GetLastTranslationUseCase getLastTranslationUseCase = new GetLastTranslationUseCase(databaseService);
+
+      return new TranslatePresenter(translateUseCase, saveTranslationUseCase, getLastTranslationUseCase);
     }
 
   }

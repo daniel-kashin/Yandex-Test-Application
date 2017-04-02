@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 
-public class Translation {
+public class NetworkTranslation {
 
   @SerializedName("code")
   @Expose
@@ -21,6 +21,10 @@ public class Translation {
 
   public String getText() {
     return text.get(0);
+  }
+
+  public String getLanguage() {
+    return language;
   }
 
 }

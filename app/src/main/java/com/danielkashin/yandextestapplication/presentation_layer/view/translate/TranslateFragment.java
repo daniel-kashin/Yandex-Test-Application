@@ -19,9 +19,9 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.base.Prese
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
     implements ITranslateView {
 
-  private EditText mEditTranslate;
+  private EditText mEditOriginal;
   private ImageView mImageClear;
-  private TextView mTextResult;
+  private TextView mTextTranslated;
   private ProgressBar mProgressBar;
 
 
@@ -29,11 +29,28 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     return new TranslateFragment();
   }
 
+
   // ---------------------------------- ITranslateView methods ------------------------------------
 
+
   @Override
-  public void setResultText(String text) {
-    mTextResult.setText(text);
+  public void removeInputTextListener(TextWatcher textWatcher) {
+    mEditOriginal.removeTextChangedListener(textWatcher);
+  }
+
+  @Override
+  public void setInputTextListener(TextWatcher textWatcher) {
+    mEditOriginal.addTextChangedListener(textWatcher);
+  }
+
+  @Override
+  public void setInputText(String text) {
+    mEditOriginal.setText(text);
+  }
+
+  @Override
+  public void setTranslatedText(String text) {
+    mTextTranslated.setText(text);
   }
 
   @Override
@@ -51,13 +68,13 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void showProgressBar() {
-    mTextResult.setTextColor(ContextCompat.getColor(getContext(), R.color.light_grey));
+    mTextTranslated.setTextColor(ContextCompat.getColor(getContext(), R.color.light_grey));
     mProgressBar.setVisibility(View.VISIBLE);
   }
 
   @Override
   public void hideProgressBar() {
-    mTextResult.setTextColor(ContextCompat.getColor(getContext(), R.color.black));
+    mTextTranslated.setTextColor(ContextCompat.getColor(getContext(), R.color.black));
     mProgressBar.setVisibility(View.GONE);
   }
 
@@ -70,7 +87,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   protected IPresenterFactory<TranslatePresenter, ITranslateView> getPresenterFactory() {
-    return new TranslatePresenter.TranslateFactory();
+    return new TranslatePresenter.Factory();
   }
 
   @Override
@@ -85,9 +102,9 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   protected void initializeView(View view) {
-    mEditTranslate = (EditText) view.findViewById(R.id.edit_translate);
+    mEditOriginal = (EditText) view.findViewById(R.id.edit_original);
     mImageClear = (ImageView) view.findViewById(R.id.image_clear);
-    mTextResult = (TextView) view.findViewById(R.id.text_result);
+    mTextTranslated = (TextView) view.findViewById(R.id.text_translated);
     mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
   }
 
@@ -96,24 +113,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mImageClear.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        mEditTranslate.setText("");
-      }
-    });
-
-    mEditTranslate.addTextChangedListener(new TextWatcher() {
-      @Override
-      public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
-
-      @Override
-      public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
-
-      @Override
-      public void afterTextChanged(Editable editable) {
-        if (editable.toString().replace(" ", "").isEmpty()) {
-          getPresenter().onInputTextClear();
-        } else {
-          getPresenter().onInputTextChanged(editable.toString());
-        }
+        mEditOriginal.setText("");
       }
     });
   }

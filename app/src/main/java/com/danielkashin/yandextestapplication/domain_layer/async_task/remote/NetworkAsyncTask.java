@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.domain_layer.async_task;
+package com.danielkashin.yandextestapplication.domain_layer.async_task.remote;
 
 import android.os.AsyncTask;
 import android.util.Pair;
@@ -14,14 +14,14 @@ import retrofit2.Response;
 
 
 
-public class YandexNetworkAsyncTask<T> extends AsyncTask<Void, Void, Pair<T, ExceptionBundle>> {
+public class NetworkAsyncTask<T> extends AsyncTask<Void, Void, Pair<T, ExceptionBundle>> {
 
-  private Call<T> mApiCall;
-  private PostExecuteListener<T> postExecuteListener;
+  private final Call<T> mApiCall;
+  private final PostExecuteListener<T> postExecuteListener;
 
 
-  public YandexNetworkAsyncTask(Call<T> apiCall,
-                                PostExecuteListener<T> postExecuteListener) {
+  public NetworkAsyncTask(Call<T> apiCall,
+                          PostExecuteListener<T> postExecuteListener) {
     this.mApiCall = apiCall;
     this.postExecuteListener = postExecuteListener;
   }

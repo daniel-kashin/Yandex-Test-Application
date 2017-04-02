@@ -16,21 +16,20 @@ import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.
 public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
     extends Fragment implements IView, LoaderManager.LoaderCallbacks<P> {
 
-  private P presenter;
+  private P mPresenter;
 
 
   // ----------------------------------------------------------------------------------------------
 
   protected final P getPresenter() {
-    return this.presenter;
+    return this.mPresenter;
   }
 
   // --------------------------------- Lifecycle methods ------------------------------------------
 
   @Override
-  public final View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
-    super.onCreateView(inflater, parent, savedInstanceState);
-    return inflater.inflate(getLayoutRes(), parent, false);
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
   }
 
   @Override
@@ -40,14 +39,23 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
   }
 
   @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+  public final View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
+    super.onCreateView(inflater, parent, savedInstanceState);
+    return inflater.inflate(getLayoutRes(), parent, false);
+  }
 
-    Loader loader = getActivity().getSupportLoaderManager().getLoader(getFragmentId());
+  @Override
+  public void onActivityCreated(Bundle savedInstanceState){
+    super.onActivityCreated(savedInstanceState);
+
+    Loader loader = getLoaderManager().getLoader(getFragmentId());
     if (loader != null) {
-      presenter = ((PresenterLoader<P, V>) loader).getPresenter();
-    } else {
-      getActivity().getSupportLoaderManager().initLoader(getFragmentId(), null, this);
+      int i = loader.hashCode();
+      mPresenter = ((PresenterLoader<P, V>) loader).getPresenter();
+    }
+
+    if (mPresenter == null) {
+      getLoaderManager().initLoader(getFragmentId(), null, this);
     }
   }
 
@@ -55,12 +63,12 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
   public void onStart() {
     super.onStart();
     setListeners();
-    presenter.attachView(getViewInterface());
+    mPresenter.attachView(getViewInterface());
   }
 
   @Override
   public void onStop() {
-    presenter.detachView();
+    mPresenter.detachView();
     super.onStop();
   }
 
@@ -73,12 +81,12 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   @Override
   public void onLoadFinished(Loader<P> loader, P presenter) {
-    this.presenter = presenter;
+    this.mPresenter = presenter;
   }
 
   @Override
   public void onLoaderReset(Loader<P> loader) {
-    this.presenter = null;
+    this.mPresenter = null;
   }
 
   // ----------------------------------- Abstract methods -----------------------------------------

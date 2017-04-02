@@ -55,8 +55,8 @@ public class ExceptionBundle extends Exception {
     WRONG_LANGS(501),
 
     EMPTY_TRANSLATION(600),
-    EMPTY_TRANSLATIONS(601);
-
+    EMPTY_TRANSLATIONS(601),
+    SAVE_DENIED(603);
 
     private final int code;
 

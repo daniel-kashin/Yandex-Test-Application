@@ -3,6 +3,9 @@ package com.danielkashin.yandextestapplication.presentation_layer.view.history_p
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+
+import com.danielkashin.yandextestapplication.presentation_layer.view.history_all.HistoryAllFragment;
+import com.danielkashin.yandextestapplication.presentation_layer.view.history_favourite.HistoryFavouriteFragment;
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
 
 
@@ -26,9 +29,9 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter {
   @Override
   public Fragment getItem(int position) {
     if (position == 0) {
-      return TranslateFragment.getInstance();
+      return HistoryAllFragment.getInstance();
     } else if (position == 1) {
-      return TranslateFragment.getInstance();
+      return HistoryFavouriteFragment.getInstance();
     } else {
       return null;
     }

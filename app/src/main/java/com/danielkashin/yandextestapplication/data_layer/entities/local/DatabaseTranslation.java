@@ -5,7 +5,7 @@ import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
 
-public class Translation extends RealmObject {
+public class DatabaseTranslation extends RealmObject {
 
   @Required
   private String originalText;
@@ -22,6 +22,14 @@ public class Translation extends RealmObject {
 
   public Boolean getIsFavourite(){
     return isFavourite;
+  }
+
+  public String getOriginalText() {
+    return originalText;
+  }
+
+  public String getTranslatedText() {
+    return translatedText;
   }
 
   public void setOriginalText(String originalText){

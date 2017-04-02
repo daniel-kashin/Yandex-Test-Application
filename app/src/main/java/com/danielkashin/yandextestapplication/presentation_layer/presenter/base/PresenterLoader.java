@@ -29,6 +29,7 @@ public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Lo
   @Override
   protected void onStartLoading() {
     if (presenter != null) {
+      int i = this.hashCode();
       deliverResult(presenter);
     } else {
       forceLoad();
@@ -43,7 +44,10 @@ public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Lo
 
   @Override
   protected void onReset() {
-    presenter.destroy();
+    if (presenter != null) {
+      presenter.destroy();
+    }
+
     presenter = null;
   }
 }
