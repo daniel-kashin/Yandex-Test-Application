@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.adapter;
+package com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

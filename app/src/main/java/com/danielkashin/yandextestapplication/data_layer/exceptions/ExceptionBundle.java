@@ -56,7 +56,8 @@ public class ExceptionBundle extends Exception {
 
     EMPTY_TRANSLATION(600),
     EMPTY_TRANSLATIONS(601),
-    SAVE_DENIED(603);
+    SAVE_DENIED(603),
+    DATABASE_CLOSED(604);
 
     private final int code;
 

@@ -8,13 +8,16 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+
+import javax.net.ssl.SSLHandshakeException;
 
 import retrofit2.Call;
 import retrofit2.Response;
 
 
 
-public class NetworkAsyncTask<T> extends AsyncTask<Void, Void, Pair<T, ExceptionBundle>> {
+public class NetworkAsyncTask<T> extends VoidAsyncTask<Pair<T, ExceptionBundle>> {
 
   private final Call<T> mApiCall;
   private final PostExecuteListener<T> postExecuteListener;
@@ -54,7 +57,7 @@ public class NetworkAsyncTask<T> extends AsyncTask<Void, Void, Pair<T, Exception
       } else {
         throw new IOException();
       }
-    } catch (ConnectException | SocketTimeoutException e) {
+    } catch (ConnectException | SocketTimeoutException | UnknownHostException | SSLHandshakeException e) {
       return new Pair<>(null, new ExceptionBundle(ExceptionBundle.Reason.NETWORK_UNAVAILABLE));
     } catch (IOException e) {
       return new Pair<>(null, new ExceptionBundle(ExceptionBundle.Reason.UNKNOWN));

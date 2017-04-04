@@ -18,8 +18,7 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   private P mPresenter;
 
-
-  // ----------------------------------------------------------------------------------------------
+  // ------------------------ provide presenter to extended classes -------------------------------
 
   protected final P getPresenter() {
     return this.mPresenter;
@@ -30,23 +29,6 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-  }
-
-  @Override
-  public final void onViewCreated(View view, Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    initializeView(view);
-  }
-
-  @Override
-  public final View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
-    super.onCreateView(inflater, parent, savedInstanceState);
-    return inflater.inflate(getLayoutRes(), parent, false);
-  }
-
-  @Override
-  public void onActivityCreated(Bundle savedInstanceState){
-    super.onActivityCreated(savedInstanceState);
 
     Loader loader = getLoaderManager().getLoader(getFragmentId());
     if (loader != null) {
@@ -57,6 +39,18 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
     if (mPresenter == null) {
       getLoaderManager().initLoader(getFragmentId(), null, this);
     }
+  }
+
+  @Override
+  public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
+    super.onCreateView(inflater, parent, savedInstanceState);
+    return inflater.inflate(getLayoutRes(), parent, false);
+  }
+
+  @Override
+  public final void onViewCreated(View view, Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
+    initializeView(view);
   }
 
   @Override

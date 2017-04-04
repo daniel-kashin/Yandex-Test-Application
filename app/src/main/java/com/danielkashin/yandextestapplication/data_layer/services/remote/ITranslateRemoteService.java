@@ -4,7 +4,7 @@ import com.danielkashin.yandextestapplication.data_layer.entities.remote.Network
 
 import retrofit2.Call;
 
-public interface ITranslateNetworkService {
+public interface ITranslateRemoteService {
 
   Call<NetworkTranslation> translate(String text, String lang);
 

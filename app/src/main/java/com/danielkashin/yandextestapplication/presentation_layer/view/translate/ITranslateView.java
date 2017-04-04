@@ -7,6 +7,8 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView
 
 public interface ITranslateView extends IView {
 
+  void setTextWatcher();
+
   void removeInputTextListener(TextWatcher textWatcher);
 
   void setInputTextListener(TextWatcher textWatcher);

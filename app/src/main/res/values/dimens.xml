@@ -2,18 +2,30 @@
     <dimen name="icon_size">24dp</dimen>
 
     <dimen name="toolbar_end">15dp</dimen>
-    <dimen name="toolbar_text_size">16sp</dimen>
+    <dimen name="toolbar_text_size">17sp</dimen>
 
-    <dimen name="fg_tr_toolbar_margin">15dp</dimen>
-    <dimen name="fg_tr_margin">10dp</dimen>
-    <dimen name="fg_tr_main_layout_padding">8dp</dimen>
-    <dimen name="fg_tr_main_layout_height">150dp</dimen>
-    <dimen name="fg_tr_edit_text_bottom">3dp</dimen>
-    <dimen name="fg_tr_result_horizontal">4dp</dimen>
-    <dimen name="fg_tr_result_top">8dp</dimen>
-    <dimen name="fg_tr_result_text_size">18sp</dimen>
-    <dimen name="fg_tr_progress_bar_top">15dp</dimen>
-    <dimen name="fg_tr_landscape_center_separator">30dp</dimen>
-    <dimen name="fg_tr_landscape_result_end">15dp</dimen>
+    <dimen name="fg_transl_toolbar_margin">15dp</dimen>
+    <dimen name="fg_transl_margin">10dp</dimen>
+    <dimen name="fg_transl_main_layout_padding">8dp</dimen>
+    <dimen name="fg_transl_main_layout_height">150dp</dimen>
+    <dimen name="fg_transl_edit_text_bottom">3dp</dimen>
+    <dimen name="fg_transl_result_horizontal">4dp</dimen>
+    <dimen name="fg_transl_result_top">8dp</dimen>
+    <dimen name="fg_transl_result_text_size">18sp</dimen>
+    <dimen name="fg_transl_progress_bar_top">15dp</dimen>
+    <dimen name="fg_transl_landscape_center_separator">30dp</dimen>
+    <dimen name="fg_transl_landscape_result_end">15dp</dimen>
+
+    <dimen name="it_transl_top">15dp</dimen>
+    <dimen name="it_transl_bottom">15dp</dimen>
+    <dimen name="it_transl_toggle_start">20dp</dimen>
+    <dimen name="it_transl_toggle_end">20dp</dimen>
+    <dimen name="it_transl_toggle_width">30dp</dimen>
+    <dimen name="it_transl_toggle_height">30dp</dimen>
+    <dimen name="it_transl_original_size">15sp</dimen>
+    <dimen name="it_transl_translated_size">14sp</dimen>
+    <dimen name="it_transl_vertical_separation">4dp</dimen>
+    <dimen name="it_transl_language_start">10dp</dimen>
+    <dimen name="it_transl_language_end">15dp</dimen>
 
 </resources>

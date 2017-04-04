@@ -19,6 +19,7 @@ public class NetworkTranslation {
   @SerializedName("text")
   private ArrayList<String> text;
 
+
   public String getText() {
     return text.get(0);
   }

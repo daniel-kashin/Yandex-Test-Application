@@ -5,8 +5,13 @@ import android.util.Pair;
 
 import com.danielkashin.yandextestapplication.data_layer.entities.remote.NetworkTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateNetworkService;
+import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.remote.NetworkAsyncTask;
+import com.danielkashin.yandextestapplication.domain_layer.async_task.remote.VoidAsyncTask;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
+import com.danielkashin.yandextestapplication.domain_layer.repository.GetTranslationCallback;
+import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.TranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.UseCase;
 
 import java.util.concurrent.Executor;
@@ -15,54 +20,55 @@ import java.util.concurrent.Executor;
 public class TranslateUseCase implements UseCase {
 
   private final Executor executor;
-  private final ITranslateNetworkService networkService;
-  private NetworkAsyncTask<NetworkTranslation> asyncTask;
+  private final ITranslateRepository repository;
+  private VoidAsyncTask getTranslationAsyncTask;
 
 
-  public TranslateUseCase(Executor executor, ITranslateNetworkService networkService) {
+  public TranslateUseCase(Executor executor, ITranslateRepository repository) {
     this.executor = executor;
-    this.networkService = networkService;
+    this.repository = repository;
   }
 
   @Override
   public void cancel() {
-    if (asyncTask != null && asyncTask.getStatus() == AsyncTask.Status.RUNNING){
-      asyncTask.cancel(false);
+    if (isRunning()){
+      getTranslationAsyncTask.cancel(false);
     }
   }
 
-  public void run(final Callbacks callbacks, final String text, final String lang) {
-    NetworkAsyncTask.PostExecuteListener<NetworkTranslation> listener =
-        new NetworkAsyncTask.PostExecuteListener<NetworkTranslation>() {
-          @Override
-          public void onResult(NetworkTranslation result) {
-            callbacks.onTranslateSuccess(new Pair<>(text, result));
-          }
+  public void run(final Callbacks callbacks, final String originalText, final String language) {
+    GetTranslationCallback getTranslationCallback = new GetTranslationCallback() {
+      @Override
+      public void onResult(Translation translation) {
+        callbacks.onTranslateSuccess(translation);
+      }
 
-          @Override
-          public void onError(ExceptionBundle error) {
-            callbacks.onTranslateError(error);
-          }
-        };
+      @Override
+      public void onError(Exception exception) {
+        if (exception instanceof ExceptionBundle) {
+          callbacks.onTranslateError((ExceptionBundle)exception);
+        } else {
+          callbacks.onTranslateError(new ExceptionBundle(ExceptionBundle.Reason.UNKNOWN));
+        }
+      }
+    };
 
-    asyncTask = new NetworkAsyncTask<NetworkTranslation>(
-        networkService.translate(text, lang),
-        listener
-    );
-
-    asyncTask.executeOnExecutor(executor);
+    getTranslationAsyncTask = repository.getTranslation(originalText, language, getTranslationCallback);
+    getTranslationAsyncTask.executeOnExecutor(executor);
   }
 
   public boolean isRunning() {
-    return asyncTask != null && asyncTask.getStatus() == AsyncTask.Status.RUNNING;
+    return getTranslationAsyncTask != null
+        && getTranslationAsyncTask.getStatus() == AsyncTask.Status.RUNNING;
   }
 
 
   public interface Callbacks {
 
-    void onTranslateSuccess(Pair<String, NetworkTranslation> result);
+    void onTranslateSuccess(Translation result);
 
     void onTranslateError(ExceptionBundle exception);
 
   }
+
 }

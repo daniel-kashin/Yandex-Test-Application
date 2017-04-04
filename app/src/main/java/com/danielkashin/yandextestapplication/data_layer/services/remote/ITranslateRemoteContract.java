@@ -12,7 +12,7 @@ import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoi
 import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.V1_5;
 
 
-interface ITranslateNetworkContract {
+interface ITranslateRemoteContract {
 
   @POST(API + V1_5 + TR_JSON + TRANSLATE)
   Call<NetworkTranslation> translate(

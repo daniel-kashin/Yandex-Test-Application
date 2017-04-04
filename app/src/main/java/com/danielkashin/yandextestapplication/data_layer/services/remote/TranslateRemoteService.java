@@ -10,19 +10,19 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 
 
-public class TranslateNetworkService extends NetworkService<ITranslateNetworkContract>
-    implements ITranslateNetworkService {
+public class TranslateRemoteService extends NetworkService<ITranslateRemoteContract>
+    implements ITranslateRemoteService {
 
-  private TranslateNetworkService(OkHttpClient okHttpClient){
+  private TranslateRemoteService(OkHttpClient okHttpClient){
     super(Endpoints.YANDEX_TRANSLATE_BASE_URL, okHttpClient);
   }
 
   @Override
-  protected ITranslateNetworkContract createService(Retrofit retrofit) {
-    return retrofit.create(ITranslateNetworkContract.class);
+  protected ITranslateRemoteContract createService(Retrofit retrofit) {
+    return retrofit.create(ITranslateRemoteContract.class);
   }
 
-  // -------------------------- ITranslateNetworkService methods ----------------------------
+  // -------------------------- ITranslateRemoteService methods ----------------------------
 
   @Override
   public Call<NetworkTranslation> translate(String text, String lang) {
@@ -35,8 +35,8 @@ public class TranslateNetworkService extends NetworkService<ITranslateNetworkCon
 
     private Factory() { }
 
-    public static ITranslateNetworkService create(OkHttpClient okHttpClient) {
-      return new TranslateNetworkService(okHttpClient);
+    public static ITranslateRemoteService create(OkHttpClient okHttpClient) {
+      return new TranslateRemoteService(okHttpClient);
     }
   }
 }

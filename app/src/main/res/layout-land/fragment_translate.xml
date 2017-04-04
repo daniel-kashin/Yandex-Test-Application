@@ -23,7 +23,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@+id/image_change_languages"
-                android:layout_marginEnd="@dimen/fg_tr_toolbar_margin"
+                android:layout_marginEnd="@dimen/fg_transl_toolbar_margin"
                 android:text="Английский"
                 android:textSize="@dimen/toolbar_text_size"
                 android:freezesText="true"
@@ -43,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@id/image_change_languages"
-                android:layout_marginStart="@dimen/fg_tr_toolbar_margin"
+                android:layout_marginStart="@dimen/fg_transl_toolbar_margin"
                 android:text="Русский"
                 android:textSize="@dimen/toolbar_text_size"
                 android:freezesText="true"
@@ -59,14 +59,14 @@
         android:id="@+id/layout_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="@dimen/fg_tr_margin"
+        android:layout_margin="@dimen/fg_transl_margin"
         android:orientation="horizontal">
 
         <RelativeLayout
             android:id="@+id/layout_input"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/fg_tr_landscape_center_separator"
+            android:layout_marginEnd="@dimen/fg_transl_landscape_center_separator"
             android:layout_weight="1"
             android:background="@drawable/fragment_translate_main_layout_border">
 
@@ -75,7 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_toStartOf="@id/image_clear"
-                android:layout_marginBottom="@dimen/fg_tr_edit_text_bottom"
+                android:layout_marginBottom="@dimen/fg_transl_edit_text_bottom"
                 android:gravity="top"
                 android:background="@android:color/transparent"
                 android:hint="@string/hint_translation_edit_text"/>
@@ -95,22 +95,22 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginTop="@dimen/fg_tr_result_top"
-            android:layout_marginEnd="@dimen/fg_tr_landscape_result_end">
+            android:layout_marginTop="@dimen/fg_transl_result_top"
+            android:layout_marginEnd="@dimen/fg_transl_landscape_result_end">
 
             <TextView
                 android:id="@+id/text_translated"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:freezesText="true"
-                android:textSize="@dimen/fg_tr_result_text_size"
+                android:textSize="@dimen/fg_transl_result_text_size"
                 android:textColor="@android:color/black"/>
 
             <ProgressBar
                 android:id="@+id/progress_bar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/fg_tr_progress_bar_top"
+                android:layout_marginTop="@dimen/fg_transl_progress_bar_top"
                 android:layout_centerHorizontal="true"
                 android:visibility="gone"/>
 

@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.danielkashin.yandextestapplication.R;
-import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.adapter.HistoryPagerAdapter;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.HistoryPagerAdapter;
 
 
 public class HistoryPagerFragment extends Fragment {
