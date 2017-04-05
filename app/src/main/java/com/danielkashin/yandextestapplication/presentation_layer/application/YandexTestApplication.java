@@ -7,12 +7,11 @@ import com.danielkashin.yandextestapplication.data_layer.services.local.ITransla
 import com.danielkashin.yandextestapplication.data_layer.services.local.TranslateLocalService;
 import com.squareup.leakcanary.LeakCanary;
 
-import io.realm.Realm;
 
-
-public class YandexTestApplication extends Application {
+public class YandexTestApplication extends Application implements ITranslateLocalServiceProvider {
 
   private static volatile ITranslateLocalService translateLocalService;
+
 
   @Override
   public void onCreate(){
@@ -24,6 +23,7 @@ public class YandexTestApplication extends Application {
     }
   }
 
+  @Override
   public ITranslateLocalService getTranslateLocalService(){
     ITranslateLocalService localInstance = translateLocalService;
     if (localInstance == null) {
