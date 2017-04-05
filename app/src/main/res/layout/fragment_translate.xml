@@ -3,7 +3,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment">
+                tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment"
+                android:background="@android:color/white">
+
 
    <android.support.v7.widget.Toolbar
        android:id="@+id/toolbar"
@@ -96,21 +98,67 @@
             android:layout_marginStart="@dimen/fg_transl_result_horizontal"
             android:layout_marginEnd="@dimen/fg_transl_result_horizontal">
 
-            <TextView
-                android:id="@+id/text_translated"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:freezesText="true"
-                android:textSize="@dimen/fg_transl_result_text_size"
-                android:textColor="@android:color/black"/>
+            <RelativeLayout
+                android:id="@+id/layout_translation"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
-            <ProgressBar
-                android:id="@+id/progress_bar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                <TextView
+                    android:id="@+id/text_translated"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:freezesText="true"
+                    android:textSize="@dimen/fg_transl_result_text_size"
+                    android:textColor="@android:color/black"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/layout_no_internet"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible"
+                android:layout_marginTop="@dimen/fg_transl_progress_bar_top">
+
+                <TextView
+                    android:id="@+id/text_no_internet_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:width="@dimen/fg_transl_no_internet_width"
+                    android:textAlignment="center"
+                    android:textSize="@dimen/fg_transl_no_internet_big_text_size"
+                    android:text="@string/no_internet_label"/>
+
+                <TextView
+                    android:id="@+id/text_no_internet_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/text_no_internet_label"
+                    android:layout_centerHorizontal="true"
+                    android:width="@dimen/fg_transl_no_internet_width"
+                    android:textAlignment="center"
+                    android:textSize="@dimen/fg_transl_no_internet_small_text_size"
+                    android:text="@string/no_internet_message"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/layout_progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginTop="@dimen/fg_transl_progress_bar_top"
-                android:layout_centerHorizontal="true"
-                android:visibility="gone"/>
+                android:background="@color/blur"
+                android:visibility="invisible">
+
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/fg_transl_progress_bar_top"
+                    android:layout_centerHorizontal="true"/>
+
+            </RelativeLayout>
 
         </RelativeLayout>
 

@@ -9,9 +9,15 @@ public interface ITranslateView extends IView {
 
   void setTextWatcher();
 
-  void removeInputTextListener(TextWatcher textWatcher);
+  void removeTextWatcher();
 
-  void setInputTextListener(TextWatcher textWatcher);
+  void hideNoInternet();
+
+  void showNoInternet();
+
+  void showProgressBar();
+
+  void hideProgressBar();
 
   void setInputText(String text);
 
@@ -21,7 +27,5 @@ public interface ITranslateView extends IView {
 
   String getStringById(int id);
 
-  void showProgressBar();
 
-  void hideProgressBar();
 }

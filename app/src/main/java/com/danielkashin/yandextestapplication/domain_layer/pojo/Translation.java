@@ -23,4 +23,9 @@ public class Translation {
   public String getTranslatedText(){
     return translatedText;
   }
+
+  public String getOriginalText(){
+    return originalText;
+  }
+
 }

@@ -6,15 +6,15 @@ import retrofit2.Call;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.API;
-import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.TRANSLATE;
-import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.TR_JSON;
-import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.V1_5;
+import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.KEY_API;
+import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.KEY_TRANSLATE;
+import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.KEY_TR_JSON;
+import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.KEY_V1_5;
 
 
 interface ITranslateRemoteContract {
 
-  @POST(API + V1_5 + TR_JSON + TRANSLATE)
+  @POST(KEY_API + KEY_V1_5 + KEY_TR_JSON + KEY_TRANSLATE)
   Call<NetworkTranslation> translate(
       @Query("key") String key,
       @Query("text") String text,

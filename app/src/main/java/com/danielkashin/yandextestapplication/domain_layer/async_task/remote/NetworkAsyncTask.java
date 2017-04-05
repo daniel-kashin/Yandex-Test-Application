@@ -10,6 +10,7 @@ import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 import retrofit2.Call;
@@ -57,7 +58,7 @@ public class NetworkAsyncTask<T> extends VoidAsyncTask<Pair<T, ExceptionBundle>>
       } else {
         throw new IOException();
       }
-    } catch (ConnectException | SocketTimeoutException | UnknownHostException | SSLHandshakeException e) {
+    } catch (ConnectException | SocketTimeoutException | UnknownHostException | SSLException e) {
       return new Pair<>(null, new ExceptionBundle(ExceptionBundle.Reason.NETWORK_UNAVAILABLE));
     } catch (IOException e) {
       return new Pair<>(null, new ExceptionBundle(ExceptionBundle.Reason.UNKNOWN));

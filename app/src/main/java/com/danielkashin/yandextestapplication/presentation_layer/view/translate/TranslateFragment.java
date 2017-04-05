@@ -12,9 +12,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
+import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.services.local.ITranslateLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.local.TranslateLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateRemoteService;
@@ -38,7 +41,10 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   private EditText mEditOriginal;
   private ImageView mImageClear;
   private TextView mTextTranslated;
-  private ProgressBar mProgressBar;
+  private RelativeLayout mProgressBarLayout;
+  private RelativeLayout mTranslationLayout;
+  private RelativeLayout mNoInternetLayout;
+  private TextWatcher mTextWatcher;
   private State mState;
 
   // ---------------------------------- getInstance methods ---------------------------------------
@@ -80,107 +86,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   // ---------------------------------- ITranslateView methods ------------------------------------
 
   @Override
-  public void removeInputTextListener(TextWatcher textWatcher) {
-    mEditOriginal.removeTextChangedListener(textWatcher);
-  }
-
-  @Override
-  public void setInputTextListener(TextWatcher textWatcher) {
-    mEditOriginal.addTextChangedListener(textWatcher);
-  }
-
-  @Override
-  public void setInputText(String text) {
-    mEditOriginal.setText(text);
-  }
-
-  @Override
-  public void setTranslatedText(String text) {
-    mTextTranslated.setText(text);
-  }
-
-  @Override
-  public void showAlertDialog(String text) {
-    new AlertDialog.Builder(getContext())
-        .setMessage(text)
-        .create()
-        .show();
-  }
-
-  @Override
-  public String getStringById(int id) {
-    return getResources().getString(id);
-  }
-
-  @Override
-  public void showProgressBar() {
-    mTextTranslated.setTextColor(ContextCompat.getColor(getContext(), R.color.light_grey));
-    mProgressBar.setVisibility(View.VISIBLE);
-  }
-
-  @Override
-  public void hideProgressBar() {
-    mTextTranslated.setTextColor(ContextCompat.getColor(getContext(), R.color.black));
-    mProgressBar.setVisibility(View.GONE);
-  }
-
-  // -------------------------------- PresenterFragment methods -----------------------------------
-
-  @Override
-  protected ITranslateView getViewInterface() {
-    return this;
-  }
-
-  @Override
-  protected IPresenterFactory<TranslatePresenter, ITranslateView> getPresenterFactory() {
-    OkHttpClient okHttpClient = new OkHttpClient.Builder()
-        .readTimeout(10, TimeUnit.SECONDS)
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .build();
-    ITranslateRemoteService remoteService = TranslateRemoteService.Factory.create(okHttpClient);
-
-    ITranslateLocalService localService = TranslateLocalService.Factory.create();
-
-    // bind TranslationRepository
-    ITranslateRepository repository = TranslateRepository.Factory.create(localService, remoteService);
-
-    // bind useCases
-    TranslateUseCase translateUseCase = new TranslateUseCase(AsyncTask.THREAD_POOL_EXECUTOR, repository);
-
-    return new TranslatePresenter.Factory(translateUseCase, null);
-  }
-
-  @Override
-  protected int getFragmentId() {
-    return "TranslateFragment".hashCode();
-  }
-
-  @Override
-  protected int getLayoutRes() {
-    return R.layout.fragment_translate;
-  }
-
-  @Override
-  protected void initializeView(View view) {
-    mEditOriginal = (EditText) view.findViewById(R.id.edit_original);
-    mImageClear = (ImageView) view.findViewById(R.id.image_clear);
-    mTextTranslated = (TextView) view.findViewById(R.id.text_translated);
-    mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
-  }
-
-  @Override
-  protected void setListeners() {
-    mImageClear.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        mEditOriginal.setText("");
-      }
-    });
-  }
-
-  @Override
   public void setTextWatcher() {
-    TextWatcher textWatcher = new TextWatcher() {
+    mTextWatcher = new TextWatcher() {
 
       private final static int INPUT_DELAY_IN_MS = 500;
       private Handler handler = new Handler(Looper.getMainLooper());
@@ -210,7 +117,114 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       }
     };
 
-    mEditOriginal.addTextChangedListener(textWatcher);
+    mEditOriginal.addTextChangedListener(mTextWatcher);
+  }
+
+  @Override
+  public void removeTextWatcher() {
+    mEditOriginal.removeTextChangedListener(mTextWatcher);
+  }
+
+  @Override
+  public void hideNoInternet() {
+    mNoInternetLayout.setVisibility(View.INVISIBLE);
+  }
+
+  @Override
+  public void showNoInternet() {
+    mNoInternetLayout.setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void showProgressBar() {
+    mProgressBarLayout.setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void hideProgressBar() {
+    mProgressBarLayout.setVisibility(View.INVISIBLE);
+  }
+
+  @Override
+  public void setInputText(String text) {
+    mEditOriginal.setText(text);
+  }
+
+  @Override
+  public void setTranslatedText(String text) {
+    mTextTranslated.setText(text);
+  }
+
+  @Override
+  public void showAlertDialog(String text) {
+    new AlertDialog.Builder(getContext())
+        .setMessage(text)
+        .create()
+        .show();
+  }
+
+  @Override
+  public String getStringById(int id) {
+    return getResources().getString(id);
+  }
+
+  // -------------------------------- PresenterFragment methods -----------------------------------
+
+  @Override
+  protected ITranslateView getViewInterface() {
+    return this;
+  }
+
+  @Override
+  protected IPresenterFactory<TranslatePresenter, ITranslateView> getPresenterFactory() {
+    OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        .readTimeout(10, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .build();
+    ITranslateRemoteService remoteService = TranslateRemoteService.Factory.create(okHttpClient);
+
+    ITranslateLocalService localService = TranslateLocalService.Factory.create();
+
+    // bind TranslationRepository
+    ITranslateRepository repository = TranslateRepository.Factory.create(localService, remoteService);
+
+    // bind useCases
+    TranslateUseCase translateUseCase = new TranslateUseCase(AsyncTask.THREAD_POOL_EXECUTOR, repository);
+
+    // bind NetworkManager
+    INetworkManager networkManager = NetworkManager.Factory.create(getContext());
+
+    return new TranslatePresenter.Factory(translateUseCase, null, networkManager);
+  }
+
+  @Override
+  protected int getFragmentId() {
+    return "TranslateFragment".hashCode();
+  }
+
+  @Override
+  protected int getLayoutRes() {
+    return R.layout.fragment_translate;
+  }
+
+  @Override
+  protected void initializeView(View view) {
+    mEditOriginal = (EditText) view.findViewById(R.id.edit_original);
+    mImageClear = (ImageView) view.findViewById(R.id.image_clear);
+    mTextTranslated = (TextView) view.findViewById(R.id.text_translated);
+    mProgressBarLayout = (RelativeLayout) view.findViewById(R.id.layout_progress_bar);
+    mTranslationLayout = (RelativeLayout) view.findViewById(R.id.layout_translation);
+    mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
+  }
+
+  @Override
+  protected void setListeners() {
+    mImageClear.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        mEditOriginal.setText("");
+      }
+    });
   }
 
   // ------------------------------------ inner classes -------------------------------------------

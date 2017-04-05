@@ -8,4 +8,6 @@
     <color name="light_grey">#858e98</color>
     <color name="black">#000000</color>
 
+    <color name="blur">#00000000</color>
+
 </resources>

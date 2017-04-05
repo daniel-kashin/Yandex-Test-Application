@@ -16,15 +16,19 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     buildTypes.each {
         it.buildConfigField 'String', 'YANDEX_TRANSLATE_API_KEY', keystoreProperties['YandexTranslateApiKey'];
-        it.buildConfigField 'String', 'REALM_CONFIGURATION_NAME', keystoreProperties['RealmConfigurationName']
+        it.buildConfigField 'String', 'REALM_CONFIGURATION_NAME', keystoreProperties['RealmConfigurationName'];
+        it.buildConfigField 'String', 'DATABASE_NAME', keystoreProperties['DatabaseName'];
+        it.buildConfigField 'Integer', 'DATABASE_BUILD_NUMBER', keystoreProperties['DatabaseBuildNumber'];
     }
 }
 
@@ -35,15 +39,22 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+
     compile 'com.android.support:appcompat-v7:25.2.0'
     compile 'com.android.support:recyclerview-v7:25.2.0'
     compile 'com.android.support:design:25.2.0'
+    compile 'com.android.support:support-v4:25.2.0'
+
+    compile 'com.pushtorefresh.storio:sqlite:1.12.3'
+    compile 'com.pushtorefresh.storio:sqlite-annotations:1.12.3'
+    annotationProcessor 'com.pushtorefresh.storio:sqlite-annotations-processor:1.12.3'
 
     compile 'com.squareup.retrofit2:retrofit:2.2.0'
     compile 'com.squareup.retrofit2:converter-gson:2.2.0'
     compile 'com.squareup.retrofit2:converter-scalars:2.2.0'
-
-    compile 'com.android.support:support-v4:25.2.0'
 
     testCompile 'junit:junit:4.12'
 }

@@ -46,9 +46,9 @@ public class TranslateUseCase implements UseCase {
       @Override
       public void onError(Exception exception) {
         if (exception instanceof ExceptionBundle) {
-          callbacks.onTranslateError((ExceptionBundle)exception);
+          callbacks.onTranslateError(new Pair<>(originalText, (ExceptionBundle)exception));
         } else {
-          callbacks.onTranslateError(new ExceptionBundle(ExceptionBundle.Reason.UNKNOWN));
+          callbacks.onTranslateError(new Pair<>(originalText, new ExceptionBundle(ExceptionBundle.Reason.UNKNOWN)));
         }
       }
     };
@@ -67,7 +67,7 @@ public class TranslateUseCase implements UseCase {
 
     void onTranslateSuccess(Translation result);
 
-    void onTranslateError(ExceptionBundle exception);
+    void onTranslateError(Pair<String, ExceptionBundle> pairOriginalTextException);
 
   }
 
