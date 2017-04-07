@@ -20,7 +20,9 @@ public class HistoryPagerFragment extends Fragment {
 
 
   public static HistoryPagerFragment getInstance() {
-    return new HistoryPagerFragment();
+    HistoryPagerFragment fragment = new HistoryPagerFragment();
+
+    return fragment;
   }
 
   @Override
@@ -32,11 +34,7 @@ public class HistoryPagerFragment extends Fragment {
   @Override
   public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    try {
-      initializeView(view);
-    } catch (Throwable t){
-      Toast.makeText(getContext(), "FRAGMENT", Toast.LENGTH_SHORT).show();
-    }
+    initializeView(view);
   }
 
 

@@ -1,6 +1,7 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.base;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.content.Loader;
 
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
@@ -8,11 +9,13 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView
 
 public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Loader<P> {
 
+  @NonNull
   private final IPresenterFactory<P, V> factory;
+
   private P presenter;
 
 
-  public PresenterLoader(Context context, IPresenterFactory<P, V> factory){
+  public PresenterLoader(Context context, @NonNull IPresenterFactory<P, V> factory){
     super(context);
     this.factory = factory;
   }

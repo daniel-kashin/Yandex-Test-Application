@@ -4,14 +4,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -19,13 +17,13 @@ import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.services.local.ITranslateLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.local.TranslateLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateRemoteService;
 import com.danielkashin.yandextestapplication.data_layer.services.remote.TranslateRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.TranslateRepository;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.local.GetLastTranslationUseCase;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.remote.TranslateUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
+import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.TranslatePresenter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.PresenterFragment;
@@ -50,7 +48,9 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   // ---------------------------------- getInstance methods ---------------------------------------
 
   public static TranslateFragment getInstance() {
-    return new TranslateFragment();
+    TranslateFragment translateFragment = new TranslateFragment();
+
+    return translateFragment;
   }
 
   // ------------------------------------ lifecycle -----------------------------------------------
@@ -60,11 +60,11 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     super.onCreate(savedInstanceState);
 
     if (getArguments() != null){
-      mState = State.UPLOADED_FROM_ARGUMENTS;
+      mState = State.INITIALIZED_FROM_ARGUMENTS;
     } else if (savedInstanceState != null){
-      mState = State.UPLOADED_FROM_BUNDLE;
+      mState = State.INITIALIZED_FROM_BUNDLE;
     } else {
-      mState = State.NOT_UPLOADED;
+      mState = State.NOT_INITIALIZED;
     }
   }
 
@@ -72,12 +72,9 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void onStart(){
     super.onStart();
 
-    if (mState == State.NOT_UPLOADED){
-      mState = State.UPLOADED_FROM_PRESENTER;
+    if (mState == State.NOT_INITIALIZED){
+      mState = State.iNITIALIZED_FROM_PRESENTER;
       getPresenter().onDataWasNotRestored();
-
-      // TODO: remove
-      setTextWatcher();
     } else {
       setTextWatcher();
     }
@@ -88,7 +85,6 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   public void setTextWatcher() {
     mTextWatcher = new TextWatcher() {
-
       private final static int INPUT_DELAY_IN_MS = 500;
       private Handler handler = new Handler(Looper.getMainLooper());
       Runnable workRunnable;
@@ -177,29 +173,36 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   protected IPresenterFactory<TranslatePresenter, ITranslateView> getPresenterFactory() {
-    OkHttpClient okHttpClient = new OkHttpClient.Builder()
-        .readTimeout(10, TimeUnit.SECONDS)
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .build();
-    ITranslateRemoteService remoteService = TranslateRemoteService.Factory.create(okHttpClient);
+    // bind remote service
+    ITranslateRemoteService remoteService = TranslateRemoteService.Factory.create(
+            new OkHttpClient.Builder()
+            .readTimeout(10, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .build());
 
-    ITranslateLocalService localService = TranslateLocalService.Factory.create();
+    // bind local service
+    ITranslateLocalService localService = ((ITranslateLocalServiceProvider)getActivity()
+        .getApplication())
+        .getTranslateLocalService();
 
-    // bind TranslationRepository
+    // bind repository
     ITranslateRepository repository = TranslateRepository.Factory.create(localService, remoteService);
 
-    // bind useCases
+    // bind use cases
     TranslateUseCase translateUseCase = new TranslateUseCase(AsyncTask.THREAD_POOL_EXECUTOR, repository);
 
-    // bind NetworkManager
+    GetLastTranslationUseCase getLastTranslationUseCase =
+        new GetLastTranslationUseCase(AsyncTask.THREAD_POOL_EXECUTOR, repository);
+
+    // bind networkmanager
     INetworkManager networkManager = NetworkManager.Factory.create(getContext());
 
-    return new TranslatePresenter.Factory(translateUseCase, null, networkManager);
+    return new TranslatePresenter.Factory(translateUseCase, getLastTranslationUseCase, networkManager);
   }
 
   @Override
   protected int getFragmentId() {
-    return "TranslateFragment".hashCode();
+    return TranslateFragment.class.getSimpleName().hashCode();
   }
 
   @Override
@@ -227,13 +230,14 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     });
   }
 
+
   // ------------------------------------ inner classes -------------------------------------------
 
   private static enum State {
-    UPLOADED_FROM_ARGUMENTS,
-    UPLOADED_FROM_BUNDLE,
-    UPLOADED_FROM_PRESENTER,
-    NOT_UPLOADED
+    INITIALIZED_FROM_ARGUMENTS,
+    INITIALIZED_FROM_BUNDLE,
+    iNITIALIZED_FROM_PRESENTER,
+    NOT_INITIALIZED
   }
 
 }

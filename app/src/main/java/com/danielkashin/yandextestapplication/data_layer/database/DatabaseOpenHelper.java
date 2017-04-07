@@ -17,11 +17,13 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
   @Override
   public void onCreate(SQLiteDatabase sqLiteDatabase) {
     sqLiteDatabase.execSQL(TranslationContract.SQL_CREATE_TABLE);
+    sqLiteDatabase.execSQL(LanguageContract.SQL_CREATE_TABLE);
   }
 
   @Override
   public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
     sqLiteDatabase.execSQL(TranslationContract.SQL_DELETE_TABLE);
+    sqLiteDatabase.execSQL(LanguageContract.SQL_DELETE_TABLE);
     onCreate(sqLiteDatabase);
   }
 }

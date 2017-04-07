@@ -9,6 +9,8 @@
     <string name="unknown">На сервере произошла неизвестная ошибка.</string>
     <string name="no_internet_label">Отсутствует интернет-соединение</string>
     <string name="no_internet_message">Ожидание подключения...</string>
+    <string name="hint_search_all_history">Найти в истории</string>
+    <string name="hint_search_favorite_history">Найти в избранном</string>
 
     <string-array name="view_pager_labels">
         <item>История</item>

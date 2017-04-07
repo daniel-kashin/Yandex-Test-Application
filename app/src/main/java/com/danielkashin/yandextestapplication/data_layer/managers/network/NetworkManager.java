@@ -38,7 +38,7 @@ public class NetworkManager implements INetworkManager {
         try {
           context.unregisterReceiver(receiver);
         } catch (IllegalArgumentException e) {
-          // do nothing
+          // in case reciever was already unregistered
         }
       }
     });
@@ -54,7 +54,8 @@ public class NetworkManager implements INetworkManager {
   // ---------------------------------- private methods --------------------------------------------
 
   private NetworkStatus getStatus(Context context) {
-    ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    ConnectivityManager connectivityManager = (ConnectivityManager)context
+        .getSystemService(Context.CONNECTIVITY_SERVICE);
     if(connectivityManager != null) {
       NetworkInfo info = connectivityManager.getActiveNetworkInfo();
       if(info != null) {
@@ -84,5 +85,4 @@ public class NetworkManager implements INetworkManager {
     }
 
   }
-
 }

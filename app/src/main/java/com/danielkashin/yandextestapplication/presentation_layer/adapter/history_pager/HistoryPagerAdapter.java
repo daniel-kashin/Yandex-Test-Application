@@ -3,10 +3,7 @@ package com.danielkashin.yandextestapplication.presentation_layer.adapter.histor
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-
-import com.danielkashin.yandextestapplication.presentation_layer.view.history_all.HistoryAllFragment;
-import com.danielkashin.yandextestapplication.presentation_layer.view.history_favourite.HistoryFavouriteFragment;
-import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
+import com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment;
 
 
 public class HistoryPagerAdapter extends FragmentPagerAdapter {
@@ -19,7 +16,7 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter {
     super(fragmentManager);
 
     if (pageTitles == null || pageTitles.length != FRAGMENT_COUNT) {
-      throw new NullPointerException("Count of pages should equal " + FRAGMENT_COUNT);
+      throw new IllegalStateException("Count of pages should equal " + FRAGMENT_COUNT);
     }
 
     mPageTitles = pageTitles;
@@ -29,9 +26,9 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter {
   @Override
   public Fragment getItem(int position) {
     if (position == 0) {
-      return HistoryAllFragment.getInstance();
+      return HistoryFragment.getInstance(false); // onlyFavorite set to false
     } else if (position == 1) {
-      return HistoryFavouriteFragment.getInstance();
+      return HistoryFragment.getInstance(true); // onlyFavorite set to true
     } else {
       return null;
     }

@@ -1,19 +1,18 @@
 package com.danielkashin.yandextestapplication.domain_layer.repository;
 
-import android.os.AsyncTask;
-
-import com.danielkashin.yandextestapplication.domain_layer.async_task.remote.VoidAsyncTask;
+import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
+
+import java.util.List;
 
 
 public interface ITranslateRepository {
 
-  VoidAsyncTask getTranslation(String originalText, String language, GetTranslationCallback callback);
+  void saveTranslation(Translation translation) throws ExceptionBundle;
 
-  VoidAsyncTask getLastTranslation(GetTranslationCallback callback);
+  Translation getTranslation(String originalText, String language) throws ExceptionBundle;
 
-  VoidAsyncTask getAllTranslations(int count, int offset, GetTranslationsCallback callback);
+  Translation getLastTranslation() throws ExceptionBundle;
 
-  VoidAsyncTask getFavouriteTranslations(int count, int offset, GetTranslationsCallback callback);
-
+  List<Translation> getTranslations(int offset, int count, boolean onlyFavourite) throws ExceptionBundle;
 }

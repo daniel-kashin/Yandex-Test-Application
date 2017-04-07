@@ -7,7 +7,7 @@
 
 
     <ToggleButton
-        android:id="@+id/toggle_favourite"
+        android:id="@+id/toggle_favorite"
         android:layout_width="@dimen/it_transl_toggle_width"
         android:layout_height="@dimen/it_transl_toggle_height"
         android:layout_marginStart="@dimen/it_transl_toggle_start"
@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:layout_toEndOf="@+id/toggle_favourite">
+        android:layout_toEndOf="@+id/toggle_favorite">
 
         <TextView
             android:id="@+id/text_original"
@@ -52,13 +52,12 @@
 
     <TextView
         android:text="ru-en"
+        android:id="@+id/text_language"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="@dimen/it_transl_language_start"
         android:layout_marginEnd="@dimen/it_transl_language_end"
         android:layout_centerVertical="true"
-        android:textAllCaps="true"
-        android:id="@+id/textView2"/>
-
+        android:textAllCaps="true"/>
 </RelativeLayout>

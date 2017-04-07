@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.domain_layer.async_task.remote;
+package com.danielkashin.yandextestapplication.domain_layer.async_task;
 
 import android.os.AsyncTask;
 

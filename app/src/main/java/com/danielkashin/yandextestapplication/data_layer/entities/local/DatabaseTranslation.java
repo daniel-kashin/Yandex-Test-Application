@@ -20,10 +20,10 @@ public class DatabaseTranslation {
   String translatedText;
 
   @StorIOSQLiteColumn(name = TranslationContract.COLUMN_NAME_LANGUAGE)
-  String language;
+  Long language;
 
   @StorIOSQLiteColumn(name = TranslationContract.COLUMN_NAME_IS_FAVOURITE)
-  Integer isFavourite;
+  Integer favorite;
 
 
   DatabaseTranslation() {
@@ -31,13 +31,32 @@ public class DatabaseTranslation {
 
 
   public DatabaseTranslation(@Nullable Long id, @NonNull String originalText, @NonNull String translatedText,
-                             @NonNull  String language, @NonNull Integer isFavourite) {
-
+                             @NonNull  Long language, @NonNull Integer isFavourite) {
     this.id = id;
     this.originalText = originalText;
     this.translatedText = translatedText;
     this.language = language;
-    this.isFavourite = isFavourite;
+    this.favorite = isFavourite;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public String getOriginalText() {
+    return originalText;
+  }
+
+  public String getTranslatedText() {
+    return translatedText;
+  }
+
+  public Integer isFavorite() {
+    return favorite;
+  }
+
+  public Long getLanguage() {
+    return language;
   }
 
 }

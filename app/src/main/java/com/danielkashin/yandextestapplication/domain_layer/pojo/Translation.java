@@ -9,14 +9,14 @@ public class Translation {
 
   private String language;
 
-  private Boolean isFavourite;
+  private Boolean favorite;
 
 
-  public Translation(String originalText, String translatedText, String language, Boolean isFavourite) {
+  public Translation(String originalText, String translatedText, String language, Boolean favorite) {
     this.originalText = originalText;
     this.translatedText = translatedText;
     this.language = language;
-    this.isFavourite = isFavourite;
+    this.favorite = favorite;
   }
 
 
@@ -26,6 +26,14 @@ public class Translation {
 
   public String getOriginalText(){
     return originalText;
+  }
+
+  public String getLanguage(){
+    return language;
+  }
+
+  public Boolean ifFavorite(){
+    return favorite;
   }
 
 }
