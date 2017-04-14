@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.services.remote;
+package com.danielkashin.yandextestapplication.data_layer.services.translation.remote;
 
 import com.danielkashin.yandextestapplication.data_layer.entities.remote.NetworkTranslation;
 
@@ -12,7 +12,7 @@ import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoi
 import static com.danielkashin.yandextestapplication.data_layer.constants.Endpoints.KEY_V1_5;
 
 
-interface ITranslateRemoteContract {
+interface ITranslationRemoteContract {
 
   @POST(KEY_API + KEY_V1_5 + KEY_TR_JSON + KEY_TRANSLATE)
   Call<NetworkTranslation> translate(

@@ -6,7 +6,7 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryVoidAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslationRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import java.util.concurrent.Executor;
 
@@ -14,11 +14,11 @@ import java.util.concurrent.Executor;
 public class TranslateUseCase implements IUseCase {
 
   private final Executor executor;
-  private final ITranslateRepository repository;
+  private final ITranslationRepository repository;
   private RepositoryResponseAsyncTask<Translation> getTranslationAsyncTask;
 
 
-  public TranslateUseCase(Executor executor, ITranslateRepository repository) {
+  public TranslateUseCase(Executor executor, ITranslationRepository repository) {
     this.executor = executor;
     this.repository = repository;
   }
@@ -85,7 +85,8 @@ public class TranslateUseCase implements IUseCase {
 
   public boolean isRunning() {
     return getTranslationAsyncTask != null
-        && getTranslationAsyncTask.getStatus() == AsyncTask.Status.RUNNING;
+        && getTranslationAsyncTask.getStatus() == AsyncTask.Status.RUNNING
+        && !getTranslationAsyncTask.isCancelled();
   }
 
 

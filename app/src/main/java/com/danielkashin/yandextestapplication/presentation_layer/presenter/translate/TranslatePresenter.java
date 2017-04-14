@@ -2,6 +2,7 @@ package com.danielkashin.yandextestapplication.presentation_layer.presenter.tran
 
 import android.support.annotation.NonNull;
 import android.util.Pair;
+
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
@@ -111,56 +112,39 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   public void onTranslateException(Pair<String, ExceptionBundle> pairOriginalTextException) {
-    disposeTranslationSubscription();
+    if (pairOriginalTextException.second.getReason() == ExceptionBundle.Reason.NETWORK_UNAVAILABLE){
+      if (getView() != null){
+        getView().setTranslatedText("");
+        getView().showNoInternet();
+        getView().showProgressBar();
+      }
 
-    if (getView() != null) {
-      switch (pairOriginalTextException.second.getReason()) {
-        case NETWORK_UNAVAILABLE:
-          getView().setTranslatedText("");
-          getView().showNoInternet();
-          getView().showProgressBar();
-          subscribeTranslationOnNetworkAvailable(pairOriginalTextException.first);
-          break;
+      disposeTranslationSubscription();
+      subscribeTranslationOnNetworkAvailable(pairOriginalTextException.first);
+    } else {
+      disposeTranslationSubscription();
 
-        case WRONG_KEY:
-          getView().showAlertDialog(getView().getStringById(R.string.wrong_key));
-          getView().hideProgressBar();
-          break;
+      if (getView() != null){
+        getView().hideNoInternet();
+        getView().hideProgressBar();
 
-        case LIMIT_EXPIRED:
-          getView().showAlertDialog(getView().getStringById(R.string.limit_expired));
-          getView().hideProgressBar();
-          break;
-
-        case TEXT_LIMIT_EXPIRED:
-          getView().showAlertDialog(getView().getStringById(R.string.text_limit_expired));
-          getView().hideProgressBar();
-          break;
-
-        case WRONG_TEXT:
-          getView().showAlertDialog(getView().getStringById(R.string.wrong_text));
-          getView().hideProgressBar();
-          break;
-
-        case WRONG_LANGS:
-          getView().showAlertDialog(getView().getStringById(R.string.wrong_langs));
-          getView().hideProgressBar();
-          break;
-
-        case UNKNOWN:
-          getView().showAlertDialog(getView().getStringById(R.string.unknown));
-          getView().hideProgressBar();
-          break;
-
-        default:
-          getView().hideProgressBar();
-          break;
+        String errorMessage = null;
+        switch (pairOriginalTextException.second.getReason()){
+          case WRONG_KEY: errorMessage = getView().getStringById(R.string.wrong_key); break;
+          case LIMIT_EXPIRED: errorMessage = getView().getStringById(R.string.limit_expired); break;
+          case TEXT_LIMIT_EXPIRED: errorMessage = getView().getStringById(R.string.text_limit_expired); break;
+          case WRONG_TEXT: errorMessage = getView().getStringById(R.string.wrong_text); break;
+          case WRONG_LANGS: errorMessage = getView().getStringById(R.string.wrong_langs); break;
+          case UNKNOWN: errorMessage = getView().getStringById(R.string.unknown); break;
+        }
+        if (errorMessage != null) {
+          getView().showAlertDialog(errorMessage);
+        }
       }
     }
   }
 
   // ------------------------------------ public methods -----------------------------------------
-
 
 
   public void onDataWasNotRestored() {
@@ -180,11 +164,9 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   public void onInputTextChanged(final String originalText) {
     mTranslateUseCase.cancel();
-    disposeTranslationSubscription();
 
     if (getView() != null) {
       getView().showProgressBar();
-      getView().hideNoInternet();
     }
 
     if (mNetworkManager.getCurrentNetworkStatus() != NetworkStatus.DISCONNECTED) {
@@ -195,6 +177,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
         getView().showNoInternet();
       }
 
+      disposeTranslationSubscription();
       subscribeTranslationOnNetworkAvailable(originalText);
     }
   }
@@ -221,7 +204,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     }
   }
 
-  // ------------------------------------- Inner classes -----------------------------------------
+// ------------------------------------- Inner classes -----------------------------------------
 
   public static final class Factory
       implements IPresenterFactory<TranslatePresenter, ITranslateView> {

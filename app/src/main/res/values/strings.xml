@@ -11,6 +11,10 @@
     <string name="no_internet_message">Ожидание подключения...</string>
     <string name="hint_search_all_history">Найти в истории</string>
     <string name="hint_search_favorite_history">Найти в избранном</string>
+    <string name="no_content_history_message">В истории пока ничего нет</string>
+    <string name="no_content_favorites_message">В понравившихся пока ничего нет</string>
+    <string name="no_content_search_message">Ничего не найдено</string>
+    <string name="search_image_description">Поиск</string>
 
     <string-array name="view_pager_labels">
         <item>История</item>

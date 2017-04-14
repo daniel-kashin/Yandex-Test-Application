@@ -9,8 +9,8 @@
     android:layout_height="match_parent"
     tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.tabs.TabActivity">
 
-    <FrameLayout
-        android:id="@+id/fragment_container"
+    <com.danielkashin.yandextestapplication.presentation_layer.custom_views.NonSwipeableViewPager
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/bottom_navigation"/>

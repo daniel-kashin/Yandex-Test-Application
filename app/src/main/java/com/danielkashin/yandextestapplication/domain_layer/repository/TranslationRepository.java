@@ -5,8 +5,8 @@ import com.danielkashin.yandextestapplication.data_layer.entities.local.Database
 import com.danielkashin.yandextestapplication.data_layer.entities.remote.NetworkTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle.Reason;
-import com.danielkashin.yandextestapplication.data_layer.services.local.ITranslateLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.local.ITranslationLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.ITranslationRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
@@ -17,25 +17,24 @@ import java.util.List;
 import retrofit2.Response;
 
 
-public class TranslateRepository implements ITranslateRepository {
+public class TranslationRepository implements ITranslationRepository {
 
-  private final ITranslateLocalService localService;
+  private final ITranslationLocalService localService;
 
-  private final ITranslateRemoteService remoteService;
+  private final ITranslationRemoteService remoteService;
 
 
-  private TranslateRepository(ITranslateLocalService localService,
-                              ITranslateRemoteService remoteService) {
+  private TranslationRepository(ITranslationLocalService localService,
+                                ITranslationRemoteService remoteService) {
     this.localService = localService;
     this.remoteService = remoteService;
   }
 
-  // ------------------------------ ITranslateRepository methods ----------------------------------
-
+  // ------------------------------ ITranslationRepository methods ----------------------------------
 
   @Override
   public void saveTranslation(Translation translation) throws ExceptionBundle {
-    // get current language it or create it
+    // get current language id or create it
     Long languageId;
     DatabaseLanguage language = localService.getLanguage(translation.getLanguage()).executeAsBlocking();
     if (language != null) {
@@ -104,15 +103,11 @@ public class TranslateRepository implements ITranslateRepository {
   }
 
   @Override
-  public List<Translation> getTranslations(int offset, int count, boolean onlyFavourite) throws ExceptionBundle {
+  public List<Translation> getTranslations(int offset, int count, boolean onlyFavourite,
+                                           String searchRequest) throws ExceptionBundle {
     // get list of database translation
     PreparedGetListOfObjects<DatabaseTranslation> preparedList;
-    if (onlyFavourite){
-      preparedList = localService.getFavoriteTranslations(offset, count);
-    } else {
-      preparedList = localService.getTranslations(offset, count);
-    }
-
+    preparedList = localService.getTranslations(offset, count, onlyFavourite, searchRequest);
     List<DatabaseTranslation> databaseTranslations = preparedList.executeAsBlocking();
     if (databaseTranslations.size() == 0) throw new ExceptionBundle(Reason.EMPTY_TRANSLATIONS);
 
@@ -136,6 +131,11 @@ public class TranslateRepository implements ITranslateRepository {
     return translations;
   }
 
+  @Override
+  public String getLanguage(String languageCode) {
+    return null;
+  }
+
   // ------------------------------------ factory -------------------------------------------------
 
   public static final class Factory {
@@ -143,9 +143,9 @@ public class TranslateRepository implements ITranslateRepository {
     private Factory() {
     }
 
-    public static ITranslateRepository create(ITranslateLocalService localService,
-                                              ITranslateRemoteService remoteService) {
-      return new TranslateRepository(localService, remoteService);
+    public static ITranslationRepository create(ITranslationLocalService localService,
+                                                ITranslationRemoteService remoteService) {
+      return new TranslationRepository(localService, remoteService);
     }
   }
 }

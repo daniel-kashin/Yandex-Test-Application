@@ -56,7 +56,6 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
   @Override
   public void onStart() {
     super.onStart();
-    setListeners();
     mPresenter.attachView(getViewInterface());
   }
 
@@ -94,6 +93,4 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
   protected abstract int getLayoutRes();
 
   protected abstract void initializeView(View view);
-
-  protected abstract void setListeners();
 }

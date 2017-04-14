@@ -1,9 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.services.local;
-
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
-import android.database.sqlite.SQLiteOpenHelper;
+package com.danielkashin.yandextestapplication.data_layer.services.translation.local;
 
 import com.danielkashin.yandextestapplication.data_layer.database.LanguageContract;
 import com.danielkashin.yandextestapplication.data_layer.database.TranslationContract;
@@ -18,18 +13,16 @@ import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 
-import java.util.List;
 
+public class TranslationLocalService extends DatabaseService implements ITranslationLocalService {
 
-public class TranslateLocalService extends DatabaseService implements ITranslateLocalService {
-
-  public TranslateLocalService(StorIOSQLite sqLite) {
+  public TranslationLocalService(StorIOSQLite sqLite) {
     super(sqLite);
   }
 
-  // ------------------------------- ITranslateLocalService ---------------------------------------
+  // ------------------------------- ITranslationLocalService ---------------------------------------
 
-  //               ----------------------- languages --------------------------
+  //               -------------------- database languages -------------------
 
   @Override
   public PreparedGetObject<DatabaseLanguage> getLanguage(String language) {
@@ -60,7 +53,7 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
         .prepare();
   }
 
-  //               ---------------------- translations --------------------------
+  //               -------------------- database translations ------------------------
 
   @Override
   public PreparedGetObject<DatabaseTranslation> getLastTranslation() {
@@ -82,31 +75,28 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
   }
 
   @Override
-  public PreparedGetListOfObjects<DatabaseTranslation> getTranslations(int offset, int count) {
+  public PreparedGetListOfObjects<DatabaseTranslation> getTranslations(int offset,
+                                                                       int count,
+                                                                       boolean onlyFavourite,
+                                                                       String searchRequest) {
+    Query.CompleteBuilder queryBuider = Query.builder()
+        .table(TranslationContract.TABLE_NAME)
+        .orderBy(TranslationContract.COLUMN_NAME_ID + " DESC")
+        .limit(offset, count);
+
+    String searchQuery = TranslationContract.getTranslationSearchQuery(onlyFavourite, searchRequest);
+    if (searchQuery != null){
+      queryBuider = queryBuider.where(searchQuery);
+    }
+
     return getSQLite().get()
         .listOfObjects(DatabaseTranslation.class)
-        .withQuery(Query.builder()
-            .table(TranslationContract.TABLE_NAME)
-            .orderBy(TranslationContract.COLUMN_NAME_ID + " DESC")
-            .limit(offset, count)
-            .build())
+        .withQuery(queryBuider.build())
         .prepare();
   }
 
-  @Override
-  public PreparedGetListOfObjects<DatabaseTranslation> getFavoriteTranslations(int offset, int count) {
-    return getSQLite().get()
-        .listOfObjects(DatabaseTranslation.class)
-        .withQuery(Query.builder()
-            .table(TranslationContract.TABLE_NAME)
-            .where(TranslationContract.COLUMN_NAME_IS_FAVOURITE + " = \"" + 1 + "\"")
-            .orderBy(TranslationContract.COLUMN_NAME_ID + " DESC")
-            .limit(offset, count)
-            .build())
-        .prepare();
-  }
 
-//               ------------------- exceptions parsing --------------------------
+  //               ------------------- exceptions parsing --------------------------
 
   @Override
   public void tryToThrowExceptionBundle(PutResult putResult, boolean insertIntended) throws ExceptionBundle {
@@ -139,8 +129,8 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
     private Factory() {
     }
 
-    public static ITranslateLocalService create(StorIOSQLite sqLite) {
-      return new TranslateLocalService(sqLite);
+    public static ITranslationLocalService create(StorIOSQLite sqLite) {
+      return new TranslationLocalService(sqLite);
     }
 
   }

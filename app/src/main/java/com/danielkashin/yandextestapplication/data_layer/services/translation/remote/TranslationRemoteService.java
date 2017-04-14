@@ -1,6 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.services.remote;
-
-import android.util.Pair;
+package com.danielkashin.yandextestapplication.data_layer.services.translation.remote;
 
 import com.danielkashin.yandextestapplication.BuildConfig;
 import com.danielkashin.yandextestapplication.data_layer.constants.Endpoints;
@@ -8,7 +6,6 @@ import com.danielkashin.yandextestapplication.data_layer.entities.remote.Network
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.services.base.NetworkService;
 
-import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -20,19 +17,19 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 
 
-public class TranslateRemoteService extends NetworkService<ITranslateRemoteContract>
-    implements ITranslateRemoteService {
+public class TranslationRemoteService extends NetworkService<ITranslationRemoteContract>
+    implements ITranslationRemoteService {
 
-  private TranslateRemoteService(OkHttpClient okHttpClient) {
+  private TranslationRemoteService(OkHttpClient okHttpClient) {
     super(Endpoints.YANDEX_TRANSLATE_BASE_URL, okHttpClient);
   }
 
   @Override
-  protected ITranslateRemoteContract createService(Retrofit retrofit) {
-    return retrofit.create(ITranslateRemoteContract.class);
+  protected ITranslationRemoteContract createService(Retrofit retrofit) {
+    return retrofit.create(ITranslationRemoteContract.class);
   }
 
-  // -------------------------- ITranslateRemoteService methods ----------------------------
+  // -------------------------- ITranslationRemoteService methods ----------------------------
 
   @Override
   public Call<NetworkTranslation> translate(String text, String lang) {
@@ -75,8 +72,8 @@ public class TranslateRemoteService extends NetworkService<ITranslateRemoteContr
     private Factory() {
     }
 
-    public static ITranslateRemoteService create(OkHttpClient okHttpClient) {
-      return new TranslateRemoteService(okHttpClient);
+    public static ITranslationRemoteService create(OkHttpClient okHttpClient) {
+      return new TranslationRemoteService(okHttpClient);
     }
   }
 }

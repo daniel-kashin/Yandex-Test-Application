@@ -1,6 +1,5 @@
 package com.danielkashin.yandextestapplication.presentation_layer.view.history;
 
-
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,14 +7,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.danielkashin.yandextestapplication.R;
-import com.danielkashin.yandextestapplication.data_layer.services.local.ITranslateLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateRemoteService;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.TranslateRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.local.ITranslationLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.ITranslationRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.TranslationRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslateRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.TranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslationRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.TranslationRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetTranslationsUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsModel;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.TranslationsAdapter;
@@ -23,30 +24,31 @@ import com.danielkashin.yandextestapplication.presentation_layer.application.ITr
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.history.HistoryPresenter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.PresenterFragment;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
+import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.IHistoryPagerView;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
-public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistoryView>
-    implements IHistoryView {
 
-  private static final String KEY_ONLY_FAVORITE = HistoryFragment.class.toString() + "KEY_ONLY_FAVORITE";
-  private boolean mOnlyFavorite;
-  private RecyclerViewState mRecyclerViewState;
+public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistoryView>
+    implements IHistoryView, IHistoryPage {
+
+  private State mRestoredState;
 
   private ImageView mSearchImage;
   private EditText mSearchEdit;
+  private TextView mNoContentText;
   private RecyclerView mRecyclerView;
+  private RelativeLayout mSearchLayout;
 
 
   public static HistoryFragment getInstance(boolean onlyFavorite) {
     HistoryFragment fragment = new HistoryFragment();
 
-    Bundle arguments = new Bundle();
-    arguments.putBoolean(KEY_ONLY_FAVORITE, onlyFavorite);
-    fragment.setArguments(arguments);
+    fragment.setArguments(State.saveOnlyFavorite(onlyFavorite));
 
     return fragment;
   }
@@ -55,11 +57,18 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    if (initializeType(getArguments())) {
-      // state initialized
-    } else if (initializeType(savedInstanceState)) {
-      // state initialized
-    } else {
+    if (getParentFragment() == null || !(getParentFragment() instanceof IHistoryPagerView)) {
+      throw new IllegalStateException("Parent fragment must implement IHistoryPagerView");
+    }
+
+    mRestoredState = new State(savedInstanceState);
+
+    if (!mRestoredState.isTypeInitialized()) {
+      mRestoredState = new State(getArguments());
+    }
+
+    if (!mRestoredState.isTypeInitialized()) {
+      // we can`t know whether fragment is only favourite history or all history
       throw new IllegalStateException("Type of the HistoryFragment must be defined");
     }
 
@@ -69,49 +78,74 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   @Override
   public void onStart() {
     super.onStart();
-  }
 
-  @Override
-  public void onResume() {
-    super.onResume();
-
-    if (!getUserVisibleHint()) {
-      return;
-    }
-
-    getPresenter().initializeAdapter();
-  }
-
-  @Override
-  public void setUserVisibleHint(boolean visible)
-  {
-    super.setUserVisibleHint(visible);
-    if (visible && isResumed() && getUserVisibleHint()) {
-      onResume();
+    if (!mRestoredState.isAdapterInitialized()) {
+      getPresenter().initializeAdapter();
     }
   }
 
   @Override
   public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    saveType(outState);
+
+    State.saveToOutState(
+        outState,
+        mRestoredState.isOnlyFavorite(),
+        mSearchLayout.getVisibility() == View.VISIBLE,
+        mRecyclerView.getVisibility() == View.VISIBLE,
+        mNoContentText.getVisibility() == View.VISIBLE,
+        (ITranslationsModel) mRecyclerView.getAdapter());
+  }
+
+  // ------------------------------- IHistoryPage -------------------------------------------
+
+  @Override
+  public void onSelected() {
+    if (mRecyclerView.getAdapter() != null && mRecyclerView.getAdapter().getItemCount() > 0) {
+      ((IHistoryPagerView) getParentFragment()).showDeleteHistoryButton(this);
+    } else {
+      ((IHistoryPagerView) getParentFragment()).hideDeleteHistoryButton(this);
+    }
+  }
+
+  @Override
+  public void onDeleteButtonClicked() {
+
   }
 
   // ------------------------------ IHistoryView methods ------------------------------------------
 
   @Override
-  public void addTranslationsToAdapter(List<Translation> translations) {
-    ((ITranslationsModel)mRecyclerView.getAdapter()).addTranslations(translations);
+  public void showEmptyContentInterface() {
+    ((IHistoryPagerView) getParentFragment()).hideDeleteHistoryButton(this);
+    showEmptyContentViews();
   }
 
   @Override
-  public void clearAdapter() {
-    ((ITranslationsModel)mRecyclerView.getAdapter()).clear();
+  public void showNotEmptyContentInterface() {
+    ((IHistoryPagerView) getParentFragment()).showDeleteHistoryButton(this);
+    showNotEmptyContentViews();
+  }
+
+  @Override
+  public void showEmptySearchContentInterface() {
+    mRecyclerView.setVisibility(View.INVISIBLE);
+    mNoContentText.setText(getString(R.string.no_content_search_message));
+    mNoContentText.setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void addTranslationsToAdapter(List<Translation> translations, boolean clear) {
+    ((ITranslationsModel) mRecyclerView.getAdapter()).addTranslations(translations, clear);
   }
 
   @Override
   public int getTranslationCount() {
-    return  ((ITranslationsModel)mRecyclerView.getAdapter()).getSize();
+    if (mRecyclerView == null || mRecyclerView.getAdapter() == null) {
+      return 0;
+    } else {
+      return ((ITranslationsModel) mRecyclerView.getAdapter()).getSize();
+    }
   }
 
   // --------------------------- PresenterFragment methods ----------------------------------------
@@ -124,23 +158,23 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   @Override
   protected IPresenterFactory<HistoryPresenter, IHistoryView> getPresenterFactory() {
     // bind remote service
-    ITranslateRemoteService remoteService = TranslateRemoteService.Factory.create(
+    ITranslationRemoteService remoteService = TranslationRemoteService.Factory.create(
         new OkHttpClient.Builder()
             .readTimeout(10, TimeUnit.SECONDS)
             .connectTimeout(10, TimeUnit.SECONDS)
             .build());
 
     // bind local service
-    ITranslateLocalService localService = ((ITranslateLocalServiceProvider) getActivity()
+    ITranslationLocalService localService = ((ITranslateLocalServiceProvider) getActivity()
         .getApplication())
         .getTranslateLocalService();
 
     // bind repository
-    ITranslateRepository repository = TranslateRepository.Factory.create(localService, remoteService);
+    ITranslationRepository repository = TranslationRepository.Factory.create(localService, remoteService);
 
     // bind use case
     GetTranslationsUseCase useCase = new GetTranslationsUseCase(AsyncTask.THREAD_POOL_EXECUTOR,
-        repository, mOnlyFavorite);
+        repository, mRestoredState.isOnlyFavorite());
 
     return new HistoryPresenter.Factory(useCase);
   }
@@ -157,40 +191,155 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   protected void initializeView(View view) {
+    mSearchLayout = (RelativeLayout) view.findViewById(R.id.layout_search);
     mSearchImage = (ImageView) view.findViewById(R.id.image_search);
     mSearchEdit = (EditText) view.findViewById(R.id.edit_search);
-    mSearchEdit.setHint(mOnlyFavorite ? getString(R.string.hint_search_favorite_history) :
-        getString(R.string.hint_search_all_history));
     mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
     mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-    mRecyclerView.setAdapter(new TranslationsAdapter());
-  }
+    mNoContentText = (TextView) view.findViewById(R.id.text_no_content);
 
-  @Override
-  protected void setListeners() {
+    mSearchEdit.setHint(mRestoredState.isOnlyFavorite() ? getString(R.string.hint_search_favorite_history) :
+        getString(R.string.hint_search_all_history));
 
+    mRecyclerView.setAdapter(
+        mRestoredState.isAdapterInitialized()
+            ? (RecyclerView.Adapter) mRestoredState.getAdapter()
+            : new TranslationsAdapter());
+
+    mNoContentText.setText(mRestoredState.isOnlyFavorite() ? getString(R.string.no_content_favorites_message) :
+        getString(R.string.no_content_history_message));
+
+    if (mRestoredState.isViewVisibilityInitialized()) {
+      mSearchLayout.setVisibility(mRestoredState.isSearchLayoutVisible() ? View.VISIBLE : View.GONE);
+      mRecyclerView.setVisibility(mRestoredState.isRecyclerViewVisible() ? View.VISIBLE : View.GONE);
+      mNoContentText.setVisibility(mRestoredState.isNoContentTextVisible() ? View.VISIBLE : View.GONE);
+    }
   }
 
   // ---------------------------------- private methods -------------------------------------------
 
-  private boolean initializeType(Bundle bundle) {
-    if (bundle.containsKey(KEY_ONLY_FAVORITE)) {
-      mOnlyFavorite = bundle.getBoolean(KEY_ONLY_FAVORITE);
-      return true;
-    }
+  private void showEmptyContentViews() {
+    mSearchLayout.setVisibility(View.GONE);
 
-    return false;
+    mRecyclerView.setVisibility(View.INVISIBLE);
+
+    mNoContentText.setText(getString(mRestoredState.isOnlyFavorite() ? R.string.no_content_favorites_message
+        : R.string.no_content_history_message));
+    mNoContentText.setVisibility(View.VISIBLE);
   }
 
-  private void saveType(Bundle outState) {
-    outState.putBoolean(KEY_ONLY_FAVORITE, mOnlyFavorite);
+  private void showNotEmptyContentViews() {
+    mSearchLayout.setVisibility(View.VISIBLE);
+
+    mRecyclerView.setVisibility(View.VISIBLE);
+
+    mNoContentText.setVisibility(View.GONE);
   }
 
   // ----------------------------------- inner classes --------------------------------------------
 
-  private enum RecyclerViewState {
-    INITIALIZED_FROM_BUNDLE,
-    INITIALIZED_FROM_PRESENTER,
-    NOT_INITIALIZED
+  private static class State {
+    private static final String KEY_ONLY_FAVORITE = "KEY_ONLY_FAVORITE";
+    private static final String KEY_SEARCH_LAYOUT_VISIBLE = "KEY_SEARCH_LAYOUT_VISIBLE";
+    private static final String KEY_RECYCLER_VIEW_VISIBLE = "KEY_RECYCLER_VIEW_VISIBLE";
+    private static final String KEY_NO_CONTENT_TEXT_VISIBLE = "KEY_NO_CONTENT_TEXT_VISIBLE";
+
+    private boolean typeInitialized;
+    private boolean onlyFavorite;
+
+    private boolean adapterInitialized;
+    private ITranslationsModel adapter;
+
+    private boolean viewVisibilityInitialized;
+    private boolean searchLayoutVisible;
+    private boolean recyclerViewVisible;
+    private boolean noContentTextVisible;
+
+
+    public State(Bundle savedInstanceState) {
+      if (savedInstanceState == null) {
+        return;
+      }
+
+      // initialize type
+      if (savedInstanceState.containsKey(KEY_ONLY_FAVORITE)) {
+        onlyFavorite = savedInstanceState.getBoolean(KEY_ONLY_FAVORITE);
+        typeInitialized = true;
+      } else {
+        typeInitialized = false;
+        return;
+      }
+
+      // initialize adapter
+      try {
+        adapter = new TranslationsAdapter(savedInstanceState);
+        adapterInitialized = true;
+      } catch (IllegalStateException e) {
+        adapterInitialized = false;
+      }
+
+      // initialize view visibilities
+      if (savedInstanceState.containsKey(KEY_SEARCH_LAYOUT_VISIBLE)
+          && savedInstanceState.containsKey(KEY_RECYCLER_VIEW_VISIBLE)
+          && savedInstanceState.containsKey(KEY_NO_CONTENT_TEXT_VISIBLE)) {
+        viewVisibilityInitialized = true;
+        searchLayoutVisible = savedInstanceState.getBoolean(KEY_SEARCH_LAYOUT_VISIBLE);
+        recyclerViewVisible = savedInstanceState.getBoolean(KEY_SEARCH_LAYOUT_VISIBLE);
+        noContentTextVisible = savedInstanceState.getBoolean(KEY_NO_CONTENT_TEXT_VISIBLE);
+      }
+    }
+
+    public boolean isTypeInitialized() {
+      return typeInitialized;
+    }
+
+    public boolean isAdapterInitialized() {
+      return adapterInitialized;
+    }
+
+    public boolean isViewVisibilityInitialized(){
+      return viewVisibilityInitialized;
+    }
+
+    public boolean isOnlyFavorite() {
+      return onlyFavorite;
+    }
+
+    public ITranslationsModel getAdapter() {
+      return adapter;
+    }
+
+    public boolean isSearchLayoutVisible() {
+      return searchLayoutVisible;
+    }
+
+    public boolean isRecyclerViewVisible() {
+      return recyclerViewVisible;
+    }
+
+    public boolean isNoContentTextVisible() {
+      return noContentTextVisible;
+    }
+
+    public static void saveToOutState(Bundle outState,
+                                      boolean onlyFavorite,
+                                      boolean searchLayoutVisible,
+                                      boolean recyclerViewVisible,
+                                      boolean noContentTextVisible,
+                                      ITranslationsModel adapter) {
+      outState.putBoolean(KEY_ONLY_FAVORITE, onlyFavorite);
+      outState.putBoolean(KEY_SEARCH_LAYOUT_VISIBLE, searchLayoutVisible);
+      outState.putBoolean(KEY_RECYCLER_VIEW_VISIBLE, recyclerViewVisible);
+      outState.putBoolean(KEY_NO_CONTENT_TEXT_VISIBLE, noContentTextVisible);
+      adapter.onSaveInstanceState(outState);
+    }
+
+    public static Bundle saveOnlyFavorite(boolean onlyFavorite) {
+      Bundle bundle = new Bundle();
+      bundle.putBoolean(KEY_ONLY_FAVORITE, onlyFavorite);
+      return bundle;
+    }
+
   }
+
 }

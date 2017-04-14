@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslationRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import java.util.concurrent.Executor;
@@ -14,11 +14,11 @@ import java.util.concurrent.Executor;
 public class GetLastTranslationUseCase implements IUseCase {
 
   private final Executor executor;
-  private final ITranslateRepository repository;
+  private final ITranslationRepository repository;
   private RepositoryResponseAsyncTask<Translation> getLastTranslationAsyncTask;
 
 
-  public GetLastTranslationUseCase(Executor executor, ITranslateRepository repository) {
+  public GetLastTranslationUseCase(Executor executor, ITranslationRepository repository) {
     this.executor = executor;
     this.repository = repository;
   }
@@ -30,7 +30,6 @@ public class GetLastTranslationUseCase implements IUseCase {
       getLastTranslationAsyncTask.cancel(false);
     }
   }
-
 
   public void run(final Callbacks callbacks) {
     RepositoryResponseAsyncTask.PostExecuteListener<Translation> listener =

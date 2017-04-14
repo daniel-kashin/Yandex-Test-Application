@@ -23,7 +23,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:layout_toEndOf="@+id/toggle_favorite">
+        android:layout_toEndOf="@+id/toggle_favorite"
+        android:layout_toStartOf="@+id/text_language">
 
         <TextView
             android:id="@+id/text_original"
@@ -33,7 +34,6 @@
             android:layout_marginBottom="@dimen/it_transl_vertical_separation"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="ты хороший человек"
             android:textColor="@color/black"
             android:textSize="@dimen/it_transl_original_size"/>
 
@@ -44,14 +44,12 @@
             android:layout_below="@+id/text_original"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="you`re a good man"
             android:textColor="@color/light_grey"
             android:textSize="@dimen/it_transl_translated_size"/>
 
     </RelativeLayout>
 
     <TextView
-        android:text="ru-en"
         android:id="@+id/text_language"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

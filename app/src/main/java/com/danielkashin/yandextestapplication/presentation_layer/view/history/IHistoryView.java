@@ -7,9 +7,13 @@ import java.util.List;
 
 public interface IHistoryView extends IView {
 
-  void addTranslationsToAdapter(List<Translation> translations);
+  void addTranslationsToAdapter(List<Translation> translations, boolean clear);
 
-  void clearAdapter();
+  void showNotEmptyContentInterface();
+
+  void showEmptyContentInterface();
+
+  void showEmptySearchContentInterface();
 
   int getTranslationCount();
 

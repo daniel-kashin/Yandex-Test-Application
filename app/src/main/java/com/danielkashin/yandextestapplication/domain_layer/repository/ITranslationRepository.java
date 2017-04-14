@@ -6,7 +6,9 @@ import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import java.util.List;
 
 
-public interface ITranslateRepository {
+public interface ITranslationRepository {
+
+  // ------------------------------------ translations --------------------------------------------
 
   void saveTranslation(Translation translation) throws ExceptionBundle;
 
@@ -14,5 +16,11 @@ public interface ITranslateRepository {
 
   Translation getLastTranslation() throws ExceptionBundle;
 
-  List<Translation> getTranslations(int offset, int count, boolean onlyFavourite) throws ExceptionBundle;
+  List<Translation> getTranslations(int offset, int count, boolean onlyFavourite,
+                                    String searchRequest) throws ExceptionBundle;
+
+  // ------------------------------------- languages ----------------------------------------------
+
+  String getLanguage(String languageCode);
+
 }

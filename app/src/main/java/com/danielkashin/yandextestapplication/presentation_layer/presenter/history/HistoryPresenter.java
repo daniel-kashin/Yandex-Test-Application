@@ -1,6 +1,5 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.history;
 
-
 import android.support.annotation.NonNull;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
@@ -11,6 +10,7 @@ import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.
 import com.danielkashin.yandextestapplication.presentation_layer.view.history.IHistoryView;
 
 import java.util.List;
+
 
 public class HistoryPresenter extends Presenter<IHistoryView>
     implements GetTranslationsUseCase.Callbacks {
@@ -23,7 +23,7 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   private final GetTranslationsUseCase mGetTranslationsUseCase;
 
 
-  public HistoryPresenter(@NonNull GetTranslationsUseCase getTranslationsUseCase){
+  public HistoryPresenter(@NonNull GetTranslationsUseCase getTranslationsUseCase) {
     mGetTranslationsUseCase = getTranslationsUseCase;
   }
 
@@ -47,24 +47,39 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   // ----------------------------- GetTranslationUseCase callbacks -------------------------------
 
   @Override
-  public void onGetTranslationsSuccess(List<Translation> translations) {
-    if (getView() != null && translations.size() != 0){
-      mCurrentCount = getView().getTranslationCount();
-      getView().clearAdapter();
-      getView().addTranslationsToAdapter(translations);
+  public void onGetTranslationsSuccess(List<Translation> translations, final int offset,
+                                       final String searchRequest) {
+    if (getView() != null) {
+      getView().showNotEmptyContentInterface();
+      getView().addTranslationsToAdapter(translations, offset == 0);
     }
   }
 
   @Override
-  public void onGetTranslationsException(ExceptionBundle exceptionBundle) {
-
+  public void onGetTranslationsException(ExceptionBundle exceptionBundle, int offset,
+                                         final String searchRequest) {
+    switch (exceptionBundle.getReason()) {
+      case EMPTY_TRANSLATIONS:
+        if (offset == 0) {
+          if (searchRequest == null) {
+            if (getView() != null) getView().showEmptyContentInterface();
+          } else {
+            if (getView() != null) getView().showEmptySearchContentInterface();
+          }
+        }
+        break;
+    }
   }
 
   // ---------------------------------- public methods --------------------------------------------
 
-  public void initializeAdapter(){
-    mGetTranslationsUseCase.run(this, 0,
-        mCurrentCount > TRANSLATIONS_PER_UPLOAD ? mCurrentCount : TRANSLATIONS_PER_UPLOAD);
+  public void initializeAdapter() {
+    int translationCount = TRANSLATIONS_PER_UPLOAD;
+    if (getView() != null && getView().getTranslationCount() > translationCount) {
+      translationCount = getView().getTranslationCount();
+    }
+
+    mGetTranslationsUseCase.run(this, 0, translationCount, null);
   }
 
   // ------------------------------------- Inner classes -----------------------------------------
@@ -75,7 +90,7 @@ public class HistoryPresenter extends Presenter<IHistoryView>
     @NonNull
     private final GetTranslationsUseCase getTranslationsUseCase;
 
-    public Factory(@NonNull GetTranslationsUseCase getTranslationsUseCase){
+    public Factory(@NonNull GetTranslationsUseCase getTranslationsUseCase) {
       this.getTranslationsUseCase = getTranslationsUseCase;
     }
 

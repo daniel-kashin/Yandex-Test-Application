@@ -4,10 +4,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -16,13 +19,14 @@ import android.widget.TextView;
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
-import com.danielkashin.yandextestapplication.data_layer.services.local.ITranslateLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.ITranslateRemoteService;
-import com.danielkashin.yandextestapplication.data_layer.services.remote.TranslateRemoteService;
-import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslateRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.TranslateRepository;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.local.ITranslationLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.ITranslationRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.TranslationRemoteService;
+import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslationRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.TranslationRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.ITranslationKeeper;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.TranslatePresenter;
@@ -34,7 +38,7 @@ import okhttp3.OkHttpClient;
 
 
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
-    implements ITranslateView {
+    implements ITranslateView, ITranslationKeeper {
 
   private EditText mEditOriginal;
   private ImageView mImageClear;
@@ -69,15 +73,27 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   @Override
+  public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState){
+    return super.onCreateView(inflater, parent, savedInstanceState);
+  }
+
+  @Override
   public void onStart(){
     super.onStart();
 
+    setListeners();
+
     if (mState == State.NOT_INITIALIZED){
-      mState = State.iNITIALIZED_FROM_PRESENTER;
+      mState = State.INITIALIZED_FROM_PRESENTER;
       getPresenter().onDataWasNotRestored();
     } else {
       setTextWatcher();
     }
+  }
+
+  @Override
+  public void onSaveInstanceState(Bundle outState){
+    super.onSaveInstanceState(outState);
   }
 
   // ---------------------------------- ITranslateView methods ------------------------------------
@@ -174,19 +190,19 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   protected IPresenterFactory<TranslatePresenter, ITranslateView> getPresenterFactory() {
     // bind remote service
-    ITranslateRemoteService remoteService = TranslateRemoteService.Factory.create(
+    ITranslationRemoteService remoteService = TranslationRemoteService.Factory.create(
             new OkHttpClient.Builder()
             .readTimeout(10, TimeUnit.SECONDS)
             .connectTimeout(10, TimeUnit.SECONDS)
             .build());
 
     // bind local service
-    ITranslateLocalService localService = ((ITranslateLocalServiceProvider)getActivity()
+    ITranslationLocalService localService = ((ITranslateLocalServiceProvider)getActivity()
         .getApplication())
         .getTranslateLocalService();
 
     // bind repository
-    ITranslateRepository repository = TranslateRepository.Factory.create(localService, remoteService);
+    ITranslationRepository repository = TranslationRepository.Factory.create(localService, remoteService);
 
     // bind use cases
     TranslateUseCase translateUseCase = new TranslateUseCase(AsyncTask.THREAD_POOL_EXECUTOR, repository);
@@ -220,8 +236,10 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
   }
 
-  @Override
-  protected void setListeners() {
+
+  // ----------------------------------- private methods -----------------------------------------
+
+  private void setListeners() {
     mImageClear.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -230,13 +248,12 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     });
   }
 
-
   // ------------------------------------ inner classes -------------------------------------------
 
-  private static enum State {
+  private enum State {
     INITIALIZED_FROM_ARGUMENTS,
     INITIALIZED_FROM_BUNDLE,
-    iNITIALIZED_FROM_PRESENTER,
+    INITIALIZED_FROM_PRESENTER,
     NOT_INITIALIZED
   }
 

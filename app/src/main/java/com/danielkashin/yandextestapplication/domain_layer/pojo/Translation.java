@@ -1,7 +1,10 @@
 package com.danielkashin.yandextestapplication.domain_layer.pojo;
 
 
-public class Translation {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Translation implements Parcelable {
 
   private String originalText;
 
@@ -34,6 +37,20 @@ public class Translation {
 
   public Boolean ifFavorite(){
     return favorite;
+  }
+
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel parcel, int i) {
+    parcel.writeString(originalText);
+    parcel.writeString(translatedText);
+    parcel.writeString(language);
+    parcel.writeByte((byte)(favorite ? 0 : 1));
   }
 
 }

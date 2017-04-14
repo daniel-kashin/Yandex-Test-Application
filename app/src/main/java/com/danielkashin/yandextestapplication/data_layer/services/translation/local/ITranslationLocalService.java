@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.services.local;
+package com.danielkashin.yandextestapplication.data_layer.services.translation.local;
 
 
 import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseLanguage;
@@ -9,9 +9,7 @@ import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
 
-import java.util.List;
-
-public interface ITranslateLocalService {
+public interface ITranslationLocalService {
 
   // -------------------------------- languages ---------------------------------------------------
 
@@ -27,9 +25,10 @@ public interface ITranslateLocalService {
 
   PreparedPutObject<DatabaseTranslation> putTranslation(DatabaseTranslation translation);
 
-  PreparedGetListOfObjects<DatabaseTranslation> getTranslations(int offset, int count);
-
-  PreparedGetListOfObjects<DatabaseTranslation> getFavoriteTranslations(int offset, int count);
+  PreparedGetListOfObjects<DatabaseTranslation> getTranslations(int offset,
+                                                                int count,
+                                                                boolean onlyFavourite,
+                                                                String searchRequest);
 
   // ----------------------------- exception parsing ----------------------------------------------
 

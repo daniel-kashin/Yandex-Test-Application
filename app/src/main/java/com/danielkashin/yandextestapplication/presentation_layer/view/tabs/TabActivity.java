@@ -5,6 +5,7 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -12,6 +13,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.MainPagerAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.HistoryPagerFragment;
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
 
@@ -20,6 +22,7 @@ public class TabActivity extends AppCompatActivity {
 
   private final static String SELECTED_MENU_ITEM_ID = "selected_tab_id";
 
+  private ViewPager mViewPager;
   private BottomNavigationView mBottomNavigationView;
 
 
@@ -33,9 +36,11 @@ public class TabActivity extends AppCompatActivity {
       setSelectedMenuItem(savedInstanceState.getInt(SELECTED_MENU_ITEM_ID));
     }
 
+    /*
     if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
       tryToAttachFragment(TranslateFragment.class.getSimpleName());
     }
+    */
   }
 
   @Override
@@ -46,7 +51,10 @@ public class TabActivity extends AppCompatActivity {
   }
 
   private void initializeView() {
+    mViewPager = (ViewPager) findViewById(R.id.view_pager);
     mBottomNavigationView = (BottomNavigationView) findViewById(R.id.bottom_navigation);
+
+    mViewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
 
     mBottomNavigationView.setOnNavigationItemSelectedListener(
         new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -54,9 +62,11 @@ public class TabActivity extends AppCompatActivity {
           public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
               case R.id.menu_search:
-                return tryToAttachFragment(TranslateFragment.class.getSimpleName());
+                mViewPager.setCurrentItem(0, true);
+                return true;
               case R.id.menu_history:
-                return tryToAttachFragment(HistoryPagerFragment.class.getSimpleName());
+                mViewPager.setCurrentItem(1, true);
+                return true;
               case R.id.menu_settings:
                 return false;
               default:
@@ -66,6 +76,7 @@ public class TabActivity extends AppCompatActivity {
         });
   }
 
+  /*
   private boolean tryToAttachFragment(String newFragmentName) {
     FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
@@ -121,6 +132,7 @@ public class TabActivity extends AppCompatActivity {
       return null;
     }
   }
+*/
 
   private int getSelectedMenuItem() {
     Menu menu = mBottomNavigationView.getMenu();
