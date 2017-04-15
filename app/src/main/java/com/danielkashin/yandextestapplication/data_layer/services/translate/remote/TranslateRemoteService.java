@@ -1,8 +1,9 @@
-package com.danielkashin.yandextestapplication.data_layer.services.translation.remote;
+package com.danielkashin.yandextestapplication.data_layer.services.translate.remote;
 
 import com.danielkashin.yandextestapplication.BuildConfig;
 import com.danielkashin.yandextestapplication.data_layer.constants.Endpoints;
-import com.danielkashin.yandextestapplication.data_layer.entities.remote.NetworkTranslation;
+import com.danielkashin.yandextestapplication.data_layer.contracts.translate.remote.ITranslationRemoteContract;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.remote.NetworkTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.services.base.NetworkService;
 
@@ -17,10 +18,10 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 
 
-public class TranslationRemoteService extends NetworkService<ITranslationRemoteContract>
-    implements ITranslationRemoteService {
+public class TranslateRemoteService extends NetworkService<ITranslationRemoteContract>
+    implements ITranslateRemoteService {
 
-  private TranslationRemoteService(OkHttpClient okHttpClient) {
+  private TranslateRemoteService(OkHttpClient okHttpClient) {
     super(Endpoints.YANDEX_TRANSLATE_BASE_URL, okHttpClient);
   }
 
@@ -29,7 +30,7 @@ public class TranslationRemoteService extends NetworkService<ITranslationRemoteC
     return retrofit.create(ITranslationRemoteContract.class);
   }
 
-  // -------------------------- ITranslationRemoteService methods ----------------------------
+  // -------------------------- ITranslateRemoteService methods ----------------------------
 
   @Override
   public Call<NetworkTranslation> translate(String text, String lang) {
@@ -49,7 +50,7 @@ public class TranslationRemoteService extends NetworkService<ITranslationRemoteC
   @Override
   public void tryToThrowExceptionBundle(int networkResponseCode) throws ExceptionBundle {
     if (networkResponseCode == 200) {
-      // do nothing, everything is alright;
+      // do nothing, everything is alright
     } else if (networkResponseCode == 401) {
       throw new ExceptionBundle(ExceptionBundle.Reason.WRONG_KEY);
     } else if (networkResponseCode == 404) {
@@ -72,8 +73,8 @@ public class TranslationRemoteService extends NetworkService<ITranslationRemoteC
     private Factory() {
     }
 
-    public static ITranslationRemoteService create(OkHttpClient okHttpClient) {
-      return new TranslationRemoteService(okHttpClient);
+    public static ITranslateRemoteService create(OkHttpClient okHttpClient) {
+      return new TranslateRemoteService(okHttpClient);
     }
   }
 }

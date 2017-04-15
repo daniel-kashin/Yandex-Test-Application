@@ -1,29 +1,34 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
 import android.os.AsyncTask;
-import android.util.Pair;
+import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
+
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryVoidAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslationRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import java.util.concurrent.Executor;
 
 
 public class TranslateUseCase implements IUseCase {
 
+  @NonNull
   private final Executor executor;
-  private final ITranslationRepository repository;
+  @NonNull
+  private final ITranslateRepository repository;
+
   private RepositoryResponseAsyncTask<Translation> getTranslationAsyncTask;
 
 
-  public TranslateUseCase(Executor executor, ITranslationRepository repository) {
+  public TranslateUseCase(@NonNull Executor executor, @NonNull ITranslateRepository repository) {
     this.executor = executor;
     this.repository = repository;
   }
 
-  // ------------------------------------ IUseCase methods ----------------------------------------
+  // ---------------------------------------- IUseCase --------------------------------------------
 
   @Override
   public void cancel() {
@@ -62,7 +67,7 @@ public class TranslateUseCase implements IUseCase {
           @Override
           public void onException(ExceptionBundle exception) {
             // notify UI that error occured
-            uiCallbacks.onTranslateException(new Pair<String, ExceptionBundle>(originalText, exception));
+            uiCallbacks.onTranslateException(new Pair<>(exception, originalText));
           }
         };
 
@@ -96,7 +101,7 @@ public class TranslateUseCase implements IUseCase {
 
     void onTranslateSuccess(Translation result);
 
-    void onTranslateException(Pair<String, ExceptionBundle> pairOriginalTextException);
+    void onTranslateException(Pair<ExceptionBundle, String> result);
 
   }
 }

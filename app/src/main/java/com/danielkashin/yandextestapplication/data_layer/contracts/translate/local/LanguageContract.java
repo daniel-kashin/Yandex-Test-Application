@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.database;
+package com.danielkashin.yandextestapplication.data_layer.contracts.translate.local;
 
 
 public class LanguageContract {

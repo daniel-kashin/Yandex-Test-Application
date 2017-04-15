@@ -10,16 +10,23 @@ public class Translation implements Parcelable {
 
   private String translatedText;
 
-  private String language;
+  private String languageCodePair;
 
   private Boolean favorite;
 
 
-  public Translation(String originalText, String translatedText, String language, Boolean favorite) {
+  public Translation(String originalText, String translatedText, String languageCodePair, Boolean favorite) {
     this.originalText = originalText;
     this.translatedText = translatedText;
-    this.language = language;
+    this.languageCodePair = languageCodePair;
     this.favorite = favorite;
+  }
+
+  public Translation(Parcel source){
+    this.originalText = source.readString();
+    this.translatedText = source.readString();
+    this.languageCodePair = source.readString();
+    this.favorite = source.readByte() == 1;
   }
 
 
@@ -31,14 +38,17 @@ public class Translation implements Parcelable {
     return originalText;
   }
 
-  public String getLanguage(){
-    return language;
+  public String getLanguageCodePair(){
+    return languageCodePair;
   }
 
   public Boolean ifFavorite(){
     return favorite;
   }
 
+  public String[] getLanguageCodes(){
+    return languageCodePair.split("-");
+  }
 
   @Override
   public int describeContents() {
@@ -49,8 +59,20 @@ public class Translation implements Parcelable {
   public void writeToParcel(Parcel parcel, int i) {
     parcel.writeString(originalText);
     parcel.writeString(translatedText);
-    parcel.writeString(language);
-    parcel.writeByte((byte)(favorite ? 0 : 1));
+    parcel.writeString(languageCodePair);
+    parcel.writeByte((byte)(favorite ? 1 : 0));
   }
+
+  public static final Parcelable.Creator<Translation> CREATOR = new Parcelable.Creator<Translation>(){
+    @Override
+    public Translation createFromParcel(Parcel parcel) {
+      return new Translation(parcel);
+    }
+
+    @Override
+    public Translation[] newArray(int i) {
+      return new Translation[i];
+    }
+  };
 
 }

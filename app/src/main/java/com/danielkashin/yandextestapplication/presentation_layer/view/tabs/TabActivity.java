@@ -2,20 +2,13 @@ package com.danielkashin.yandextestapplication.presentation_layer.view.tabs;
 
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
-
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.MainPagerAdapter;
-import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.HistoryPagerFragment;
-import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
 
 
 public class TabActivity extends AppCompatActivity {
@@ -35,12 +28,6 @@ public class TabActivity extends AppCompatActivity {
     if (savedInstanceState != null) {
       setSelectedMenuItem(savedInstanceState.getInt(SELECTED_MENU_ITEM_ID));
     }
-
-    /*
-    if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
-      tryToAttachFragment(TranslateFragment.class.getSimpleName());
-    }
-    */
   }
 
   @Override
@@ -76,64 +63,6 @@ public class TabActivity extends AppCompatActivity {
         });
   }
 
-  /*
-  private boolean tryToAttachFragment(String newFragmentName) {
-    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-    Fragment topFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-    if (topFragment != null) {
-      if (topFragment.getClass().getSimpleName().equals(newFragmentName)) {
-        // top fragment is the same class with the fragment we want to add
-        transaction.commit();
-        return false;
-      } else {
-        // top fragment is found but has the different class from the fragment we want to add
-
-        // detach top fragment so we can restore its state later
-        transaction.detach(topFragment);
-
-        // try to attach existing fragment or create new in case of failure
-        Fragment savedState = getSupportFragmentManager().findFragmentByTag(newFragmentName);
-        if (savedState != null) {
-          transaction.attach(savedState);
-        } else {
-          transaction.add(
-              R.id.fragment_container,
-              getFragmentByFragmentName(newFragmentName),
-              newFragmentName
-          );
-        }
-
-        // commit changes
-        transaction.commit();
-        getSupportFragmentManager().executePendingTransactions();
-        return true;
-      }
-    } else {
-      // fragmentManager is empty -- just add fragment to the top
-      Fragment newFragment = getFragmentByFragmentName(newFragmentName);
-      transaction.add(R.id.fragment_container, newFragment, newFragmentName)
-          .commit();
-
-      getSupportFragmentManager().executePendingTransactions();
-      return true;
-    }
-  }
-
-  private Fragment getFragmentByFragmentName(String fragmentName) {
-    String translate = TranslateFragment.class.getSimpleName();
-    String historyPager = HistoryPagerFragment.class.getSimpleName();
-
-    if (fragmentName.equals(translate)) {
-      return TranslateFragment.getInstance();
-    } else if (fragmentName.equals(historyPager)) {
-      return HistoryPagerFragment.getInstance();
-    } else {
-      return null;
-    }
-  }
-*/
-
   private int getSelectedMenuItem() {
     Menu menu = mBottomNavigationView.getMenu();
     for (int i = 0; i < menu.size(); ++i) {
@@ -152,6 +81,5 @@ public class TabActivity extends AppCompatActivity {
 
     menu.getItem(position).setChecked(true);
   }
-
 
 }

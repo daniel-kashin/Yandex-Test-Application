@@ -32,7 +32,6 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
     Loader loader = getLoaderManager().getLoader(getFragmentId());
     if (loader != null) {
-      int i = loader.hashCode();
       mPresenter = ((PresenterLoader<P, V>) loader).getPresenter();
     }
 

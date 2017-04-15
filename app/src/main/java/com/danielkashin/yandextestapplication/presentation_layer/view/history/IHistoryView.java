@@ -15,6 +15,7 @@ public interface IHistoryView extends IView {
 
   void showEmptySearchContentInterface();
 
-  int getTranslationCount();
+  int getTranslationAdapterCount();
 
+  void clearTranslationAdapter();
 }

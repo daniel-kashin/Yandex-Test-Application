@@ -7,6 +7,10 @@ public interface IHistoryAdapter {
 
   void onDeleteButtonClicked();
 
+  void onDataChanged(IHistoryPage source);
+
+  void onDataChanged();
+
   boolean equalsCurrent(IHistoryPage page);
 
 }

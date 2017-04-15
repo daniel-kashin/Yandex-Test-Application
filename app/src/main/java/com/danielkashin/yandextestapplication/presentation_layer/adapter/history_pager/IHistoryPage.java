@@ -3,6 +3,10 @@ package com.danielkashin.yandextestapplication.presentation_layer.adapter.histor
 
 public interface IHistoryPage {
 
+  void onDataChanged();
+
+  void onUnselected();
+
   void onSelected();
 
   void onDeleteButtonClicked();

@@ -1,8 +1,8 @@
-package com.danielkashin.yandextestapplication.data_layer.entities.local;
+package com.danielkashin.yandextestapplication.data_layer.entities.translate.local;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import com.danielkashin.yandextestapplication.data_layer.database.TranslationContract;
+import com.danielkashin.yandextestapplication.data_layer.contracts.translate.local.TranslationContract;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 

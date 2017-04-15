@@ -71,11 +71,17 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistor
 
   @Override
   public void onPageSelected(int position) {
-    if (mPages != null && position < mPages.size()) {
-      WeakReference<IHistoryPage> reference = mPages.get(position);
-      if (reference != null && reference.get() != null) {
-        mCurrentPage = position;
-        reference.get().onSelected();
+    if (mPages != null) {
+      for (int i = 0; i < mPages.size(); ++i) {
+        WeakReference<IHistoryPage> reference = mPages.get(i);
+        if (reference != null && reference.get() != null) {
+          if (i == position) {
+            mCurrentPage = position;
+            reference.get().onSelected();
+          } else {
+            reference.get().onUnselected();
+          }
+        }
       }
     }
   }
@@ -91,8 +97,28 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistor
   }
 
   @Override
+  public void onDataChanged(IHistoryPage source) {
+    if (mPages == null || mPages.size() == 0){
+      return;
+    }
+
+    for (int i = 0; i < mPages.size(); ++i){
+      WeakReference<IHistoryPage> reference = mPages.get(i);
+      if (reference != null && reference.get() != source){
+        reference.get().onDataChanged();
+      }
+    }
+  }
+
+  @Override
+  public void onDataChanged() {
+    onDataChanged(null);
+  }
+
+  @Override
   public boolean equalsCurrent(IHistoryPage page) {
-    if (mPages == null || mCurrentPage >= mPages.size() || mPages.get(mCurrentPage) == null) {
+    if (mPages == null || mCurrentPage >= mPages.size()
+        || mPages.get(mCurrentPage) == null || page == null) {
       return false;
     }
 

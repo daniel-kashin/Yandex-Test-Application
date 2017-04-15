@@ -1,15 +1,14 @@
 package com.danielkashin.yandextestapplication.data_layer.database;
 
 import android.content.Context;
-
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseLanguage;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseLanguageStorIOSQLiteDeleteResolver;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseLanguageStorIOSQLiteGetResolver;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseLanguageStorIOSQLitePutResolver;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseTranslation;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseTranslationStorIOSQLiteDeleteResolver;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseTranslationStorIOSQLiteGetResolver;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseTranslationStorIOSQLitePutResolver;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguage;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguageStorIOSQLiteDeleteResolver;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguageStorIOSQLiteGetResolver;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguageStorIOSQLitePutResolver;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslation;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslationStorIOSQLiteDeleteResolver;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslationStorIOSQLiteGetResolver;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslationStorIOSQLitePutResolver;
 import com.pushtorefresh.storio.sqlite.SQLiteTypeMapping;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.impl.DefaultStorIOSQLite;

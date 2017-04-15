@@ -1,11 +1,11 @@
 package com.danielkashin.yandextestapplication.data_layer.database;
 
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
 import com.danielkashin.yandextestapplication.BuildConfig;
+import com.danielkashin.yandextestapplication.data_layer.contracts.translate.local.LanguageContract;
+import com.danielkashin.yandextestapplication.data_layer.contracts.translate.local.TranslationContract;
 
 
 public class DatabaseOpenHelper extends SQLiteOpenHelper {

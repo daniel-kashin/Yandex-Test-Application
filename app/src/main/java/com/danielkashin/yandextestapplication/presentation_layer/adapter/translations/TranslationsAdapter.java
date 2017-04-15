@@ -2,7 +2,6 @@ package com.danielkashin.yandextestapplication.presentation_layer.adapter.transl
 
 
 import android.os.Bundle;
-import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -21,6 +20,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     implements ITranslationsModel {
 
   private static final String KEY_TRANSLATIONS = "KEY_TRANSLATIONS";
+  private static ITranslationsCallbacks mCallbacks;
   private ArrayList<Translation> mTranslations;
 
 
@@ -35,6 +35,16 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   // ------------------------------ ITranslationsModel methods ------------------------------------
 
   @Override
+  public void addCallbacks(ITranslationsCallbacks callbacks) {
+    mCallbacks = callbacks;
+  }
+
+  @Override
+  public void removeCallbacks() {
+    mCallbacks = null;
+  }
+
+  @Override
   public void clear() {
     mTranslations.clear();
     notifyDataSetChanged();
@@ -42,7 +52,10 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
 
   @Override
   public void addTranslations(List<Translation> translations, boolean clear) {
-    if (clear) mTranslations.clear();
+    if (clear) {
+      mTranslations.clear();
+      notifyDataSetChanged();
+    }
 
     for (Translation translation : translations) {
       mTranslations.add(translation);
@@ -66,13 +79,43 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   }
 
   @Override
-  public void onBindViewHolder(TranslationViewHolder holder, int position) {
+  public void onBindViewHolder(final TranslationViewHolder holder, final int position) {
     Translation translation = mTranslations.get(holder.getAdapterPosition());
 
     holder.setOriginalText(translation.getOriginalText());
     holder.setTranslatedText(translation.getTranslatedText());
     holder.setIsFavourite(translation.ifFavorite());
-    holder.setLanguage(translation.getLanguage());
+    holder.setLanguage(translation.getLanguageCodePair());
+
+    holder.setOnFavoriteToggleListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        if (mCallbacks != null) {
+          mCallbacks.onFavoriteToggleClicked(holder.getAdapterPosition());
+        }
+      }
+    });
+
+    holder.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        if (mCallbacks != null) {
+         mCallbacks.onItemClicked(holder.getAdapterPosition());
+        }
+      }
+    });
+
+    holder.setOnLongClickListener(new View.OnLongClickListener() {
+      @Override
+      public boolean onLongClick(View view) {
+        if (mCallbacks != null) {
+          mCallbacks.onLongItemClicked(holder.getAdapterPosition());
+          return true;
+        } else {
+          return false;
+        }
+      }
+    });
   }
 
   @Override
@@ -86,19 +129,19 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   }
 
   private ArrayList<Translation> restoreTranslations(Bundle savedInstanceState) {
-    if (savedInstanceState == null || !savedInstanceState.containsKey(KEY_TRANSLATIONS)){
+    if (savedInstanceState == null || !savedInstanceState.containsKey(KEY_TRANSLATIONS)) {
       throw new IllegalStateException("Bundle must contain the needed field");
     }
 
     ArrayList<Parcelable> parcelableArrayList = savedInstanceState.getParcelableArrayList(KEY_TRANSLATIONS);
 
-    if (parcelableArrayList == null){
+    if (parcelableArrayList == null) {
       throw new IllegalStateException("Field in bundle cannot be null");
     }
 
     ArrayList<Translation> result = new ArrayList<>();
-    for (Parcelable parcelable : parcelableArrayList){
-      result.add((Translation)parcelable);
+    for (Parcelable parcelable : parcelableArrayList) {
+      result.add((Translation) parcelable);
     }
     return result;
   }
@@ -107,37 +150,49 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
 
   static class TranslationViewHolder extends RecyclerView.ViewHolder {
 
+    private final View rootView;
     private final ToggleButton favoriteToggle;
     private final TextView originalText;
     private final TextView translatedText;
     private final TextView language;
 
 
-    private TranslationViewHolder(View view) {
+    public TranslationViewHolder(View view) {
       super(view);
+      rootView = view;
       favoriteToggle = (ToggleButton) view.findViewById(R.id.toggle_favorite);
       originalText = (TextView) view.findViewById(R.id.text_original);
       translatedText = (TextView) view.findViewById(R.id.text_translated);
       language = (TextView) view.findViewById(R.id.text_language);
     }
 
-    private void setIsFavourite(boolean isFavourite) {
+    public void setIsFavourite(boolean isFavourite) {
       favoriteToggle.setChecked(isFavourite);
     }
 
-    private void setOriginalText(String text) {
+    public void setOriginalText(String text) {
       originalText.setText(text);
     }
 
-    private void setTranslatedText(String text) {
+    public void setTranslatedText(String text) {
       translatedText.setText(text);
     }
 
-    private void setLanguage(String text) {
+    public void setLanguage(String text) {
       language.setText(text);
     }
 
+    public void setOnFavoriteToggleListener(View.OnClickListener listener) {
+      favoriteToggle.setOnClickListener(listener);
+    }
 
+    public void setOnClickListener(View.OnClickListener listener) {
+      rootView.setOnClickListener(listener);
+    }
+
+    public void setOnLongClickListener(View.OnLongClickListener listener) {
+      rootView.setOnLongClickListener(listener);
+    }
   }
 
 }

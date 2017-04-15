@@ -14,4 +14,9 @@ public interface ITranslationsModel {
   void clear();
 
   int getSize();
+
+  void addCallbacks(ITranslationsCallbacks callbacks);
+
+  void removeCallbacks();
+
 }

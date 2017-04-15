@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.entities.remote;
+package com.danielkashin.yandextestapplication.data_layer.entities.translate.remote;
 
 
 import com.google.gson.annotations.Expose;

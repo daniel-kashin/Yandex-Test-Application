@@ -21,7 +21,7 @@
            android:gravity="center_vertical">
 
            <TextView
-               android:id="@+id/text_first_language"
+               android:id="@+id/text_original_language"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:layout_toStartOf="@+id/image_change_languages"
@@ -40,7 +40,7 @@
                android:layout_centerHorizontal="true"/>
 
            <TextView
-               android:id="@+id/text_second_language"
+               android:id="@+id/text_translated_language"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:layout_toEndOf="@id/image_change_languages"

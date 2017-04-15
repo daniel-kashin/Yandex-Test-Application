@@ -15,9 +15,108 @@
     <string name="no_content_favorites_message">В понравившихся пока ничего нет</string>
     <string name="no_content_search_message">Ничего не найдено</string>
     <string name="search_image_description">Поиск</string>
+    <string name="text_copied">Текст скопирован</string>
 
     <string-array name="view_pager_labels">
         <item>История</item>
         <item>Избранное</item>
     </string-array>
+
+    <string-array name="supported_languages_texts">
+        <item>Африкаанс</item>
+        <item>Амхарский</item>
+        <item>Арабский</item>
+        <item>Азербайджанский</item>
+        <item>Башкирский</item>
+        <item>Белорусский</item>
+        <item>Болгарский</item>
+        <item>Бенгальский</item>
+        <item>Боснийский</item>
+        <item>Каталанский</item>
+        <item>Себуанский</item>
+        <item>Чешский</item>
+        <item>Валлийский</item>
+        <item>Датский</item>
+        <item>Немецкий</item>
+        <item>Греческий</item>
+        <item>Английский</item>
+        <item>Эсперанто</item>
+        <item>Испанский</item>
+        <item>Эстонский</item>
+        <item>Баскский</item>
+        <item>Персидский</item>
+        <item>Финский</item>
+        <item>Французский</item>
+        <item>Ирландский</item>
+        <item>Шотландский(гэльский)</item>
+        <item>Галисийский</item>
+        <item>Гуджарати</item>
+        <item>Иврит</item>
+        <item>Хинди</item>
+        <item>Хорватский</item>
+        <item>Гаитянский</item>
+        <item>Венгерский</item>
+        <item>Армянский</item>
+        <item>Индонезийский</item>
+        <item>Исландский</item>
+        <item>Итальянский</item>
+        <item>Японский</item>
+        <item>Яванский</item>
+        <item>Грузинский</item>
+        <item>Казахский</item>
+        <item>Кхмерский</item>
+        <item>Каннада</item>
+        <item>Корейский</item>
+        <item>Киргизский</item>
+        <item>Латынь</item>
+        <item>Люксембургский</item>
+        <item>Лаосский</item>
+        <item>Литовский</item>
+        <item>Латышский</item>
+        <item>Малагасийский</item>
+        <item>Марийский</item>
+        <item>Маори</item>
+        <item>Македонский</item>
+        <item>Малаялам</item>
+        <item>Монгольский</item>
+        <item>Маратхи</item>
+        <item>Горномарийский</item>
+        <item>Малайский</item>
+        <item>Мальтийский</item>
+        <item>Бирманский</item>
+        <item>Непальский</item>
+        <item>Голландский</item>
+        <item>Норвежский</item>
+        <item>Панджаби</item>
+        <item>Папьяменто</item>
+        <item>Польский</item>
+        <item>Португальский</item>
+        <item>Румынский</item>
+        <item>Русский</item>
+        <item>Сингальский</item>
+        <item>Словацкий</item>
+        <item>Словенский</item>
+        <item>Албанский</item>
+        <item>Сербский</item>
+        <item>Сунданский</item>
+        <item>Шведский</item>
+        <item>Суахили</item>
+        <item>Тамильский</item>
+        <item>Телугу</item>
+        <item>Таджикский</item>
+        <item>Тайский</item>
+        <item>Тагальский</item>
+        <item>Турецкий</item>
+        <item>Татарский</item>
+        <item>Удмуртский</item>
+        <item>Украинский</item>
+        <item>Урду</item>
+        <item>Узбекский</item>
+        <item>Вьетнамский</item>
+        <item>Коса</item>
+        <item>Идиш</item>
+        <item>Китайский</item>
+    </string-array>
+
+
 </resources>

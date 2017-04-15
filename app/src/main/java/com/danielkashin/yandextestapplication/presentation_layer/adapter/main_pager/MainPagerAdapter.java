@@ -4,13 +4,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.view.ViewGroup;
-
-import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.HistoryPagerFragment;
-import com.danielkashin.yandextestapplication.presentation_layer.view.translate.ITranslateView;
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
-
-import java.lang.ref.WeakReference;
 
 
 public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPagerAdapter {

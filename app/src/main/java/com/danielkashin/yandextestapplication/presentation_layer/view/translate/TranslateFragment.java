@@ -1,10 +1,12 @@
 package com.danielkashin.yandextestapplication.presentation_layer.view.translate;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -15,15 +17,20 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
-import com.danielkashin.yandextestapplication.data_layer.services.translation.local.ITranslationLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.ITranslationRemoteService;
-import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.TranslationRemoteService;
-import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslationRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.TranslationRepository;
+import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.SupportedLanguagesLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslateLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslateRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslateRemoteService;
+import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.ISupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.SupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.ITranslationKeeper;
@@ -40,16 +47,20 @@ import okhttp3.OkHttpClient;
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
     implements ITranslateView, ITranslationKeeper {
 
-  private EditText mEditOriginal;
-  private ImageView mImageClear;
-  private TextView mTextTranslated;
-  private RelativeLayout mProgressBarLayout;
+  private TextView mOriginalLanguageText;
+  private TextView mTranslatedLanguageText;
+  private ImageView mChangeLanguagesImage;
+  private EditText mOriginalTextEdit;
+  private ImageView mClearImage;
   private RelativeLayout mTranslationLayout;
+  private TextView mTranslatedText;
+  private RelativeLayout mProgressBarLayout;
   private RelativeLayout mNoInternetLayout;
   private TextWatcher mTextWatcher;
+
   private State mState;
 
-  // ---------------------------------- getInstance methods ---------------------------------------
+  // ----------------------------------- getInstance ----------------------------------------------
 
   public static TranslateFragment getInstance() {
     TranslateFragment translateFragment = new TranslateFragment();
@@ -60,12 +71,12 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   // ------------------------------------ lifecycle -----------------------------------------------
 
   @Override
-  public void onCreate(Bundle savedInstanceState){
+  public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    if (getArguments() != null){
+    if (getArguments() != null) {
       mState = State.INITIALIZED_FROM_ARGUMENTS;
-    } else if (savedInstanceState != null){
+    } else if (savedInstanceState != null) {
       mState = State.INITIALIZED_FROM_BUNDLE;
     } else {
       mState = State.NOT_INITIALIZED;
@@ -73,30 +84,30 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState){
+  public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
     return super.onCreateView(inflater, parent, savedInstanceState);
   }
 
   @Override
-  public void onStart(){
+  public void onStart() {
     super.onStart();
 
     setListeners();
 
-    if (mState == State.NOT_INITIALIZED){
+    if (mState == State.NOT_INITIALIZED) {
       mState = State.INITIALIZED_FROM_PRESENTER;
-      getPresenter().onDataWasNotRestored();
+      getPresenter().onFirstStart();
     } else {
       setTextWatcher();
     }
   }
 
   @Override
-  public void onSaveInstanceState(Bundle outState){
+  public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
   }
 
-  // ---------------------------------- ITranslateView methods ------------------------------------
+  // ------------------------------------ ITranslateView  -----------------------------------------
 
   @Override
   public void setTextWatcher() {
@@ -106,7 +117,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       Runnable workRunnable;
 
       @Override
-      public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+      public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+      }
 
       @Override
       public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -117,7 +129,9 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       public void afterTextChanged(final Editable editable) {
         if (editable.toString().replace(" ", "").isEmpty()) {
           getPresenter().onInputTextClear();
+          mClearImage.setVisibility(View.INVISIBLE);
         } else {
+          mClearImage.setVisibility(View.VISIBLE);
           workRunnable = new Runnable() {
             @Override
             public void run() {
@@ -129,13 +143,14 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       }
     };
 
-    mEditOriginal.addTextChangedListener(mTextWatcher);
+    mOriginalTextEdit.addTextChangedListener(mTextWatcher);
   }
 
   @Override
   public void removeTextWatcher() {
-    mEditOriginal.removeTextChangedListener(mTextWatcher);
+    mOriginalTextEdit.removeTextChangedListener(mTextWatcher);
   }
+
 
   @Override
   public void hideNoInternet() {
@@ -146,6 +161,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void showNoInternet() {
     mNoInternetLayout.setVisibility(View.VISIBLE);
   }
+
 
   @Override
   public void showProgressBar() {
@@ -158,13 +174,38 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   @Override
+  public void showImageClear() {
+    mClearImage.setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void hideImageClear() {
+    mClearImage.setVisibility(View.INVISIBLE);
+  }
+
+  @Override
+  public void setOriginalLanguage(String originalLanguage) {
+    mOriginalLanguageText.setText(originalLanguage);
+  }
+
+  @Override
+  public void setTranslatedLanguage(String translatedLanguage) {
+    mTranslatedLanguageText.setText(translatedLanguage);
+  }
+
+  @Override
   public void setInputText(String text) {
-    mEditOriginal.setText(text);
+    mOriginalTextEdit.setText(text);
   }
 
   @Override
   public void setTranslatedText(String text) {
-    mTextTranslated.setText(text);
+    mTranslatedText.setText(text);
+  }
+
+  @Override
+  public String getTranslatedText() {
+    return mTranslatedText.getText().toString();
   }
 
   @Override
@@ -180,7 +221,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     return getResources().getString(id);
   }
 
-  // -------------------------------- PresenterFragment methods -----------------------------------
+  // ----------------------------------- PresenterFragment  ---------------------------------------
 
   @Override
   protected ITranslateView getViewInterface() {
@@ -189,30 +230,48 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   protected IPresenterFactory<TranslatePresenter, ITranslateView> getPresenterFactory() {
-    // bind remote service
-    ITranslationRemoteService remoteService = TranslationRemoteService.Factory.create(
-            new OkHttpClient.Builder()
-            .readTimeout(10, TimeUnit.SECONDS)
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .build());
+    // bind services
+    OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        .readTimeout(10, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .build();
+    ITranslateRemoteService translateRemoteService = TranslateRemoteService.Factory
+        .create(okHttpClient);
 
-    // bind local service
-    ITranslationLocalService localService = ((ITranslateLocalServiceProvider)getActivity()
+    ITranslateLocalService translateLocalService = ((ITranslateLocalServiceProvider) getActivity()
         .getApplication())
         .getTranslateLocalService();
 
-    // bind repository
-    ITranslationRepository repository = TranslationRepository.Factory.create(localService, remoteService);
+    ISupportedLanguagesLocalService supportedLanguagesLocalService =
+        SupportedLanguagesLocalService.Factory
+            .create(getContext());
+
+
+    // bind repositories
+    ITranslateRepository translateRepository = TranslateRepository.Factory
+        .create(translateLocalService, translateRemoteService);
+
+    ISupportedLanguagesRepository supportedLanguagesRepository =
+        SupportedLanguagesRepository.Factory
+            .create(supportedLanguagesLocalService);
+
 
     // bind use cases
-    TranslateUseCase translateUseCase = new TranslateUseCase(AsyncTask.THREAD_POOL_EXECUTOR, repository);
+    TranslateUseCase translateUseCase = new TranslateUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        translateRepository);
 
-    GetLastTranslationUseCase getLastTranslationUseCase =
-        new GetLastTranslationUseCase(AsyncTask.THREAD_POOL_EXECUTOR, repository);
+    GetLastTranslationUseCase getLastTranslationUseCase = new GetLastTranslationUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        translateRepository,
+        supportedLanguagesRepository);
 
-    // bind networkmanager
+
+    // bind network manager
     INetworkManager networkManager = NetworkManager.Factory.create(getContext());
 
+
+    // return presenter with dependencies
     return new TranslatePresenter.Factory(translateUseCase, getLastTranslationUseCase, networkManager);
   }
 
@@ -228,22 +287,42 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   protected void initializeView(View view) {
-    mEditOriginal = (EditText) view.findViewById(R.id.edit_original);
-    mImageClear = (ImageView) view.findViewById(R.id.image_clear);
-    mTextTranslated = (TextView) view.findViewById(R.id.text_translated);
-    mProgressBarLayout = (RelativeLayout) view.findViewById(R.id.layout_progress_bar);
+    mOriginalLanguageText = (TextView) view.findViewById(R.id.text_original_language);
+    mTranslatedLanguageText = (TextView) view.findViewById(R.id.text_translated_language);
+    mChangeLanguagesImage = (ImageView) view.findViewById(R.id.image_change_languages);
+    mOriginalTextEdit = (EditText) view.findViewById(R.id.edit_original);
+    mClearImage = (ImageView) view.findViewById(R.id.image_clear);
     mTranslationLayout = (RelativeLayout) view.findViewById(R.id.layout_translation);
+    mTranslatedText = (TextView) view.findViewById(R.id.text_translated);
+    mProgressBarLayout = (RelativeLayout) view.findViewById(R.id.layout_progress_bar);
     mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
   }
 
-
-  // ----------------------------------- private methods -----------------------------------------
+  // --------------------------------------- private ----------------------------------------------
 
   private void setListeners() {
-    mImageClear.setOnClickListener(new View.OnClickListener() {
+    mClearImage.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        mEditOriginal.setText("");
+        mOriginalTextEdit.setText("");
+      }
+    });
+
+    mChangeLanguagesImage.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        getPresenter().onChangeButtonsImageClicked();
+      }
+    });
+
+    mTranslatedText.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        ClipboardManager manager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (manager!= null) {
+          manager.setPrimaryClip(ClipData.newPlainText("", mTranslatedText.getText().toString()));
+          Toast.makeText(getContext(), getContext().getString(R.string.text_copied), Toast.LENGTH_SHORT).show();
+        }
       }
     });
   }

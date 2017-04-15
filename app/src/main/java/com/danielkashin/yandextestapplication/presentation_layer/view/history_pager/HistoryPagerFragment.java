@@ -67,7 +67,19 @@ public class HistoryPagerFragment extends Fragment implements IHistoryPagerView,
     }
   }
 
-  // -------------------------------- private methods ---------------------------------------------
+  // ------------------------------ IDatabaseChangeReceiver ---------------------------------------
+
+  @Override
+  public void onDataChanged(IHistoryPage source) {
+    ((IHistoryAdapter)mViewPager.getAdapter()).onDataChanged(source);
+  }
+
+  @Override
+  public void onDataChanged() {
+    ((IHistoryAdapter)mViewPager.getAdapter()).onDataChanged();
+  }
+
+  // ---------------------------------- private methods -------------------------------------------
 
   private void initializeView(View view, Bundle savedInstanceState) {
     mViewPager = (ViewPager) view.findViewById(R.id.view_pager);

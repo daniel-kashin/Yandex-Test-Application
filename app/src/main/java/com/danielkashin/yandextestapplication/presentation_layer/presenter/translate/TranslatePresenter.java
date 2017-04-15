@@ -1,13 +1,14 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.translate;
 
 import android.support.annotation.NonNull;
-import android.util.Pair;
+import android.support.v4.util.Pair;
 
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkStatus;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkSubscriber;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
@@ -19,12 +20,6 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.translate.
 public class TranslatePresenter extends Presenter<ITranslateView>
     implements TranslateUseCase.Callbacks, GetLastTranslationUseCase.Callbacks {
 
-  private String mTextCache;
-  private String mLangFrom;
-  private String mLangTo;
-
-  private NetworkSubscriber mTranslationOnInternetAvailable;
-
   @NonNull
   private final TranslateUseCase mTranslateUseCase;
   @NonNull
@@ -32,11 +27,14 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   @NonNull
   private final INetworkManager mNetworkManager;
 
+  private NetworkSubscriber mTranslationOnInternetAvailable;
+  private String mTextCache;
+  private LanguagePair mLanguages;
+
 
   public TranslatePresenter(@NonNull TranslateUseCase translateUseCase,
                             @NonNull GetLastTranslationUseCase getLastTranslationUseCase,
                             @NonNull INetworkManager manager) {
-
     mTranslateUseCase = translateUseCase;
     mGetLastTranslationUseCase = getLastTranslationUseCase;
     mNetworkManager = manager;
@@ -46,28 +44,29 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   protected void onViewAttached() {
-    if (mTextCache != null && !mTextCache.equals("") && getView() != null) {
+    if (mLanguages != null) {
+      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
+      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
+    }
+
+    if (mTextCache != null && !mTextCache.equals("")) {
       getView().setTranslatedText(mTextCache);
       mTextCache = "";
     }
 
-    if (getView() != null) {
-      if (mTranslateUseCase.isRunning()) {
-        getView().showProgressBar();
-      }
+    if (mTranslateUseCase.isRunning()) {
+      getView().showProgressBar();
+    }
 
-      if (mTranslationOnInternetAvailable != null && !mTranslationOnInternetAvailable.isDisposed()) {
-        getView().showProgressBar();
-        getView().showNoInternet();
-      }
+    if (mTranslationOnInternetAvailable != null && !mTranslationOnInternetAvailable.isDisposed()) {
+      getView().showProgressBar();
+      getView().showNoInternet();
     }
   }
 
   @Override
   protected void onViewDetached() {
-    if (getView() != null) {
-      getView().removeTextWatcher();
-    }
+    getView().removeTextWatcher();
   }
 
   @Override
@@ -81,18 +80,28 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   // ---------------------------- GetLastTranslationUseCase callbacks -----------------------------
 
   @Override
-  public void onGetLastTranslationSuccess(Translation translation) {
+  public void onGetLastTranslationSuccess(Pair<Translation, LanguagePair> result) {
+    mLanguages = result.second;
+
     if (getView() != null) {
-      getView().setInputText(translation.getOriginalText());
-      getView().setTranslatedText(translation.getTranslatedText());
+      getView().setInputText(result.first.getOriginalText());
+      getView().setTranslatedText(result.first.getTranslatedText());
       getView().setTextWatcher();
+      getView().showImageClear();
+      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
+      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
     }
   }
 
   @Override
-  public void onGetLastTranslationException(ExceptionBundle exception) {
+  public void onGetLastTranslationException(Pair<ExceptionBundle, LanguagePair> result) {
+    mLanguages = result.second;
+
     if (getView() != null) {
       getView().setTextWatcher();
+      getView().hideImageClear();
+      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
+      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
     }
   }
 
@@ -111,31 +120,42 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   }
 
   @Override
-  public void onTranslateException(Pair<String, ExceptionBundle> pairOriginalTextException) {
-    if (pairOriginalTextException.second.getReason() == ExceptionBundle.Reason.NETWORK_UNAVAILABLE){
-      if (getView() != null){
+  public void onTranslateException(Pair<ExceptionBundle, String> pairOriginalTextException) {
+    disposeTranslationSubscription();
+
+    if (pairOriginalTextException.first.getReason() == ExceptionBundle.Reason.NETWORK_UNAVAILABLE) {
+      subscribeTranslationOnNetworkAvailable(pairOriginalTextException.second);
+
+      if (getView() != null) {
         getView().setTranslatedText("");
         getView().showNoInternet();
         getView().showProgressBar();
       }
-
-      disposeTranslationSubscription();
-      subscribeTranslationOnNetworkAvailable(pairOriginalTextException.first);
     } else {
-      disposeTranslationSubscription();
-
-      if (getView() != null){
+      if (getView() != null) {
         getView().hideNoInternet();
         getView().hideProgressBar();
 
         String errorMessage = null;
-        switch (pairOriginalTextException.second.getReason()){
-          case WRONG_KEY: errorMessage = getView().getStringById(R.string.wrong_key); break;
-          case LIMIT_EXPIRED: errorMessage = getView().getStringById(R.string.limit_expired); break;
-          case TEXT_LIMIT_EXPIRED: errorMessage = getView().getStringById(R.string.text_limit_expired); break;
-          case WRONG_TEXT: errorMessage = getView().getStringById(R.string.wrong_text); break;
-          case WRONG_LANGS: errorMessage = getView().getStringById(R.string.wrong_langs); break;
-          case UNKNOWN: errorMessage = getView().getStringById(R.string.unknown); break;
+        switch (pairOriginalTextException.first.getReason()) {
+          case WRONG_KEY:
+            errorMessage = getView().getStringById(R.string.wrong_key);
+            break;
+          case LIMIT_EXPIRED:
+            errorMessage = getView().getStringById(R.string.limit_expired);
+            break;
+          case TEXT_LIMIT_EXPIRED:
+            errorMessage = getView().getStringById(R.string.text_limit_expired);
+            break;
+          case WRONG_TEXT:
+            errorMessage = getView().getStringById(R.string.wrong_text);
+            break;
+          case WRONG_LANGS:
+            errorMessage = getView().getStringById(R.string.wrong_langs);
+            break;
+          case UNKNOWN:
+            errorMessage = getView().getStringById(R.string.unknown);
+            break;
         }
         if (errorMessage != null) {
           getView().showAlertDialog(errorMessage);
@@ -147,7 +167,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   // ------------------------------------ public methods -----------------------------------------
 
 
-  public void onDataWasNotRestored() {
+  public void onFirstStart() {
     mGetLastTranslationUseCase.run(this);
   }
 
@@ -155,30 +175,35 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     mTranslateUseCase.cancel();
     disposeTranslationSubscription();
 
-    if (getView() != null) {
-      getView().hideProgressBar();
-      getView().hideNoInternet();
-      getView().setTranslatedText("");
-    }
+    getView().hideProgressBar();
+    getView().hideNoInternet();
+    getView().setTranslatedText("");
   }
 
   public void onInputTextChanged(final String originalText) {
     mTranslateUseCase.cancel();
 
-    if (getView() != null) {
-      getView().showProgressBar();
-    }
+    getView().showProgressBar();
 
     if (mNetworkManager.getCurrentNetworkStatus() != NetworkStatus.DISCONNECTED) {
-      mTranslateUseCase.run(this, originalText, "ru-en");
+      mTranslateUseCase.run(this, originalText, mLanguages.getLanguageCodePair());
     } else {
-      if (getView() != null) {
-        getView().setTranslatedText("");
-        getView().showNoInternet();
-      }
+      getView().setTranslatedText("");
+      getView().showNoInternet();
 
       disposeTranslationSubscription();
       subscribeTranslationOnNetworkAvailable(originalText);
+    }
+  }
+
+  public void onChangeButtonsImageClicked() {
+    if (mLanguages != null) {
+      mLanguages.swapLanguages();
+
+      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
+      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
+
+      getView().setInputText(getView().getTranslatedText());
     }
   }
 

@@ -1,12 +1,12 @@
-package com.danielkashin.yandextestapplication.domain_layer.repository;
+package com.danielkashin.yandextestapplication.domain_layer.repository.translate;
 
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseLanguage;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseTranslation;
-import com.danielkashin.yandextestapplication.data_layer.entities.remote.NetworkTranslation;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguage;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslation;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.remote.NetworkTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle.Reason;
-import com.danielkashin.yandextestapplication.data_layer.services.translation.local.ITranslationLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.translation.remote.ITranslationRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslateLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslateRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
@@ -17,15 +17,15 @@ import java.util.List;
 import retrofit2.Response;
 
 
-public class TranslationRepository implements ITranslationRepository {
+public class TranslateRepository implements ITranslateRepository {
 
-  private final ITranslationLocalService localService;
+  private final ITranslateLocalService localService;
 
-  private final ITranslationRemoteService remoteService;
+  private final ITranslateRemoteService remoteService;
 
 
-  private TranslationRepository(ITranslationLocalService localService,
-                                ITranslationRemoteService remoteService) {
+  private TranslateRepository(ITranslateLocalService localService,
+                              ITranslateRemoteService remoteService) {
     this.localService = localService;
     this.remoteService = remoteService;
   }
@@ -36,13 +36,13 @@ public class TranslationRepository implements ITranslationRepository {
   public void saveTranslation(Translation translation) throws ExceptionBundle {
     // get current language id or create it
     Long languageId;
-    DatabaseLanguage language = localService.getLanguage(translation.getLanguage()).executeAsBlocking();
+    DatabaseLanguage language = localService.getLanguage(translation.getLanguageCodePair()).executeAsBlocking();
     if (language != null) {
       // language found -- pick its id
       languageId = language.getId();
     } else {
       // put new language to the table
-      PutResult result = localService.putLanguage(translation.getLanguage())
+      PutResult result = localService.putLanguage(translation.getLanguageCodePair())
           .executeAsBlocking();
       localService.tryToThrowExceptionBundle(result, true);
       languageId = result.insertedId();
@@ -103,7 +103,7 @@ public class TranslationRepository implements ITranslationRepository {
   }
 
   @Override
-  public List<Translation> getTranslations(int offset, int count, boolean onlyFavourite,
+  public ArrayList<Translation> getTranslations(int offset, int count, boolean onlyFavourite,
                                            String searchRequest) throws ExceptionBundle {
     // get list of database translation
     PreparedGetListOfObjects<DatabaseTranslation> preparedList;
@@ -112,7 +112,7 @@ public class TranslationRepository implements ITranslationRepository {
     if (databaseTranslations.size() == 0) throw new ExceptionBundle(Reason.EMPTY_TRANSLATIONS);
 
     // parse it into common translations
-    List<Translation> translations = new ArrayList<>();
+    ArrayList<Translation> translations = new ArrayList<>();
     for (int i = 0; i < databaseTranslations.size(); ++i) {
       DatabaseTranslation databaseTranslation = databaseTranslations.get(i);
       DatabaseLanguage databaseLanguage = localService.getLanguage(databaseTranslation.getLanguage())
@@ -143,9 +143,9 @@ public class TranslationRepository implements ITranslationRepository {
     private Factory() {
     }
 
-    public static ITranslationRepository create(ITranslationLocalService localService,
-                                                ITranslationRemoteService remoteService) {
-      return new TranslationRepository(localService, remoteService);
+    public static ITranslateRepository create(ITranslateLocalService localService,
+                                              ITranslateRemoteService remoteService) {
+      return new TranslateRepository(localService, remoteService);
     }
   }
 }

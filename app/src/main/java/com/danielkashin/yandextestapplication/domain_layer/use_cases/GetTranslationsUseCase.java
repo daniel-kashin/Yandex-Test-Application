@@ -1,45 +1,56 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.ITranslationRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
 
 public class GetTranslationsUseCase implements IUseCase {
 
+  @NonNull
   private final Executor executor;
-  private final ITranslationRepository translateRepository;
+  @NonNull
+  private final ITranslateRepository translateRepository;
   private final boolean onlyFavorite;
-  private RepositoryResponseAsyncTask<List<Translation>> getTranslationsAsyncTask;
+
+  private RepositoryResponseAsyncTask<ArrayList<Translation>> getTranslationsAsyncTask;
 
 
-  public GetTranslationsUseCase(Executor executor, ITranslationRepository translateRepository,
+  public GetTranslationsUseCase(@NonNull Executor executor,
+                                @NonNull ITranslateRepository translateRepository,
                                 boolean onlyFavorite){
     this.executor = executor;
     this.translateRepository = translateRepository;
     this.onlyFavorite = onlyFavorite;
   }
 
+  // --------------------------------------- IUseCase ---------------------------------------------
 
   @Override
   public void cancel() {
     if (isRunning()){
       getTranslationsAsyncTask.cancel(false);
+      getTranslationsAsyncTask = null;
     }
   }
 
-  public void run(final Callbacks callbacks, final int offset, final int count, final String searchRequest){
-    RepositoryResponseAsyncTask.PostExecuteListener<List<Translation>> listener =
-        new RepositoryResponseAsyncTask.PostExecuteListener<List<Translation>>() {
+  // ------------------------------------- public methods -----------------------------------------
+
+  public void run(final Callbacks callbacks, final int offset,
+                  final int count, final String searchRequest){
+    RepositoryResponseAsyncTask.PostExecuteListener<ArrayList<Translation>> listener =
+        new RepositoryResponseAsyncTask.PostExecuteListener<ArrayList<Translation>>() {
           @Override
-          public void onResult(List<Translation> result) {
+          public void onResult(ArrayList<Translation> result) {
             callbacks.onGetTranslationsSuccess(result, offset, searchRequest);
           }
 
@@ -49,15 +60,15 @@ public class GetTranslationsUseCase implements IUseCase {
           }
         };
 
-    RepositoryResponseAsyncTask.RepositoryRunnable<List<Translation>> runnable =
-        new RepositoryResponseAsyncTask.RepositoryRunnable<List<Translation>>() {
+    RepositoryResponseAsyncTask.RepositoryRunnable<ArrayList<Translation>> runnable =
+        new RepositoryResponseAsyncTask.RepositoryRunnable<ArrayList<Translation>>() {
           @Override
-          public List<Translation> run() throws ExceptionBundle {
+          public ArrayList<Translation> run() throws ExceptionBundle {
             return translateRepository.getTranslations(offset, count, onlyFavorite, searchRequest);
           }
         };
 
-    getTranslationsAsyncTask = new RepositoryResponseAsyncTask<List<Translation>>(
+    getTranslationsAsyncTask = new RepositoryResponseAsyncTask<>(
         runnable,
         listener
     );
@@ -70,9 +81,11 @@ public class GetTranslationsUseCase implements IUseCase {
         && !getTranslationsAsyncTask.isCancelled();
   }
 
+  // ------------------------------------ inner classes--------------------------------------------
+
   public interface Callbacks {
 
-    void onGetTranslationsSuccess(List<Translation> translations, int offset, String searchRequest);
+    void onGetTranslationsSuccess(ArrayList<Translation> translations, int offset, String searchRequest);
 
     void onGetTranslationsException(ExceptionBundle exceptionBundle, int offset, String searchRequest);
 

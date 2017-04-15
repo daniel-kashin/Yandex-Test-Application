@@ -16,6 +16,7 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="@dimen/fg_history_search_icon_horizontal"
             android:layout_marginEnd="@dimen/fg_history_search_icon_horizontal"
+            android:labelFor="@+id/edit_search"
             android:background="@mipmap/ic_search"
             android:contentDescription="@string/search_image_description"/>
 

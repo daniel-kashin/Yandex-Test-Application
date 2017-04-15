@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.database;
+package com.danielkashin.yandextestapplication.data_layer.contracts.translate.local;
 
 
 public class TranslationContract {
@@ -36,24 +36,26 @@ public class TranslationContract {
     StringBuilder searchBuilder = new StringBuilder("");
 
     if (onlyFavorite) {
-      searchBuilder.append("(")
-          .append(TranslationContract.COLUMN_NAME_IS_FAVOURITE)
-          .append(" = \"")
-          .append(1)
-          .append("\")");
+      searchBuilder.append(TranslationContract.COLUMN_NAME_IS_FAVOURITE)
+          .append(" = ")
+          .append(1);
     }
 
     if (searchRequest != null && !searchRequest.isEmpty()) {
-      searchBuilder.append(searchBuilder.toString().equals("") ? "" : " AND ")
+      searchBuilder.append(onlyFavorite ? "\nAND" : "")
           .append("(")
           .append(TranslationContract.COLUMN_NAME_ORIGINAL_TEXT)
-          .append(" = \"")
+          .append(" LIKE \'%")
           .append(searchRequest)
-          .append("\" OR ")
+          .append("%\'")
+          .append(onlyFavorite ? "" : ")")
+          .append(" OR ")
+          .append(onlyFavorite ? "" : "(")
           .append(TranslationContract.COLUMN_NAME_TRANSLATED_TEXT)
-          .append(" = \n")
+          .append(" LIKE \'%")
           .append(searchRequest)
-          .append("\n)");
+          .append("%\'")
+          .append(")");
     }
 
     String result = searchBuilder.toString();

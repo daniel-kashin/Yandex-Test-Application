@@ -1,9 +1,9 @@
-package com.danielkashin.yandextestapplication.data_layer.services.translation.local;
+package com.danielkashin.yandextestapplication.data_layer.services.translate.local;
 
-import com.danielkashin.yandextestapplication.data_layer.database.LanguageContract;
-import com.danielkashin.yandextestapplication.data_layer.database.TranslationContract;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseLanguage;
-import com.danielkashin.yandextestapplication.data_layer.entities.local.DatabaseTranslation;
+import com.danielkashin.yandextestapplication.data_layer.contracts.translate.local.LanguageContract;
+import com.danielkashin.yandextestapplication.data_layer.contracts.translate.local.TranslationContract;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguage;
+import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.services.base.DatabaseService;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
@@ -14,13 +14,13 @@ import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 
 
-public class TranslationLocalService extends DatabaseService implements ITranslationLocalService {
+public class TranslateLocalService extends DatabaseService implements ITranslateLocalService {
 
-  public TranslationLocalService(StorIOSQLite sqLite) {
+  public TranslateLocalService(StorIOSQLite sqLite) {
     super(sqLite);
   }
 
-  // ------------------------------- ITranslationLocalService ---------------------------------------
+  // ------------------------------- ITranslateLocalService ---------------------------------------
 
   //               -------------------- database languages -------------------
 
@@ -129,8 +129,8 @@ public class TranslationLocalService extends DatabaseService implements ITransla
     private Factory() {
     }
 
-    public static ITranslationLocalService create(StorIOSQLite sqLite) {
-      return new TranslationLocalService(sqLite);
+    public static ITranslateLocalService create(StorIOSQLite sqLite) {
+      return new TranslateLocalService(sqLite);
     }
 
   }

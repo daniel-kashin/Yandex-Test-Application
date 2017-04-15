@@ -1,12 +1,13 @@
-package com.danielkashin.yandextestapplication.domain_layer.repository;
+package com.danielkashin.yandextestapplication.domain_layer.repository.translate;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
-public interface ITranslationRepository {
+public interface ITranslateRepository {
 
   // ------------------------------------ translations --------------------------------------------
 
@@ -16,8 +17,8 @@ public interface ITranslationRepository {
 
   Translation getLastTranslation() throws ExceptionBundle;
 
-  List<Translation> getTranslations(int offset, int count, boolean onlyFavourite,
-                                    String searchRequest) throws ExceptionBundle;
+  ArrayList<Translation> getTranslations(int offset, int count, boolean onlyFavourite,
+                                         String searchRequest) throws ExceptionBundle;
 
   // ------------------------------------- languages ----------------------------------------------
 
