@@ -28,7 +28,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     mTranslations = new ArrayList<>();
   }
 
-  public TranslationsAdapter(Bundle savedInstanceState) {
+  public TranslationsAdapter(Bundle savedInstanceState) throws IllegalStateException {
     mTranslations = restoreTranslations(savedInstanceState);
   }
 
@@ -128,7 +128,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     outState.putParcelableArrayList(KEY_TRANSLATIONS, mTranslations);
   }
 
-  private ArrayList<Translation> restoreTranslations(Bundle savedInstanceState) {
+  private ArrayList<Translation> restoreTranslations(Bundle savedInstanceState) throws IllegalStateException {
     if (savedInstanceState == null || !savedInstanceState.containsKey(KEY_TRANSLATIONS)) {
       throw new IllegalStateException("Bundle must contain the needed field");
     }

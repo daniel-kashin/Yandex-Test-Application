@@ -39,6 +39,7 @@ public class GetLastTranslationUseCase implements IUseCase {
   public void cancel() {
     if (isRunning()) {
       getLastTranslationAsyncTask.cancel(false);
+      getLastTranslationAsyncTask = null;
     }
   }
 

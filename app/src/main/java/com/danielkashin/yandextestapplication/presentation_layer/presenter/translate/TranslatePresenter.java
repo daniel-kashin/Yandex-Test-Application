@@ -20,21 +20,17 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.translate.
 public class TranslatePresenter extends Presenter<ITranslateView>
     implements TranslateUseCase.Callbacks, GetLastTranslationUseCase.Callbacks {
 
-  @NonNull
   private final TranslateUseCase mTranslateUseCase;
-  @NonNull
   private final GetLastTranslationUseCase mGetLastTranslationUseCase;
-  @NonNull
   private final INetworkManager mNetworkManager;
 
   private NetworkSubscriber mTranslationOnInternetAvailable;
   private String mTextCache;
-  private LanguagePair mLanguages;
 
 
-  public TranslatePresenter(@NonNull TranslateUseCase translateUseCase,
-                            @NonNull GetLastTranslationUseCase getLastTranslationUseCase,
-                            @NonNull INetworkManager manager) {
+  public TranslatePresenter(TranslateUseCase translateUseCase,
+                            GetLastTranslationUseCase getLastTranslationUseCase,
+                            INetworkManager manager) {
     mTranslateUseCase = translateUseCase;
     mGetLastTranslationUseCase = getLastTranslationUseCase;
     mNetworkManager = manager;
@@ -44,11 +40,6 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   protected void onViewAttached() {
-    if (mLanguages != null) {
-      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
-      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
-    }
-
     if (mTextCache != null && !mTextCache.equals("")) {
       getView().setTranslatedText(mTextCache);
       mTextCache = "";
@@ -81,27 +72,21 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   public void onGetLastTranslationSuccess(Pair<Translation, LanguagePair> result) {
-    mLanguages = result.second;
-
     if (getView() != null) {
+      getView().initializeLanguages(result.second);
       getView().setInputText(result.first.getOriginalText());
       getView().setTranslatedText(result.first.getTranslatedText());
       getView().setTextWatcher();
       getView().showImageClear();
-      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
-      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
     }
   }
 
   @Override
   public void onGetLastTranslationException(Pair<ExceptionBundle, LanguagePair> result) {
-    mLanguages = result.second;
-
     if (getView() != null) {
+      getView().initializeLanguages(result.second);
       getView().setTextWatcher();
       getView().hideImageClear();
-      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
-      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
     }
   }
 
@@ -113,6 +98,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
     if (getView() != null) {
       getView().hideProgressBar();
+      getView().hideNoInternet();
       getView().setTranslatedText(translation.getTranslatedText());
     } else {
       mTextCache = translation.getTranslatedText();
@@ -186,7 +172,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     getView().showProgressBar();
 
     if (mNetworkManager.getCurrentNetworkStatus() != NetworkStatus.DISCONNECTED) {
-      mTranslateUseCase.run(this, originalText, mLanguages.getLanguageCodePair());
+      mTranslateUseCase.run(this, originalText, getView().getLanguages().getLanguageCodePair());
     } else {
       getView().setTranslatedText("");
       getView().showNoInternet();
@@ -197,12 +183,8 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   }
 
   public void onChangeButtonsImageClicked() {
-    if (mLanguages != null) {
-      mLanguages.swapLanguages();
-
-      getView().setOriginalLanguage(mLanguages.getOriginalLanguage().getText());
-      getView().setTranslatedLanguage(mLanguages.getTranslatedLanguage().getText());
-
+    if (getView().getLanguages() != null) {
+      getView().swapLanguages();
       getView().setInputText(getView().getTranslatedText());
     }
   }

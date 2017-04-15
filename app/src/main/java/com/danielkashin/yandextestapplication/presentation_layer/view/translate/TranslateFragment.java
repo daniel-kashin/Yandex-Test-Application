@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.Language;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
@@ -27,6 +28,8 @@ import com.danielkashin.yandextestapplication.data_layer.services.supported_lang
 import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslateLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslateRemoteService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslateRemoteService;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.ISupportedLanguagesRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.SupportedLanguagesRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
@@ -58,7 +61,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   private RelativeLayout mNoInternetLayout;
   private TextWatcher mTextWatcher;
 
-  private State mState;
+  private State mRestoredState;
 
   // ----------------------------------- getInstance ----------------------------------------------
 
@@ -74,12 +77,10 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    if (getArguments() != null) {
-      mState = State.INITIALIZED_FROM_ARGUMENTS;
-    } else if (savedInstanceState != null) {
-      mState = State.INITIALIZED_FROM_BUNDLE;
-    } else {
-      mState = State.NOT_INITIALIZED;
+    mRestoredState = new State(savedInstanceState);
+
+    if (!mRestoredState.isLanguagesInitialized()){
+      mRestoredState = new State(getArguments());
     }
   }
 
@@ -94,8 +95,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
     setListeners();
 
-    if (mState == State.NOT_INITIALIZED) {
-      mState = State.INITIALIZED_FROM_PRESENTER;
+    if (!mRestoredState.isLanguagesInitialized()) {
       getPresenter().onFirstStart();
     } else {
       setTextWatcher();
@@ -105,9 +105,44 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
+    mRestoredState.saveToOutState(outState);
   }
 
   // ------------------------------------ ITranslateView  -----------------------------------------
+
+
+  @Override
+  public void swapLanguages() {
+    if (mRestoredState.isLanguagesInitialized()) {
+      mRestoredState.getLanguages().swapLanguages();
+      mOriginalLanguageText.setText(mRestoredState.getLanguages().getOriginalLanguage().getText());
+      mTranslatedLanguageText.setText(mRestoredState.getLanguages().getTranslatedLanguage().getText());
+    }
+  }
+
+  @Override
+  public void initializeLanguages(LanguagePair languages) {
+    mRestoredState = new State(languages);
+    mOriginalLanguageText.setText(languages.getOriginalLanguage().getText());
+    mTranslatedLanguageText.setText(languages.getTranslatedLanguage().getText());
+  }
+
+  @Override
+  public LanguagePair getLanguages() {
+    return mRestoredState.getLanguages();
+  }
+
+  @Override
+  public void setOriginalLanguage(Language language) {
+    mRestoredState.setOriginalLanguage(language);
+    mOriginalLanguageText.setText(language.getText());
+  }
+
+  @Override
+  public void setTranslatedLanguage(Language language) {
+    mRestoredState.setTranslatedLanguage(language);
+    mTranslatedLanguageText.setText(language.getText());
+  }
 
   @Override
   public void setTextWatcher() {
@@ -181,16 +216,6 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   public void hideImageClear() {
     mClearImage.setVisibility(View.INVISIBLE);
-  }
-
-  @Override
-  public void setOriginalLanguage(String originalLanguage) {
-    mOriginalLanguageText.setText(originalLanguage);
-  }
-
-  @Override
-  public void setTranslatedLanguage(String translatedLanguage) {
-    mTranslatedLanguageText.setText(translatedLanguage);
   }
 
   @Override
@@ -296,6 +321,17 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mTranslatedText = (TextView) view.findViewById(R.id.text_translated);
     mProgressBarLayout = (RelativeLayout) view.findViewById(R.id.layout_progress_bar);
     mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
+
+    if (!mTranslatedText.getText().toString().equals("")) {
+      mClearImage.setVisibility(View.VISIBLE);
+    } else {
+      mClearImage.setVisibility(View.INVISIBLE);
+    }
+
+    if (mRestoredState.isLanguagesInitialized()){
+      mOriginalLanguageText.setText(mRestoredState.getLanguages().getOriginalLanguage().getText());
+      mTranslatedLanguageText.setText(mRestoredState.getLanguages().getTranslatedLanguage().getText());
+    }
   }
 
   // --------------------------------------- private ----------------------------------------------
@@ -319,7 +355,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       @Override
       public void onClick(View view) {
         ClipboardManager manager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-        if (manager!= null) {
+        if (manager != null) {
           manager.setPrimaryClip(ClipData.newPlainText("", mTranslatedText.getText().toString()));
           Toast.makeText(getContext(), getContext().getString(R.string.text_copied), Toast.LENGTH_SHORT).show();
         }
@@ -329,11 +365,51 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   // ------------------------------------ inner classes -------------------------------------------
 
-  private enum State {
-    INITIALIZED_FROM_ARGUMENTS,
-    INITIALIZED_FROM_BUNDLE,
-    INITIALIZED_FROM_PRESENTER,
-    NOT_INITIALIZED
-  }
+  private class State {
 
+    private LanguagePair languages;
+    private boolean languagesInitialized;
+
+
+    public State(Bundle bundle) {
+      try {
+        languages = new LanguagePair(bundle);
+        languagesInitialized = true;
+      } catch (IllegalStateException e) {
+        languagesInitialized = false;
+      }
+    }
+
+    public State(LanguagePair languages){
+      if (languages != null) {
+        this.languages = languages;
+        languagesInitialized = true;
+      } else {
+        languagesInitialized = false;
+      }
+    }
+
+    void saveToOutState(Bundle outState){
+      if (languages != null) {
+        languages.saveToBundle(outState);
+      }
+    }
+
+    public LanguagePair getLanguages(){
+      return languages;
+    }
+
+    public boolean isLanguagesInitialized() {
+      return languagesInitialized;
+    }
+
+    public void setOriginalLanguage(Language language) {
+      languages.setOriginalLanguage(language);
+    }
+
+    public void setTranslatedLanguage(Language language) {
+      languages.setTranslatedLanguage(language);
+    }
+
+  }
 }

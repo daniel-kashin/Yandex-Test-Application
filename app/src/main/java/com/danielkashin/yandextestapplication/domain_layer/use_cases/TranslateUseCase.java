@@ -34,6 +34,7 @@ public class TranslateUseCase implements IUseCase {
   public void cancel() {
     if (isRunning()) {
       getTranslationAsyncTask.cancel(false);
+      getTranslationAsyncTask = null;
     }
   }
 

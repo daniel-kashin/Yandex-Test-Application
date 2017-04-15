@@ -3,9 +3,22 @@ package com.danielkashin.yandextestapplication.presentation_layer.view.translate
 
 import android.text.TextWatcher;
 
+import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.Language;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
 public interface ITranslateView extends IView {
+
+  LanguagePair getLanguages();
+
+  void swapLanguages();
+
+  void initializeLanguages(LanguagePair languages);
+
+  void setOriginalLanguage(Language language);
+
+  void setTranslatedLanguage(Language language);
+
 
   void setTextWatcher();
 
@@ -25,11 +38,6 @@ public interface ITranslateView extends IView {
   void showImageClear();
 
   void hideImageClear();
-
-
-  void setOriginalLanguage(String originalLanguage);
-
-  void setTranslatedLanguage(String translatedLanguage);
 
 
   void setInputText(String text);
