@@ -10,8 +10,9 @@ import com.danielkashin.yandextestapplication.domain_layer.repository.translate.
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executor;
+
+import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
 
 
 public class GetTranslationsUseCase implements IUseCase {
@@ -20,24 +21,24 @@ public class GetTranslationsUseCase implements IUseCase {
   private final Executor executor;
   @NonNull
   private final ITranslateRepository translateRepository;
-  private final boolean onlyFavorite;
+  private final FragmentType fragmentType;
 
   private RepositoryResponseAsyncTask<ArrayList<Translation>> getTranslationsAsyncTask;
 
 
   public GetTranslationsUseCase(@NonNull Executor executor,
                                 @NonNull ITranslateRepository translateRepository,
-                                boolean onlyFavorite){
+                                FragmentType fragmentType) {
     this.executor = executor;
     this.translateRepository = translateRepository;
-    this.onlyFavorite = onlyFavorite;
+    this.fragmentType = fragmentType;
   }
 
   // --------------------------------------- IUseCase ---------------------------------------------
 
   @Override
   public void cancel() {
-    if (isRunning()){
+    if (isRunning()) {
       getTranslationsAsyncTask.cancel(false);
       getTranslationsAsyncTask = null;
     }
@@ -46,17 +47,21 @@ public class GetTranslationsUseCase implements IUseCase {
   // ------------------------------------- public methods -----------------------------------------
 
   public void run(final Callbacks callbacks, final int offset,
-                  final int count, final String searchRequest){
+                  final int count, final String searchRequest) {
     RepositoryResponseAsyncTask.PostExecuteListener<ArrayList<Translation>> listener =
         new RepositoryResponseAsyncTask.PostExecuteListener<ArrayList<Translation>>() {
           @Override
           public void onResult(ArrayList<Translation> result) {
-            callbacks.onGetTranslationsSuccess(result, offset, searchRequest);
+            if (callbacks != null) {
+              callbacks.onGetTranslationsSuccess(result, offset, searchRequest);
+            }
           }
 
           @Override
           public void onException(ExceptionBundle exception) {
-            callbacks.onGetTranslationsException(exception, offset, searchRequest);
+            if (callbacks != null) {
+              callbacks.onGetTranslationsException(exception, offset, searchRequest);
+            }
           }
         };
 
@@ -64,7 +69,11 @@ public class GetTranslationsUseCase implements IUseCase {
         new RepositoryResponseAsyncTask.RepositoryRunnable<ArrayList<Translation>>() {
           @Override
           public ArrayList<Translation> run() throws ExceptionBundle {
-            return translateRepository.getTranslations(offset, count, onlyFavorite, searchRequest);
+            return translateRepository.getTranslations(
+                offset,
+                count,
+                fragmentType == FragmentType.ONLY_FAVORITE_HISTORY,
+                searchRequest);
           }
         };
 
@@ -75,7 +84,7 @@ public class GetTranslationsUseCase implements IUseCase {
     getTranslationsAsyncTask.executeOnExecutor(executor);
   }
 
-  public boolean isRunning(){
+  private boolean isRunning() {
     return getTranslationsAsyncTask != null
         && getTranslationsAsyncTask.getStatus() == AsyncTask.Status.RUNNING
         && !getTranslationsAsyncTask.isCancelled();

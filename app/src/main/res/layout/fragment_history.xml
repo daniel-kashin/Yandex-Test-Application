@@ -28,7 +28,7 @@
             android:background="@android:color/transparent"
             android:maxLines="1"
             android:scrollHorizontally="true"
-            android:inputType="text"/>
+            android:inputType="textFilter|textNoSuggestions"/>
 
     </RelativeLayout>
 

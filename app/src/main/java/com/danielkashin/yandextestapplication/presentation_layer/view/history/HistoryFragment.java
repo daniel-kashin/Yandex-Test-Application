@@ -21,6 +21,7 @@ import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetTranslationsUseCase;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsCallbacks;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsModel;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.TranslationsAdapter;
@@ -51,10 +52,10 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   // ---------------------------------- getInstance -----------------------------------------------
 
-  public static HistoryFragment getInstance(boolean onlyFavorite) {
+  public static HistoryFragment getInstance(State.FragmentType fragmentType) {
     HistoryFragment fragment = new HistoryFragment();
 
-    fragment.setArguments(State.saveOnlyFavorite(onlyFavorite));
+    fragment.setArguments(State.getFragmentTypeBundle(fragmentType));
 
     return fragment;
   }
@@ -63,22 +64,24 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    if (getParentFragment() == null || !(getParentFragment() instanceof IHistoryPagerView)) {
-      throw new IllegalStateException("Parent fragment must implement IHistoryPagerView");
+    if (!(getParentFragment() instanceof IHistoryPagerView)
+        || !(getParentFragment() instanceof IDatabaseChangeReceiver)) {
+      throw new IllegalStateException("Parent fragment must implement IHistoryPagerView" +
+          " and IDatabaseChangeReceiver");
     }
 
     mRestoredState = new State(savedInstanceState);
 
-    if (!mRestoredState.isTypeInitialized()) {
+    if (!mRestoredState.isFragmentTypeInitialized()) {
       mRestoredState = new State(getArguments());
     }
 
-    if (!mRestoredState.isTypeInitialized()) {
+    if (!mRestoredState.isFragmentTypeInitialized()) {
       // we can`t know whether fragment is only favourite history or all history
       throw new IllegalStateException("Type of the HistoryFragment must be defined");
     }
 
-    // we must know the type of the fragment before its presenter will be created in base class
+    // we must know the fragmentType of the fragment before its presenter will be created in base class
     super.onCreate(savedInstanceState);
   }
 
@@ -86,7 +89,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   public void onStart() {
     super.onStart();
 
-    if (!mRestoredState.isAdapterInitialized()) {
+    if (!mRestoredState.isTranslationsAdapterInitialized()) {
       getPresenter().refreshTranslations(null);
     }
 
@@ -105,28 +108,34 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
 
-    mRestoredState.saveToOutState(
-        outState,
-        mRestoredState.isOnlyFavorite(),
-        mSearchLayout.getVisibility() == View.VISIBLE,
-        mRecyclerView.getVisibility() == View.VISIBLE,
-        mNoContentText.getVisibility() == View.VISIBLE,
-        (ITranslationsModel) mRecyclerView.getAdapter());
+    mRestoredState.setTranslationsAdapter((ITranslationsModel) mRecyclerView.getAdapter());
+    mRestoredState.setNoContentTextVisible(mNoContentText.getVisibility() == View.VISIBLE);
+    mRestoredState.setRecyclerViewVisible(mRecyclerView.getVisibility() == View.VISIBLE);
+    mRestoredState.setSearchLayoutVisible(mSearchLayout.getVisibility() == View.VISIBLE);
+    mRestoredState.saveToOutState(outState);
   }
 
-  // ------------------------------- IHistoryPage -------------------------------------------
-
+  // ------------------------------- IDatabaseChangeReceiver --------------------------------------
 
   @Override
-  public void onUnselected() {
+  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
+    getPresenter().refreshTranslations(null);
+  }
+
+  // ------------------------------- IDatabaseChangePublisher --------------------------------------
+
+  @Override
+  public void publishOnDataChanged() {
+
+  }
+
+  // ------------------------------------- IHistoryPage -------------------------------------------
+
+  @Override
+  public void onAnotherPageSelected() {
     if (mSearchEdit != null && !mSearchEdit.getText().toString().equals("")) {
       mSearchEdit.setText("");
     }
-  }
-
-  @Override
-  public void onDataChanged() {
-    getPresenter().refreshTranslations(null);
   }
 
   @Override
@@ -150,8 +159,6 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     ((IHistoryPagerView) getParentFragment()).hideDeleteHistoryButton(this);
     mSearchLayout.setVisibility(View.GONE);
     mRecyclerView.setVisibility(View.INVISIBLE);
-    mNoContentText.setText(getString(mRestoredState.isOnlyFavorite() ? R.string.no_content_favorites_message
-        : R.string.no_content_history_message));
     mNoContentText.setVisibility(View.VISIBLE);
   }
 
@@ -216,7 +223,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
     // bind use case
     GetTranslationsUseCase useCase = new GetTranslationsUseCase(AsyncTask.THREAD_POOL_EXECUTOR,
-        repository, mRestoredState.isOnlyFavorite());
+        repository, mRestoredState.getFragmentType());
 
 
     // return presenter with dependencies
@@ -242,22 +249,21 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
     mNoContentText = (TextView) view.findViewById(R.id.text_no_content);
 
-    mSearchEdit.setHint(mRestoredState.isOnlyFavorite() ? getString(R.string.hint_search_favorite_history) :
-        getString(R.string.hint_search_all_history));
+    mRecyclerView.setAdapter(mRestoredState.isTranslationsAdapterInitialized()
+        ? (RecyclerView.Adapter) mRestoredState.getTranslationsAdapter()
+        : new TranslationsAdapter());
 
-    mRecyclerView.setAdapter(
-        mRestoredState.isAdapterInitialized()
-            ? (RecyclerView.Adapter) mRestoredState.getAdapter()
-            : new TranslationsAdapter());
+    mSearchEdit.setHint(mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
+        ? getString(R.string.hint_search_favorite_history)
+        : getString(R.string.hint_search_all_history));
 
-    mNoContentText.setText(mRestoredState.isOnlyFavorite() ? getString(R.string.no_content_favorites_message) :
-        getString(R.string.no_content_history_message));
+    mNoContentText.setText(mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
+        ? getString(R.string.no_content_favorites_message)
+        : getString(R.string.no_content_history_message));
 
-    if (mRestoredState.isViewVisibilityInitialized()) {
-      mSearchLayout.setVisibility(mRestoredState.isSearchLayoutVisible() ? View.VISIBLE : View.GONE);
-      mRecyclerView.setVisibility(mRestoredState.isRecyclerViewVisible() ? View.VISIBLE : View.GONE);
-      mNoContentText.setVisibility(mRestoredState.isNoContentTextVisible() ? View.VISIBLE : View.GONE);
-    }
+    mSearchLayout.setVisibility(mRestoredState.isSearchLayoutVisible() ? View.VISIBLE : View.GONE);
+    mRecyclerView.setVisibility(mRestoredState.isRecyclerViewVisible() ? View.VISIBLE : View.GONE);
+    mNoContentText.setVisibility(mRestoredState.isNoContentTextVisible() ? View.VISIBLE : View.GONE);
   }
 
   // ---------------------------------- private methods -------------------------------------------
@@ -304,112 +310,121 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   // ----------------------------------- inner classes --------------------------------------------
 
-  private static class State {
+  public static class State {
     private static final String KEY_ONLY_FAVORITE = "KEY_ONLY_FAVORITE";
     private static final String KEY_SEARCH_LAYOUT_VISIBLE = "KEY_SEARCH_LAYOUT_VISIBLE";
     private static final String KEY_RECYCLER_VIEW_VISIBLE = "KEY_RECYCLER_VIEW_VISIBLE";
     private static final String KEY_NO_CONTENT_TEXT_VISIBLE = "KEY_NO_CONTENT_TEXT_VISIBLE";
 
-    private boolean typeInitialized;
-    private boolean onlyFavorite;
-
-    private boolean adapterInitialized;
-    private ITranslationsModel adapter;
-
-    private boolean viewVisibilityInitialized;
+    private FragmentType fragmentType;
+    private ITranslationsModel translationsAdapter;
     private boolean searchLayoutVisible;
     private boolean recyclerViewVisible;
     private boolean noContentTextVisible;
 
 
-    public State(Bundle savedInstanceState) {
-      if (savedInstanceState == null) {
+    private State(Bundle savedInstanceState) {
+      if (savedInstanceState == null || !savedInstanceState.containsKey(KEY_ONLY_FAVORITE)
+          || savedInstanceState.getSerializable(KEY_ONLY_FAVORITE) == null) {
+        fragmentType = null;
         return;
       }
 
-      // initialize type
-      if (savedInstanceState.containsKey(KEY_ONLY_FAVORITE)) {
-        onlyFavorite = savedInstanceState.getBoolean(KEY_ONLY_FAVORITE);
-        typeInitialized = true;
-      } else {
-        typeInitialized = false;
-        return;
-      }
+      fragmentType = (FragmentType) savedInstanceState.getSerializable(KEY_ONLY_FAVORITE);
 
-      // initialize adapter
+      // initialize translationsAdapter
       try {
-        adapter = new TranslationsAdapter(savedInstanceState);
-        adapterInitialized = true;
+        translationsAdapter = new TranslationsAdapter(savedInstanceState);
       } catch (IllegalStateException e) {
-        adapterInitialized = false;
+        translationsAdapter = null;
       }
 
       // initialize view visibilities
       if (savedInstanceState.containsKey(KEY_SEARCH_LAYOUT_VISIBLE)
           && savedInstanceState.containsKey(KEY_RECYCLER_VIEW_VISIBLE)
           && savedInstanceState.containsKey(KEY_NO_CONTENT_TEXT_VISIBLE)) {
-        viewVisibilityInitialized = true;
         searchLayoutVisible = savedInstanceState.getBoolean(KEY_SEARCH_LAYOUT_VISIBLE);
         recyclerViewVisible = savedInstanceState.getBoolean(KEY_RECYCLER_VIEW_VISIBLE);
         noContentTextVisible = savedInstanceState.getBoolean(KEY_NO_CONTENT_TEXT_VISIBLE);
       }
     }
 
-    public boolean isTypeInitialized() {
-      return typeInitialized;
-    }
-
-    public boolean isAdapterInitialized() {
-      return adapterInitialized;
-    }
-
-    public boolean isViewVisibilityInitialized() {
-      return viewVisibilityInitialized;
-    }
-
-    public boolean isOnlyFavorite() {
-      return onlyFavorite;
-    }
-
-    public ITranslationsModel getAdapter() {
-      return adapter;
-    }
-
-    public boolean isSearchLayoutVisible() {
-      return searchLayoutVisible;
-    }
-
-    public boolean isRecyclerViewVisible() {
-      return recyclerViewVisible;
-    }
-
-    public boolean isNoContentTextVisible() {
-      return noContentTextVisible;
-    }
-
-    public void saveToOutState(Bundle outState,
-                               boolean onlyFavorite,
-                               boolean searchLayoutVisible,
-                               boolean recyclerViewVisible,
-                               boolean noContentTextVisible,
-                               ITranslationsModel adapter) {
-      this.onlyFavorite = onlyFavorite;
-      this.searchLayoutVisible = searchLayoutVisible;
-      this.recyclerViewVisible = recyclerViewVisible;
-      this.noContentTextVisible = noContentTextVisible;
-      this.adapterInitialized = true;
-
-      outState.putBoolean(KEY_ONLY_FAVORITE, this.onlyFavorite);
+    private void saveToOutState(Bundle outState) {
+      outState.putSerializable(KEY_ONLY_FAVORITE, this.fragmentType);
       outState.putBoolean(KEY_SEARCH_LAYOUT_VISIBLE, this.searchLayoutVisible);
       outState.putBoolean(KEY_RECYCLER_VIEW_VISIBLE, this.recyclerViewVisible);
       outState.putBoolean(KEY_NO_CONTENT_TEXT_VISIBLE, this.noContentTextVisible);
-      adapter.onSaveInstanceState(outState);
+
+      if (translationsAdapter != null) {
+        translationsAdapter.onSaveInstanceState(outState);
+      }
     }
 
-    public static Bundle saveOnlyFavorite(boolean onlyFavorite) {
+    //                        ------------ setters --------------
+
+    private void setFragmentType(FragmentType fragmentType) {
+      this.fragmentType = fragmentType;
+    }
+
+    private void setSearchLayoutVisible(boolean searchLayoutVisible) {
+      this.searchLayoutVisible = searchLayoutVisible;
+    }
+
+    private void setRecyclerViewVisible(boolean recyclerViewVisible) {
+      this.recyclerViewVisible = recyclerViewVisible;
+    }
+
+    private void setNoContentTextVisible(boolean noContentTextVisible) {
+      this.noContentTextVisible = noContentTextVisible;
+    }
+
+    private void setTranslationsAdapter(ITranslationsModel translationsAdapter) {
+      this.translationsAdapter = translationsAdapter;
+    }
+
+    //                        ------------ getters --------------
+
+    private boolean isFragmentTypeInitialized() {
+      return fragmentType != null;
+    }
+
+    private boolean isTranslationsAdapterInitialized() {
+      return translationsAdapter != null;
+    }
+
+    private FragmentType getFragmentType() {
+      return fragmentType;
+    }
+
+    private ITranslationsModel getTranslationsAdapter() {
+      return translationsAdapter;
+    }
+
+    private boolean isSearchLayoutVisible() {
+      return searchLayoutVisible;
+    }
+
+    private boolean isRecyclerViewVisible() {
+      return recyclerViewVisible;
+    }
+
+    private boolean isNoContentTextVisible() {
+      return noContentTextVisible;
+    }
+
+    //                        --------------- static ------------------
+
+    private static Bundle getFragmentTypeBundle(FragmentType fragmentType) {
       Bundle bundle = new Bundle();
-      bundle.putBoolean(KEY_ONLY_FAVORITE, onlyFavorite);
+      bundle.putSerializable(KEY_ONLY_FAVORITE, fragmentType);
       return bundle;
+    }
+
+    //                        ------------ inner types ----------------
+
+    public enum FragmentType {
+      ONLY_FAVORITE_HISTORY,
+      ALL_HISTORY
     }
 
   }

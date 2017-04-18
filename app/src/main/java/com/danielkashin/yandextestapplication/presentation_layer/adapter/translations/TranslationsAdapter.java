@@ -28,7 +28,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     mTranslations = new ArrayList<>();
   }
 
-  public TranslationsAdapter(Bundle savedInstanceState) throws IllegalStateException {
+  public TranslationsAdapter(Bundle savedInstanceState) throws IllegalArgumentException {
     mTranslations = restoreTranslations(savedInstanceState);
   }
 
@@ -128,9 +128,9 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     outState.putParcelableArrayList(KEY_TRANSLATIONS, mTranslations);
   }
 
-  private ArrayList<Translation> restoreTranslations(Bundle savedInstanceState) throws IllegalStateException {
+  private ArrayList<Translation> restoreTranslations(Bundle savedInstanceState) throws IllegalArgumentException{
     if (savedInstanceState == null || !savedInstanceState.containsKey(KEY_TRANSLATIONS)) {
-      throw new IllegalStateException("Bundle must contain the needed field");
+      throw new IllegalStateException("Bundle must be non null and contain KEY_TRANSLATIONS key");
     }
 
     ArrayList<Parcelable> parcelableArrayList = savedInstanceState.getParcelableArrayList(KEY_TRANSLATIONS);
@@ -157,7 +157,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     private final TextView language;
 
 
-    public TranslationViewHolder(View view) {
+    private TranslationViewHolder(View view) {
       super(view);
       rootView = view;
       favoriteToggle = (ToggleButton) view.findViewById(R.id.toggle_favorite);
@@ -166,23 +166,23 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       language = (TextView) view.findViewById(R.id.text_language);
     }
 
-    public void setIsFavourite(boolean isFavourite) {
+    private void setIsFavourite(boolean isFavourite) {
       favoriteToggle.setChecked(isFavourite);
     }
 
-    public void setOriginalText(String text) {
+    private void setOriginalText(String text) {
       originalText.setText(text);
     }
 
-    public void setTranslatedText(String text) {
+    private void setTranslatedText(String text) {
       translatedText.setText(text);
     }
 
-    public void setLanguage(String text) {
+    private void setLanguage(String text) {
       language.setText(text);
     }
 
-    public void setOnFavoriteToggleListener(View.OnClickListener listener) {
+    private void setOnFavoriteToggleListener(View.OnClickListener listener) {
       favoriteToggle.setOnClickListener(listener);
     }
 

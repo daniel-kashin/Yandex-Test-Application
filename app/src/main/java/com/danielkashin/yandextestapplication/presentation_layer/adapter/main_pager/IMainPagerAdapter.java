@@ -1,5 +1,10 @@
 package com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager;
 
 
-public interface IMainPagerAdapter {
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
+
+public interface IMainPagerAdapter extends IDatabaseChangeReceiver {
+
+
+
 }

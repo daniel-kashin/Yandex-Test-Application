@@ -1,9 +1,8 @@
 package com.danielkashin.yandextestapplication.domain_layer.pojo;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 
-import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.Language;
+import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.DatabaseLanguage;
 
 
 public class LanguagePair {
@@ -15,39 +14,28 @@ public class LanguagePair {
   private Language translatedLanguage;
 
 
-  public LanguagePair(Bundle bundle) throws IllegalStateException {
-    if (bundle == null || !bundle.containsKey(KEY_ORIGINAL_LANGUAGE)
-        || !bundle.containsKey(KEY_TRANSLATED_LANGUAGE)
-        || bundle.getParcelable(KEY_ORIGINAL_LANGUAGE) == null
-        || bundle.getParcelable(KEY_TRANSLATED_LANGUAGE) == null){
-      throw new IllegalStateException("Bundle must contain languages");
-    }
-
-    this.originalLanguage = bundle.getParcelable(KEY_ORIGINAL_LANGUAGE);
-    this.translatedLanguage = bundle.getParcelable(KEY_TRANSLATED_LANGUAGE);
-  }
-
   public LanguagePair(Language originalLanguage, Language translatedLanguage) {
     if (originalLanguage == null || translatedLanguage == null){
-      throw new IllegalStateException("Both languages bust be non null");
+      throw new IllegalArgumentException("Languages in parameters must be non null");
     }
 
     this.originalLanguage = originalLanguage;
     this.translatedLanguage = translatedLanguage;
   }
 
+  // ------------------------------ getters/setters -----------------------------------------------
 
   public void setOriginalLanguage(Language originalLanguage) {
-    if (originalLanguage == null){
-      throw new IllegalStateException("Language must be non null");
+    if (originalLanguage == null) {
+      throw new IllegalArgumentException("DatabaseLanguage in parameter must be non null");
     }
 
     this.originalLanguage = originalLanguage;
   }
 
   public void setTranslatedLanguage(Language translatedLanguage) {
-    if (translatedLanguage == null){
-      throw new IllegalStateException("Language must be non null");
+    if (translatedLanguage == null) {
+      throw new IllegalArgumentException("DatabaseLanguage in parameter must be non null");
     }
 
     this.translatedLanguage = translatedLanguage;
@@ -65,6 +53,8 @@ public class LanguagePair {
     return originalLanguage.getCode() + "-" + translatedLanguage.getCode();
   }
 
+  // -------------------------------------- another -----------------------------------------------
+
   public void saveToBundle(Bundle bundle){
     bundle.putParcelable(KEY_ORIGINAL_LANGUAGE, originalLanguage);
     bundle.putParcelable(KEY_TRANSLATED_LANGUAGE, translatedLanguage);
@@ -75,4 +65,29 @@ public class LanguagePair {
     originalLanguage = translatedLanguage;
     translatedLanguage = buffer;
   }
+
+  // ---------0-------------------------- inner classes -------------------------------------------
+
+  public static class Factory {
+
+    private Factory(){
+    }
+
+    public static LanguagePair create(Bundle bundle) throws IllegalArgumentException {
+      if (bundle == null || !bundle.containsKey(KEY_ORIGINAL_LANGUAGE)
+          || !bundle.containsKey(KEY_TRANSLATED_LANGUAGE)){
+        throw new IllegalArgumentException("Bundle must contain languages");
+      }
+
+      Language originalLanguage = bundle.getParcelable(KEY_ORIGINAL_LANGUAGE);
+      Language translatedLanguage = bundle.getParcelable(KEY_TRANSLATED_LANGUAGE);
+
+      if (originalLanguage == null || translatedLanguage == null){
+        throw new IllegalArgumentException("Languages in bundle must be non null");
+      }
+
+      return new LanguagePair(originalLanguage, translatedLanguage);
+    }
+  }
+
 }

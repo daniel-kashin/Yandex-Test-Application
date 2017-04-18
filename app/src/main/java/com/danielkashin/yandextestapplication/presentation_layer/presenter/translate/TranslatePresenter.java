@@ -26,6 +26,8 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   private NetworkSubscriber mTranslationOnInternetAvailable;
   private String mTextCache;
+  private boolean mNotifyDataChangedCache;
+  private LanguagePair mLanguageCache;
 
 
   public TranslatePresenter(TranslateUseCase translateUseCase,
@@ -40,14 +42,22 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   protected void onViewAttached() {
+    mLanguageCache = null;
+
     if (mTextCache != null && !mTextCache.equals("")) {
       getView().setTranslatedText(mTextCache);
       mTextCache = "";
     }
 
+    if (mNotifyDataChangedCache) {
+      getView().publishOnDataChanged();
+      mNotifyDataChangedCache = false;
+    }
+
     if (mTranslateUseCase.isRunning()) {
       getView().showProgressBar();
     }
+
 
     if (mTranslationOnInternetAvailable != null && !mTranslationOnInternetAvailable.isDisposed()) {
       getView().showProgressBar();
@@ -57,6 +67,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   protected void onViewDetached() {
+    mLanguageCache = getView().getLanguages();
     getView().removeTextWatcher();
   }
 
@@ -76,8 +87,9 @@ public class TranslatePresenter extends Presenter<ITranslateView>
       getView().initializeLanguages(result.second);
       getView().setInputText(result.first.getOriginalText());
       getView().setTranslatedText(result.first.getTranslatedText());
-      getView().setTextWatcher();
       getView().showImageClear();
+      getView().setTextWatcher();
+      getView().setSwapLanguagesListener();
     }
   }
 
@@ -85,12 +97,28 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   public void onGetLastTranslationException(Pair<ExceptionBundle, LanguagePair> result) {
     if (getView() != null) {
       getView().initializeLanguages(result.second);
-      getView().setTextWatcher();
       getView().hideImageClear();
+      getView().setTextWatcher();
+      getView().setSwapLanguagesListener();
     }
   }
 
   // -------------------------------- TranslateUseCase callbacks ----------------------------------
+
+
+  @Override
+  public void onSaveTranslationSuccess() {
+    if (getView() != null) {
+      getView().publishOnDataChanged();
+    } else {
+      mNotifyDataChangedCache = true;
+    }
+  }
+
+  @Override
+  public void onSaveTranslationException(ExceptionBundle exceptionBundle) {
+    // TODO
+  }
 
   @Override
   public void onTranslateSuccess(Translation translation) {
@@ -157,35 +185,45 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     mGetLastTranslationUseCase.run(this);
   }
 
+  public void onNotFirstStart() {
+    if (getView() != null) {
+      getView().setTextWatcher();
+      getView().setSwapLanguagesListener();
+    }
+  }
+
   public void onInputTextClear() {
     mTranslateUseCase.cancel();
     disposeTranslationSubscription();
 
-    getView().hideProgressBar();
-    getView().hideNoInternet();
-    getView().setTranslatedText("");
+    if (getView() != null) {
+      getView().hideProgressBar();
+      getView().hideNoInternet();
+      getView().setTranslatedText("");
+    }
   }
 
   public void onInputTextChanged(final String originalText) {
     mTranslateUseCase.cancel();
 
-    getView().showProgressBar();
+    if (getView() != null) {
+      getView().showProgressBar();
+    }
 
     if (mNetworkManager.getCurrentNetworkStatus() != NetworkStatus.DISCONNECTED) {
-      mTranslateUseCase.run(this, originalText, getView().getLanguages().getLanguageCodePair());
+      if (getView() != null) {
+        mTranslateUseCase.run(this, originalText, getView().getLanguages().getLanguageCodePair());
+      } else {
+        mTranslateUseCase.run(this, originalText, mLanguageCache.getLanguageCodePair());
+      }
     } else {
-      getView().setTranslatedText("");
-      getView().showNoInternet();
+      if (getView() != null) {
+        getView().setTranslatedText("");
+        getView().showNoInternet();
+      }
 
       disposeTranslationSubscription();
       subscribeTranslationOnNetworkAvailable(originalText);
-    }
-  }
-
-  public void onChangeButtonsImageClicked() {
-    if (getView().getLanguages() != null) {
-      getView().swapLanguages();
-      getView().setInputText(getView().getTranslatedText());
     }
   }
 
@@ -211,7 +249,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     }
   }
 
-// ------------------------------------- Inner classes -----------------------------------------
+// --------------------------------------- inner types --------------------------------------------
 
   public static final class Factory
       implements IPresenterFactory<TranslatePresenter, ITranslateView> {
@@ -236,7 +274,5 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     public TranslatePresenter create() {
       return new TranslatePresenter(translateUseCase, getLastTranslationUseCase, networkManager);
     }
-
   }
-
 }

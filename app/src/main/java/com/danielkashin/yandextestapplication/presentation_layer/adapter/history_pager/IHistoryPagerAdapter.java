@@ -1,15 +1,13 @@
 package com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager;
 
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 
-public interface IHistoryAdapter {
+
+public interface IHistoryPagerAdapter extends IDatabaseChangeReceiver {
 
   void onPageSelected(int position);
 
   void onDeleteButtonClicked();
-
-  void onDataChanged(IHistoryPage source);
-
-  void onDataChanged();
 
   boolean equalsCurrent(IHistoryPage page);
 

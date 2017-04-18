@@ -1,17 +1,16 @@
 package com.danielkashin.yandextestapplication.presentation_layer.view.translate;
 
 
-import android.text.TextWatcher;
-
-import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.Language;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
-public interface ITranslateView extends IView {
+public interface ITranslateView extends IView, IDatabaseChangePublisher {
+
+  // --------------------------------------- languages --------------------------------------------
 
   LanguagePair getLanguages();
-
-  void swapLanguages();
 
   void initializeLanguages(LanguagePair languages);
 
@@ -19,37 +18,37 @@ public interface ITranslateView extends IView {
 
   void setTranslatedLanguage(Language language);
 
+  // ---------------------------------------- listeners -------------------------------------------
+
+  void setSwapLanguagesListener();
+
+  void removeSwapLanguagesListener();
 
   void setTextWatcher();
 
   void removeTextWatcher();
 
+  // ------------------------------------- hide/show views ----------------------------------------
 
   void hideNoInternet();
 
   void showNoInternet();
 
-
   void showProgressBar();
 
   void hideProgressBar();
-
 
   void showImageClear();
 
   void hideImageClear();
 
+  // ------------------------------------ other view handling -------------------------------------
 
   void setInputText(String text);
 
-
   void setTranslatedText(String text);
 
-  String getTranslatedText();
-
-
   void showAlertDialog(String text);
-
 
   String getStringById(int id);
 

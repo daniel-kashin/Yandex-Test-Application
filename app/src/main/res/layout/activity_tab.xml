@@ -7,7 +7,7 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.tabs.TabActivity">
+    tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.main_tab.MainTabActivity">
 
     <com.danielkashin.yandextestapplication.presentation_layer.custom_views.NonSwipeableViewPager
         android:id="@+id/view_pager"

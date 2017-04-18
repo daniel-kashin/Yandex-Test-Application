@@ -3,7 +3,8 @@ package com.danielkashin.yandextestapplication.data_layer.contracts.translate.lo
 
 public class TranslationContract {
 
-  private TranslationContract() {}
+  private TranslationContract() {
+  }
 
 
   // -------------------------------------- constants ---------------------------------------------
@@ -25,16 +26,20 @@ public class TranslationContract {
       + COLUMN_NAME_ORIGINAL_TEXT + " TEXT NOT NULL, "
       + COLUMN_NAME_TRANSLATED_TEXT + " TEXT NOT NULL, "
       + COLUMN_NAME_LANGUAGE + " INTEGER NOT NULL, "
-      + COLUMN_NAME_IS_FAVOURITE + " TEXT NOT NULL"
+      + COLUMN_NAME_IS_FAVOURITE + " TEXT NOT NULL, "
+      + "UNIQUE(" + COLUMN_NAME_ORIGINAL_TEXT + ", " + COLUMN_NAME_LANGUAGE + ") ON CONFLICT REPLACE"
       + ");";
 
   public static String SQL_DELETE_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME;
 
-  // ----------------------------------- static methods ------------------------------------------
+  private static final String ESCAPE_CHAR = "#";
+
+  // --------------------------------------- public -----------------------------------------------
 
   public static String getTranslationSearchQuery(boolean onlyFavorite, String searchRequest) {
     StringBuilder searchBuilder = new StringBuilder("");
 
+    // add query to get only favorite translations
     if (onlyFavorite) {
       searchBuilder.append(TranslationContract.COLUMN_NAME_IS_FAVOURITE)
           .append(" = ")
@@ -42,27 +47,46 @@ public class TranslationContract {
     }
 
     if (searchRequest != null && !searchRequest.isEmpty()) {
-      searchBuilder.append(onlyFavorite ? "\nAND" : "")
+      searchBuilder
+
+          // if we added query to find only favorite, then we must add AND keyword
+          .append(onlyFavorite ? "\nAND" : "")
+
+          // translations where original text contains search request will match
           .append("(")
           .append(TranslationContract.COLUMN_NAME_ORIGINAL_TEXT)
           .append(" LIKE \'%")
-          .append(searchRequest)
+          .append(getEscapedString(searchRequest))
           .append("%\'")
+          .append(" ESCAPE ")
+          .append("\'")
+          .append(ESCAPE_CHAR)
+          .append("\'")
           .append(onlyFavorite ? "" : ")")
+
+          // translations where translated text contains search request will also match
           .append(" OR ")
           .append(onlyFavorite ? "" : "(")
           .append(TranslationContract.COLUMN_NAME_TRANSLATED_TEXT)
           .append(" LIKE \'%")
-          .append(searchRequest)
+          .append(getEscapedString(searchRequest))
           .append("%\'")
+          .append(" ESCAPE ")
+          .append("\'")
+          .append(ESCAPE_CHAR)
+          .append("\'")
           .append(")");
     }
 
-    String result = searchBuilder.toString();
-    if (result.equals("")) {
-      return null;
-    } else {
-      return result;
-    }
+    return searchBuilder.toString();
+  }
+
+  // ---------------------------------------- private  --------------------------------------------
+
+  private static String getEscapedString(String string) {
+    return string.replace(ESCAPE_CHAR, ESCAPE_CHAR + ESCAPE_CHAR)
+        .replace("'", "''")
+        .replace("%", ESCAPE_CHAR + "%")
+        .replace("_", ESCAPE_CHAR + "_");
   }
 }

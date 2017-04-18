@@ -10,6 +10,7 @@ import com.danielkashin.yandextestapplication.domain_layer.async_task.Repository
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
+
 import java.util.concurrent.Executor;
 
 
@@ -46,7 +47,9 @@ public class TranslateUseCase implements IUseCase {
           @Override
           public void onResult(final Translation result) {
             // notify UI that translation has finished successfully
-            uiCallbacks.onTranslateSuccess(result);
+            if (uiCallbacks != null) {
+              uiCallbacks.onTranslateSuccess(result);
+            }
 
             // save translation right after getting it
             RepositoryVoidAsyncTask.RepositoryRunnable saveTranslationRunnable =
@@ -58,10 +61,26 @@ public class TranslateUseCase implements IUseCase {
                 };
 
 
-            // don`t save this asynctask cause it`s not needed to cancel it later
+            RepositoryVoidAsyncTask.PostExecuteListener innerListener
+                = new RepositoryVoidAsyncTask.PostExecuteListener() {
+                  @Override
+                  public void onResult() {
+                    if (uiCallbacks != null) {
+                      uiCallbacks.onSaveTranslationSuccess();
+                    }
+                  }
+
+                  @Override
+                  public void onException(ExceptionBundle exception) {
+                    if (uiCallbacks != null) {
+                      uiCallbacks.onSaveTranslationException(exception);
+                    }
+                  }
+                };
+
             new RepositoryVoidAsyncTask<>(
                 saveTranslationRunnable,
-                null                      // don`t want to notify user about saving
+                innerListener
             ).executeOnExecutor(executor);
           }
 
@@ -99,6 +118,10 @@ public class TranslateUseCase implements IUseCase {
   // ------------------------------------ callbacks ----------------------------------------------
 
   public interface Callbacks {
+
+    void onSaveTranslationSuccess();
+
+    void onSaveTranslationException(ExceptionBundle exceptionBundle);
 
     void onTranslateSuccess(Translation result);
 

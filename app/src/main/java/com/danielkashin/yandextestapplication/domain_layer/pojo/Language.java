@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local;
+package com.danielkashin.yandextestapplication.domain_layer.pojo;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -15,9 +15,9 @@ public class Language implements Parcelable {
     this.text = text;
   }
 
-  public Language(Parcel source) {
-    this.code = source.readString();
-    this.text = source.readString();
+  private Language(Parcel parcel){
+    this.code = parcel.readString();
+    this.text = parcel.readString();
   }
 
   public String getCode() {
@@ -47,8 +47,8 @@ public class Language implements Parcelable {
     }
 
     @Override
-    public Language[] newArray(int i) {
-      return new Language[i];
+    public Language[] newArray(int size) {
+      return new Language[size];
     }
   };
 }

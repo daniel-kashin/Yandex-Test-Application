@@ -18,14 +18,17 @@ public class HistoryPresenter extends Presenter<IHistoryView>
 
   private static final int TRANSLATIONS_PER_UPLOAD = 50;
 
-  @NonNull
   private final GetTranslationsUseCase mGetTranslationsUseCase;
 
   private ArrayList<Translation> mCachedTranslations;
   private boolean mCachedTranslationsClearBeforeAdd;
 
 
-  public HistoryPresenter(@NonNull GetTranslationsUseCase getTranslationsUseCase) {
+  public HistoryPresenter(GetTranslationsUseCase getTranslationsUseCase) {
+    if (getTranslationsUseCase == null) {
+      throw new IllegalArgumentException("All arguments must be non null");
+    }
+
     mGetTranslationsUseCase = getTranslationsUseCase;
   }
 
@@ -95,10 +98,9 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   public static final class Factory
       implements IPresenterFactory<HistoryPresenter, IHistoryView> {
 
-    @NonNull
     private final GetTranslationsUseCase getTranslationsUseCase;
 
-    public Factory(@NonNull GetTranslationsUseCase getTranslationsUseCase) {
+    public Factory(GetTranslationsUseCase getTranslationsUseCase) {
       this.getTranslationsUseCase = getTranslationsUseCase;
     }
 

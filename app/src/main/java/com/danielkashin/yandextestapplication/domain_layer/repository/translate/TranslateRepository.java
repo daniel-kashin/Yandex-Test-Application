@@ -48,6 +48,10 @@ public class TranslateRepository implements ITranslateRepository {
       languageId = result.insertedId();
     }
 
+    if (languageId == null) {
+      throw new ExceptionBundle(Reason.PUT_DENIED);
+    }
+
     // create new database translation using picked id and input translation`s information
     DatabaseTranslation databaseTranslation = new DatabaseTranslation(
         null,
@@ -76,7 +80,8 @@ public class TranslateRepository implements ITranslateRepository {
       // some codes shows us that there was exceptional situation
       remoteService.tryToThrowExceptionBundle(response.code());
 
-      return new Translation(originalText, response.body().getText(), response.body().getLanguage(), false);
+      return new Translation(originalText, response.body().getText(),
+          response.body().getLanguage(), false);
     } catch (Exception exception) {
       // parse exception
       remoteService.tryToThrowExceptionBundle(exception);

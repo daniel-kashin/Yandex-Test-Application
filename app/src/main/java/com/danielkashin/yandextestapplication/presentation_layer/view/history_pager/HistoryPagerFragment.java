@@ -10,12 +10,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.HistoryPagerAdapter;
-import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryAdapter;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPagerAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
-import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IDatabaseChangeReceiver;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 
 
-public class HistoryPagerFragment extends Fragment implements IHistoryPagerView, IDatabaseChangeReceiver {
+public class HistoryPagerFragment extends Fragment
+    implements IHistoryPagerView, IDatabaseChangeReceiver {
 
   private static final String KEY_CLEAR_HISTORY_IMAGE_VISIBLE = "KEY_CLEAR_HISTORY_IMAGE_VISIBLE";
 
@@ -26,12 +27,19 @@ public class HistoryPagerFragment extends Fragment implements IHistoryPagerView,
 
 
   public static HistoryPagerFragment getInstance() {
-    HistoryPagerFragment fragment = new HistoryPagerFragment();
-
-    return fragment;
+    return new HistoryPagerFragment();
   }
 
   // ---------------------------------- lifecycle -------------------------------------------------
+
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    if (!(getActivity() instanceof IDatabaseChangeReceiver)) {
+      throw new IllegalStateException("Parent activity must implement IHistoryPagerView IDatabaseChangeReceiver");
+    }
+  }
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -50,33 +58,36 @@ public class HistoryPagerFragment extends Fragment implements IHistoryPagerView,
     outState.putBoolean(KEY_CLEAR_HISTORY_IMAGE_VISIBLE, mClearHistoryImage.getVisibility() == View.VISIBLE);
   }
 
+  // ------------------------------ IDatabaseChangeReceiver ---------------------------------------
+
+  @Override
+  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
+    // throw call to adapter
+    ((IDatabaseChangeReceiver)mViewPager.getAdapter()).receiveOnDataChanged(source);
+  }
+
+  // ------------------------------ IDatabaseChangeReceiver ---------------------------------------
+
+  @Override
+  public void publishOnDataChanged() {
+
+  }
+
   // -------------------------------- IHistoryPagerView -------------------------------------------
 
   @Override
   public void hideDeleteHistoryButton(IHistoryPage source) {
-    if (((IHistoryAdapter) mViewPager.getAdapter()).equalsCurrent(source)) {
+    if (((IHistoryPagerAdapter) mViewPager.getAdapter()).equalsCurrent(source)) {
       mClearHistoryImage.setVisibility(View.INVISIBLE);
     }
   }
 
   @Override
   public void showDeleteHistoryButton(IHistoryPage source) {
-    if (((IHistoryAdapter) mViewPager.getAdapter()).equalsCurrent(source)) {
+    if (((IHistoryPagerAdapter) mViewPager.getAdapter()).equalsCurrent(source)) {
       mClearHistoryImage.setOnClickListener(mClearHistoryImageClickListener);
       mClearHistoryImage.setVisibility(View.VISIBLE);
     }
-  }
-
-  // ------------------------------ IDatabaseChangeReceiver ---------------------------------------
-
-  @Override
-  public void onDataChanged(IHistoryPage source) {
-    ((IHistoryAdapter)mViewPager.getAdapter()).onDataChanged(source);
-  }
-
-  @Override
-  public void onDataChanged() {
-    ((IHistoryAdapter)mViewPager.getAdapter()).onDataChanged();
   }
 
   // ---------------------------------- private methods -------------------------------------------
@@ -97,7 +108,7 @@ public class HistoryPagerFragment extends Fragment implements IHistoryPagerView,
     mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
       @Override
       public void onPageSelected(int position) {
-        ((IHistoryAdapter) mViewPager.getAdapter()).onPageSelected(position);
+        ((IHistoryPagerAdapter) mViewPager.getAdapter()).onPageSelected(position);
       }
 
       @Override
@@ -114,7 +125,7 @@ public class HistoryPagerFragment extends Fragment implements IHistoryPagerView,
     mClearHistoryImageClickListener = new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        ((IHistoryAdapter) mViewPager.getAdapter()).onDeleteButtonClicked();
+        ((IHistoryPagerAdapter) mViewPager.getAdapter()).onDeleteButtonClicked();
       }
     };
 

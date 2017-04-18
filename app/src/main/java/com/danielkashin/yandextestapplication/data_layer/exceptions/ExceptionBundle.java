@@ -57,8 +57,7 @@ public class ExceptionBundle extends Exception {
     EMPTY_TRANSLATION(600),
     EMPTY_LANGUAGE(601),
     EMPTY_TRANSLATIONS(602),
-    INSERT_DENIED(603),
-    UPDATE_DENIED(604),
+    PUT_DENIED(603),
     NULL_FIELD(605),
     DATABASE_CLOSED(606),
 

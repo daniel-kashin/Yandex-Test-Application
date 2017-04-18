@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.presentation_layer.view.tabs;
+package com.danielkashin.yandextestapplication.presentation_layer.view.main_tab;
 
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -8,16 +8,19 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.MainPagerAdapter;
 
 
-public class TabActivity extends AppCompatActivity {
+public class MainTabActivity extends AppCompatActivity implements IDatabaseChangeReceiver {
 
   private final static String SELECTED_MENU_ITEM_ID = "selected_tab_id";
 
   private ViewPager mViewPager;
   private BottomNavigationView mBottomNavigationView;
 
+
+  // --------------------------------------- lifecycle --------------------------------------------
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +39,16 @@ public class TabActivity extends AppCompatActivity {
 
     outState.putInt(SELECTED_MENU_ITEM_ID, getSelectedMenuItem());
   }
+
+  // -------------------------------- IDatabaseChangeReceiver -------------------------------------
+
+  @Override
+  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
+    ((IDatabaseChangeReceiver)mViewPager.getAdapter()).receiveOnDataChanged(source);
+  }
+
+  // --------------------------------------- lifecycle --------------------------------------------
+
 
   private void initializeView() {
     mViewPager = (ViewPager) findViewById(R.id.view_pager);

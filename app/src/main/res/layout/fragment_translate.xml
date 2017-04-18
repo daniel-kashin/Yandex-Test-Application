@@ -24,7 +24,7 @@
                android:id="@+id/text_original_language"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
-               android:layout_toStartOf="@+id/image_change_languages"
+               android:layout_toStartOf="@+id/image_swap_languages"
                android:layout_marginEnd="@dimen/fg_transl_toolbar_margin"
                android:textSize="@dimen/toolbar_text_size"
                android:freezesText="true"
@@ -33,7 +33,7 @@
                android:maxLines="1"/>
 
            <ImageView
-               android:id="@+id/image_change_languages"
+               android:id="@+id/image_swap_languages"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:background="@drawable/ic_compare_arrows"
@@ -43,7 +43,7 @@
                android:id="@+id/text_translated_language"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
-               android:layout_toEndOf="@id/image_change_languages"
+               android:layout_toEndOf="@id/image_swap_languages"
                android:layout_marginStart="@dimen/fg_transl_toolbar_margin"
                android:textSize="@dimen/toolbar_text_size"
                android:freezesText="true"
@@ -77,6 +77,7 @@
                 android:layout_marginBottom="@dimen/fg_transl_edit_text_bottom"
                 android:gravity="top"
                 android:background="@android:color/transparent"
+                android:inputType="textFilter|textNoSuggestions"
                 android:hint="@string/hint_translation_edit_text"/>
 
             <ImageView

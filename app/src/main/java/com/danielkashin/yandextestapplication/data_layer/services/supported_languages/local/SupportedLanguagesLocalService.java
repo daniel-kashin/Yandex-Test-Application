@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.contracts.supported_languages.local.SupportedLanguagesContract;
-import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.Language;
+import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.DatabaseLanguage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,37 +26,37 @@ public class SupportedLanguagesLocalService implements ISupportedLanguagesLocalS
 
 
   @Override
-  public Language getDefaultOriginalLanguage() {
+  public DatabaseLanguage getDefaultOriginalLanguage() {
     return getLanguage(SupportedLanguagesContract.DEFAULT_ORIGINAL_LANGUAGE_CODE);
   }
 
   @Override
-  public Language getDefaultTranslatedLanguage() {
+  public DatabaseLanguage getDefaultTranslatedLanguage() {
     return getLanguage(SupportedLanguagesContract.DEFAULT_TRANSLATED_LANGUAGE_CODE);
   }
 
   @Override
-  public Language getLanguage(String code) {
+  public DatabaseLanguage getLanguage(String code) {
     checkLengths();
     checkCode(code);
 
     String languageText = context.getResources()
         .getStringArray(R.array.supported_languages_texts)
         [codes.get(code)];
-    return new Language(code, languageText);
+    return new DatabaseLanguage(code, languageText);
   }
 
   @Override
-  public ArrayList<Language> getAllLanguages() {
+  public ArrayList<DatabaseLanguage> getAllLanguages() {
     checkLengths();
 
     String[] languageTexts = context.getResources()
         .getStringArray(R.array.supported_languages_texts);
     String[] languageCodes = SupportedLanguagesContract.SUPPORTED_LANGUAGES_CODES;
 
-    ArrayList<Language> languages = new ArrayList<>();
+    ArrayList<DatabaseLanguage> languages = new ArrayList<>();
     for (int i = 0; i < languageCodes.length; ++i) {
-      languages.add(new Language(languageCodes[i], languageTexts[i]));
+      languages.add(new DatabaseLanguage(languageCodes[i], languageTexts[i]));
     }
 
     return languages;

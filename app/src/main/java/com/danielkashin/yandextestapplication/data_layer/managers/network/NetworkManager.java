@@ -38,7 +38,7 @@ public class NetworkManager implements INetworkManager {
         try {
           context.unregisterReceiver(receiver);
         } catch (IllegalArgumentException e) {
-          // in case reciever was already unregistered
+          // in case receiver was already unregistered
         }
       }
     });

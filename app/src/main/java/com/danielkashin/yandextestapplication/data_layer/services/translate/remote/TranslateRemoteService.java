@@ -39,7 +39,9 @@ public class TranslateRemoteService extends NetworkService<ITranslationRemoteCon
 
   @Override
   public void tryToThrowExceptionBundle(Exception exception) throws ExceptionBundle {
-    if (exception instanceof ConnectException || exception instanceof SocketTimeoutException
+    if (exception instanceof ExceptionBundle) {
+      throw (ExceptionBundle) exception;
+    } else if (exception instanceof ConnectException || exception instanceof SocketTimeoutException
         || exception instanceof UnknownHostException || exception instanceof SSLException) {
       throw new ExceptionBundle(ExceptionBundle.Reason.NETWORK_UNAVAILABLE);
     } else {

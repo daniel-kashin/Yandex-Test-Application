@@ -20,7 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.danielkashin.yandextestapplication.R;
-import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.Language;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
@@ -28,15 +27,15 @@ import com.danielkashin.yandextestapplication.data_layer.services.supported_lang
 import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslateLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslateRemoteService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslateRemoteService;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
-import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.ISupportedLanguagesRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.SupportedLanguagesRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslateRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
-import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.ITranslationKeeper;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.TranslatePresenter;
@@ -48,11 +47,11 @@ import okhttp3.OkHttpClient;
 
 
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
-    implements ITranslateView, ITranslationKeeper {
+    implements ITranslateView, IDatabaseChangeReceiver {
 
   private TextView mOriginalLanguageText;
   private TextView mTranslatedLanguageText;
-  private ImageView mChangeLanguagesImage;
+  private ImageView mSwapLanguagesImage;
   private EditText mOriginalTextEdit;
   private ImageView mClearImage;
   private RelativeLayout mTranslationLayout;
@@ -66,9 +65,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   // ----------------------------------- getInstance ----------------------------------------------
 
   public static TranslateFragment getInstance() {
-    TranslateFragment translateFragment = new TranslateFragment();
-
-    return translateFragment;
+    return new TranslateFragment();
   }
 
   // ------------------------------------ lifecycle -----------------------------------------------
@@ -77,9 +74,15 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    if (!(getActivity() instanceof IDatabaseChangeReceiver)) {
+      throw new IllegalStateException("Parent activity must implement IDatabaseChangeReceiver");
+    }
+
+    // try to restore state from saved instance
     mRestoredState = new State(savedInstanceState);
 
-    if (!mRestoredState.isLanguagesInitialized()){
+    if (!mRestoredState.isLanguagePairInitialized()) {
+      // could not restore state -- check arguments
       mRestoredState = new State(getArguments());
     }
   }
@@ -93,43 +96,53 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void onStart() {
     super.onStart();
 
-    setListeners();
-
-    if (!mRestoredState.isLanguagesInitialized()) {
+    if (!mRestoredState.isLanguagePairInitialized()) {
+      // activity state is not initialized -- call fragment to initialized
       getPresenter().onFirstStart();
     } else {
-      setTextWatcher();
+      // activity state is initialized -- presenter does something else
+      getPresenter().onNotFirstStart();
     }
+
+    setListeners();
   }
 
   @Override
   public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
+    mRestoredState.setClearImageVisible(mClearImage.getVisibility() == View.VISIBLE);
     mRestoredState.saveToOutState(outState);
   }
 
-  // ------------------------------------ ITranslateView  -----------------------------------------
-
+  // ------------------------------- IDatabaseChangeReceiver --------------------------------------
 
   @Override
-  public void swapLanguages() {
-    if (mRestoredState.isLanguagesInitialized()) {
-      mRestoredState.getLanguages().swapLanguages();
-      mOriginalLanguageText.setText(mRestoredState.getLanguages().getOriginalLanguage().getText());
-      mTranslatedLanguageText.setText(mRestoredState.getLanguages().getTranslatedLanguage().getText());
-    }
+  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
+
   }
+
+  // ---------------------------------- IDatabaseNotifier -----------------------------------------
+
+  @Override
+  public void publishOnDataChanged() {
+    ((IDatabaseChangeReceiver)getActivity()).receiveOnDataChanged(this);
+  }
+
+  // ------------------------------------ ITranslateView ------------------------------------------
+
+  //                        --------------- languages ------------------
 
   @Override
   public void initializeLanguages(LanguagePair languages) {
-    mRestoredState = new State(languages);
+    // state handles exceptions by itself -- no need to check it here
+    mRestoredState.setLanguagePair(languages);
     mOriginalLanguageText.setText(languages.getOriginalLanguage().getText());
     mTranslatedLanguageText.setText(languages.getTranslatedLanguage().getText());
   }
 
   @Override
   public LanguagePair getLanguages() {
-    return mRestoredState.getLanguages();
+    return mRestoredState.getLanguagePair();
   }
 
   @Override
@@ -144,9 +157,30 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mTranslatedLanguageText.setText(language.getText());
   }
 
+  //                        --------------- listeners ------------------
+
+  @Override
+  public void setSwapLanguagesListener() {
+    // set this listener only after initialization of languages was performed
+    mSwapLanguagesImage.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        swapLanguages();
+        mOriginalTextEdit.setText(mTranslatedText.getText());
+      }
+    });
+  }
+
+  @Override
+  public void removeSwapLanguagesListener() {
+    // when presenter unbinds view
+    mSwapLanguagesImage.setOnClickListener(null);
+  }
+
   @Override
   public void setTextWatcher() {
     mTextWatcher = new TextWatcher() {
+      // fields to perform delay
       private final static int INPUT_DELAY_IN_MS = 500;
       private Handler handler = new Handler(Looper.getMainLooper());
       Runnable workRunnable;
@@ -163,8 +197,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       @Override
       public void afterTextChanged(final Editable editable) {
         if (editable.toString().replace(" ", "").isEmpty()) {
-          getPresenter().onInputTextClear();
           mClearImage.setVisibility(View.INVISIBLE);
+          getPresenter().onInputTextClear();
         } else {
           mClearImage.setVisibility(View.VISIBLE);
           workRunnable = new Runnable() {
@@ -186,6 +220,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mOriginalTextEdit.removeTextChangedListener(mTextWatcher);
   }
 
+  //                        ------------ hide/show views ---------------
 
   @Override
   public void hideNoInternet() {
@@ -196,7 +231,6 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void showNoInternet() {
     mNoInternetLayout.setVisibility(View.VISIBLE);
   }
-
 
   @Override
   public void showProgressBar() {
@@ -218,6 +252,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mClearImage.setVisibility(View.INVISIBLE);
   }
 
+  //                        ----------- other view handling ------------
+
   @Override
   public void setInputText(String text) {
     mOriginalTextEdit.setText(text);
@@ -226,11 +262,6 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   public void setTranslatedText(String text) {
     mTranslatedText.setText(text);
-  }
-
-  @Override
-  public String getTranslatedText() {
-    return mTranslatedText.getText().toString();
   }
 
   @Override
@@ -314,7 +345,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   protected void initializeView(View view) {
     mOriginalLanguageText = (TextView) view.findViewById(R.id.text_original_language);
     mTranslatedLanguageText = (TextView) view.findViewById(R.id.text_translated_language);
-    mChangeLanguagesImage = (ImageView) view.findViewById(R.id.image_change_languages);
+    mSwapLanguagesImage = (ImageView) view.findViewById(R.id.image_swap_languages);
     mOriginalTextEdit = (EditText) view.findViewById(R.id.edit_original);
     mClearImage = (ImageView) view.findViewById(R.id.image_clear);
     mTranslationLayout = (RelativeLayout) view.findViewById(R.id.layout_translation);
@@ -322,16 +353,12 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mProgressBarLayout = (RelativeLayout) view.findViewById(R.id.layout_progress_bar);
     mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
 
-    if (!mTranslatedText.getText().toString().equals("")) {
-      mClearImage.setVisibility(View.VISIBLE);
-    } else {
-      mClearImage.setVisibility(View.INVISIBLE);
+    if (mRestoredState.isLanguagePairInitialized()) {
+      mOriginalLanguageText.setText(mRestoredState.getLanguagePair().getOriginalLanguage().getText());
+      mTranslatedLanguageText.setText(mRestoredState.getLanguagePair().getTranslatedLanguage().getText());
     }
 
-    if (mRestoredState.isLanguagesInitialized()){
-      mOriginalLanguageText.setText(mRestoredState.getLanguages().getOriginalLanguage().getText());
-      mTranslatedLanguageText.setText(mRestoredState.getLanguages().getTranslatedLanguage().getText());
-    }
+    mClearImage.setVisibility(mRestoredState.clearImageVisible ? View.VISIBLE : View.INVISIBLE);
   }
 
   // --------------------------------------- private ----------------------------------------------
@@ -341,13 +368,6 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       @Override
       public void onClick(View view) {
         mOriginalTextEdit.setText("");
-      }
-    });
-
-    mChangeLanguagesImage.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        getPresenter().onChangeButtonsImageClicked();
       }
     });
 
@@ -363,53 +383,88 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     });
   }
 
+  private void swapLanguages() {
+    mRestoredState.getLanguagePair().swapLanguages();
+    mOriginalLanguageText.setText(mRestoredState.getLanguagePair().getOriginalLanguage().getText());
+    mTranslatedLanguageText.setText(mRestoredState.getLanguagePair().getTranslatedLanguage().getText());
+  }
+
   // ------------------------------------ inner classes -------------------------------------------
 
   private class State {
 
-    private LanguagePair languages;
-    private boolean languagesInitialized;
+    private static final String KEY_CLEAR_IMAGE_VISIBLE = "KEY_CLEAR_IMAGE_VISIBLE";
+
+    private LanguagePair languagePair;
+    private boolean clearImageVisible;
 
 
-    public State(Bundle bundle) {
+    private State(Bundle bundle) {
+      if (bundle == null){
+        languagePair = null;
+        clearImageVisible = false;
+        return;
+      }
+
       try {
-        languages = new LanguagePair(bundle);
-        languagesInitialized = true;
-      } catch (IllegalStateException e) {
-        languagesInitialized = false;
+        languagePair = LanguagePair.Factory.create(bundle);
+        clearImageVisible = bundle.containsKey(KEY_CLEAR_IMAGE_VISIBLE)
+            && bundle.getBoolean(KEY_CLEAR_IMAGE_VISIBLE);
+      } catch (IllegalArgumentException e) {
+        languagePair = null;
+        clearImageVisible = false;
       }
     }
 
-    public State(LanguagePair languages){
-      if (languages != null) {
-        this.languages = languages;
-        languagesInitialized = true;
-      } else {
-        languagesInitialized = false;
+    private void saveToOutState(Bundle outState) {
+      if (isLanguagePairInitialized()) {
+        languagePair.saveToBundle(outState);
       }
+      outState.putBoolean(KEY_CLEAR_IMAGE_VISIBLE, clearImageVisible);
     }
 
-    void saveToOutState(Bundle outState){
-      if (languages != null) {
-        languages.saveToBundle(outState);
+    //                        ------------ setters --------------
+
+    private void setLanguagePair(LanguagePair languagePair){
+      this.languagePair = languagePair;
+    }
+
+    private void setOriginalLanguage(Language language) {
+      if (!isLanguagePairInitialized()) {
+        throw new IllegalStateException("LanguagePair must be initialized when setting a language");
       }
+
+      languagePair.setOriginalLanguage(language);
     }
 
-    public LanguagePair getLanguages(){
-      return languages;
+    private void setTranslatedLanguage(Language language) {
+      if (!isLanguagePairInitialized()) {
+        throw new IllegalStateException("LanguagePair must be initialized when setting a language");
+      }
+
+      languagePair.setTranslatedLanguage(language);
     }
 
-    public boolean isLanguagesInitialized() {
-      return languagesInitialized;
+    private void setClearImageVisible(boolean clearImageVisible) {
+      this.clearImageVisible = clearImageVisible;
     }
 
-    public void setOriginalLanguage(Language language) {
-      languages.setOriginalLanguage(language);
+    //                        ------------ getters --------------
+
+    private boolean isLanguagePairInitialized() {
+      return languagePair != null;
     }
 
-    public void setTranslatedLanguage(Language language) {
-      languages.setTranslatedLanguage(language);
+    private boolean isClearImageVisible() {
+      return clearImageVisible;
     }
 
+    private LanguagePair getLanguagePair() {
+      if (!isLanguagePairInitialized()) {
+        throw new IllegalStateException("Languages must me initialized when getting");
+      }
+
+      return languagePair;
+    }
   }
 }

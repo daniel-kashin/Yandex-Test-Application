@@ -5,18 +5,22 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.view.ViewGroup;
 
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
+import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
 
-public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistoryAdapter {
 
-  private int mCurrentPage = 0;
+public class HistoryPagerAdapter extends FragmentPagerAdapter
+    implements IHistoryPagerAdapter, IDatabaseChangeReceiver {
+
+  private int mCurrentFragment = 0;
   private final int FRAGMENT_COUNT = 2;
-  private final String[] mPageTitles;
   private ArrayList<WeakReference<IHistoryPage>> mPages;
+  private final String[] mPageTitles;
 
 
   public HistoryPagerAdapter(FragmentManager fragmentManager, String[] pageTitles) {
@@ -33,6 +37,23 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistor
     }
   }
 
+  // -------------------------------- IDatabaseChangeReceiver -------------------------------------
+
+  @Override
+  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
+    if (mPages == null || mPages.size() == 0){
+      return;
+    }
+
+    for (int i = 0; i < mPages.size(); ++i){
+      WeakReference<IHistoryPage> reference = mPages.get(i);
+      if (reference != null && reference.get() != source){
+        reference.get().receiveOnDataChanged(null);
+      }
+    }
+  }
+
+  // ------------------------------------- IHistoryPagerAdapter ----------------------------------------
 
   @Override
   public Fragment instantiateItem(ViewGroup container, int position) {
@@ -51,9 +72,9 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistor
   @Override
   public Fragment getItem(int position) {
     if (position == 0) {
-      return HistoryFragment.getInstance(false);
+      return HistoryFragment.getInstance(FragmentType.ALL_HISTORY);
     } else if (position == 1) {
-      return HistoryFragment.getInstance(true);
+      return HistoryFragment.getInstance(FragmentType.ONLY_FAVORITE_HISTORY);
     } else {
       return null;
     }
@@ -76,10 +97,10 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistor
         WeakReference<IHistoryPage> reference = mPages.get(i);
         if (reference != null && reference.get() != null) {
           if (i == position) {
-            mCurrentPage = position;
+            mCurrentFragment = position;
             reference.get().onSelected();
           } else {
-            reference.get().onUnselected();
+            reference.get().onAnotherPageSelected();
           }
         }
       }
@@ -89,7 +110,7 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistor
   @Override
   public void onDeleteButtonClicked() {
     if (mPages != null) {
-      IHistoryPage page = mPages.get(mCurrentPage).get();
+      IHistoryPage page = mPages.get(mCurrentFragment).get();
       if (page != null) {
         page.onDeleteButtonClicked();
       }
@@ -97,31 +118,12 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter implements IHistor
   }
 
   @Override
-  public void onDataChanged(IHistoryPage source) {
-    if (mPages == null || mPages.size() == 0){
-      return;
-    }
-
-    for (int i = 0; i < mPages.size(); ++i){
-      WeakReference<IHistoryPage> reference = mPages.get(i);
-      if (reference != null && reference.get() != source){
-        reference.get().onDataChanged();
-      }
-    }
-  }
-
-  @Override
-  public void onDataChanged() {
-    onDataChanged(null);
-  }
-
-  @Override
   public boolean equalsCurrent(IHistoryPage page) {
-    if (mPages == null || mCurrentPage >= mPages.size()
-        || mPages.get(mCurrentPage) == null || page == null) {
+    if (mPages == null || mCurrentFragment >= mPages.size()
+        || mPages.get(mCurrentFragment) == null || page == null) {
       return false;
     }
 
-    return mPages.get(mCurrentPage).get() == page;
+    return mPages.get(mCurrentFragment).get() == page;
   }
 }

@@ -85,7 +85,7 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
         .limit(offset, count);
 
     String searchQuery = TranslationContract.getTranslationSearchQuery(onlyFavourite, searchRequest);
-    if (searchQuery != null){
+    if (!searchQuery.equals("")){
       queryBuider = queryBuider.where(searchQuery);
     }
 
@@ -100,10 +100,8 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
 
   @Override
   public void tryToThrowExceptionBundle(PutResult putResult, boolean insertIntended) throws ExceptionBundle {
-    if (putResult.wasNotInserted() && insertIntended) {
-      throw new ExceptionBundle(ExceptionBundle.Reason.INSERT_DENIED);
-    } else if (putResult.wasNotUpdated()) {
-      throw new ExceptionBundle(ExceptionBundle.Reason.UPDATE_DENIED);
+    if (putResult.wasNotInserted() && putResult.wasNotUpdated()) {
+      throw new ExceptionBundle(ExceptionBundle.Reason.PUT_DENIED);
     }
   }
 
