@@ -26,7 +26,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   private NetworkSubscriber mTranslationOnInternetAvailable;
   private String mTextCache;
-  private boolean mNotifyDataChangedCache;
+  private boolean mCacheTranslationSaved;
   private LanguagePair mLanguageCache;
 
 
@@ -49,9 +49,9 @@ public class TranslatePresenter extends Presenter<ITranslateView>
       mTextCache = "";
     }
 
-    if (mNotifyDataChangedCache) {
-      getView().publishOnDataChanged();
-      mNotifyDataChangedCache = false;
+    if (mCacheTranslationSaved) {
+      getView().onTranslationSaved();
+      mCacheTranslationSaved = false;
     }
 
     if (mTranslateUseCase.isRunning()) {
@@ -109,9 +109,9 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   @Override
   public void onSaveTranslationSuccess() {
     if (getView() != null) {
-      getView().publishOnDataChanged();
+      getView().onTranslationSaved();
     } else {
-      mNotifyDataChangedCache = true;
+      mCacheTranslationSaved = true;
     }
   }
 
@@ -210,21 +210,21 @@ public class TranslatePresenter extends Presenter<ITranslateView>
       getView().showProgressBar();
     }
 
-    if (mNetworkManager.getCurrentNetworkStatus() != NetworkStatus.DISCONNECTED) {
+    //if (mNetworkManager.getCurrentNetworkStatus() != NetworkStatus.DISCONNECTED) {
       if (getView() != null) {
         mTranslateUseCase.run(this, originalText, getView().getLanguages().getLanguageCodePair());
       } else {
         mTranslateUseCase.run(this, originalText, mLanguageCache.getLanguageCodePair());
       }
-    } else {
-      if (getView() != null) {
-        getView().setTranslatedText("");
-        getView().showNoInternet();
-      }
-
-      disposeTranslationSubscription();
-      subscribeTranslationOnNetworkAvailable(originalText);
-    }
+    //} else {
+    //  if (getView() != null) {
+    //    getView().setTranslatedText("");
+    //    getView().showNoInternet();
+    //  }
+    //
+    //  disposeTranslationSubscription();
+    //  subscribeTranslationOnNetworkAvailable(originalText);
+    //}
   }
 
   // ------------------------------------ private methods ----------------------------------------

@@ -1,11 +1,11 @@
-package com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local;
+package com.danielkashin.yandextestapplication.data_layer.services.languages.local;
 
 import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.DatabaseLanguage;
 
 import java.util.ArrayList;
 
 
-public interface ISupportedLanguagesLocalService {
+public interface ILanguagesLocalService {
 
   public DatabaseLanguage getDefaultOriginalLanguage();
 

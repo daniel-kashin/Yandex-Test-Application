@@ -30,14 +30,15 @@ public class DatabaseTranslation {
   }
 
 
-  public DatabaseTranslation(@Nullable Long id, @NonNull String originalText, @NonNull String translatedText,
-                             @NonNull  Long language, @NonNull Integer isFavourite) {
+  public DatabaseTranslation(Long id, String originalText, String translatedText,
+                             Long language, Integer isFavourite) {
     this.id = id;
     this.originalText = originalText;
     this.translatedText = translatedText;
     this.language = language;
     this.favorite = isFavourite;
   }
+
 
   public Long getId() {
     return id;

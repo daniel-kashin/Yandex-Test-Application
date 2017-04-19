@@ -7,20 +7,22 @@ import com.danielkashin.yandextestapplication.data_layer.entities.translate.loca
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.services.base.DatabaseService;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
+import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteByQuery;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
+import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 
 
-public class TranslateLocalService extends DatabaseService implements ITranslateLocalService {
+public class TranslationsLocalService extends DatabaseService implements ITranslationsLocalService {
 
-  public TranslateLocalService(StorIOSQLite sqLite) {
+  private TranslationsLocalService(StorIOSQLite sqLite) {
     super(sqLite);
   }
 
-  // ------------------------------- ITranslateLocalService ---------------------------------------
+  // ------------------------------- ITranslationsLocalService ---------------------------------------
 
   //               -------------------- database languages -------------------
 
@@ -41,7 +43,7 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
         .object(DatabaseLanguage.class)
         .withQuery(Query.builder()
             .table(LanguageContract.TABLE_NAME)
-            .where(LanguageContract.COLUMN_NAME_ID + " = \"" + index + "\"")
+            .where(LanguageContract.COLUMN_NAME_ID + " = " + index)
             .build())
         .prepare();
   }
@@ -56,6 +58,16 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
   //               -------------------- database translations ------------------------
 
   @Override
+  public PreparedDeleteByQuery deleteTranslations(boolean favorite) {
+    return getSQLite().delete()
+        .byQuery(DeleteQuery.builder()
+            .table(TranslationContract.TABLE_NAME)
+            .where(TranslationContract.COLUMN_NAME_IS_FAVOURITE + " = " + (favorite? 1 : 0))
+            .build()
+        ).prepare();
+  }
+
+  @Override
   public PreparedGetObject<DatabaseTranslation> getLastTranslation() {
     return getSQLite().get()
         .object(DatabaseTranslation.class)
@@ -63,6 +75,17 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
             .table(TranslationContract.TABLE_NAME)
             .orderBy(TranslationContract.COLUMN_NAME_ID + " DESC")
             .limit(1)
+            .build())
+        .prepare();
+  }
+
+  @Override
+  public PreparedGetObject<DatabaseTranslation> getTranslation(String originalText, int languageCode) {
+    return getSQLite().get()
+        .object(DatabaseTranslation.class)
+        .withQuery(Query.builder()
+            .table(TranslationContract.TABLE_NAME)
+            .where(TranslationContract.getGetTranslationSearchQuery(originalText, languageCode))
             .build())
         .prepare();
   }
@@ -79,43 +102,53 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
                                                                        int count,
                                                                        boolean onlyFavourite,
                                                                        String searchRequest) {
-    Query.CompleteBuilder queryBuider = Query.builder()
+    // create builder and add common search bounds
+    Query.CompleteBuilder queryBuilder = Query.builder()
         .table(TranslationContract.TABLE_NAME)
         .orderBy(TranslationContract.COLUMN_NAME_ID + " DESC")
         .limit(offset, count);
 
-    String searchQuery = TranslationContract.getTranslationSearchQuery(onlyFavourite, searchRequest);
-    if (!searchQuery.equals("")){
-      queryBuider = queryBuider.where(searchQuery);
+    // add another bounds if needed
+    String searchQuery = TranslationContract.getGetTranslationsSearchQuery(onlyFavourite, searchRequest);
+    if (!searchQuery.equals("")) {
+      queryBuilder = queryBuilder.where(searchQuery);
     }
 
     return getSQLite().get()
         .listOfObjects(DatabaseTranslation.class)
-        .withQuery(queryBuider.build())
+        .withQuery(queryBuilder.build())
         .prepare();
   }
-
 
   //               ------------------- exceptions parsing --------------------------
 
   @Override
-  public void tryToThrowExceptionBundle(PutResult putResult, boolean insertIntended) throws ExceptionBundle {
+  public void checkPutResultForExceptions(PutResult putResult) throws ExceptionBundle {
     if (putResult.wasNotInserted() && putResult.wasNotUpdated()) {
       throw new ExceptionBundle(ExceptionBundle.Reason.PUT_DENIED);
     }
   }
 
   @Override
-  public void tryToThrowExceptionBundle(DatabaseLanguage databaseLanguage) throws ExceptionBundle {
+  public void checkInsertResultForExceptions(PutResult putResult) throws ExceptionBundle {
+    if (putResult.wasNotInserted() || putResult.insertedId() == null) {
+      throw new ExceptionBundle(ExceptionBundle.Reason.PUT_DENIED);
+    }
+  }
+
+  @Override
+  public void checkDatabaseLanguageForExceptions(DatabaseLanguage databaseLanguage) throws ExceptionBundle {
     if (databaseLanguage.getId() == null || databaseLanguage.getLanguage() == null) {
       throw new ExceptionBundle(ExceptionBundle.Reason.NULL_FIELD);
     }
   }
 
   @Override
-  public void tryToThrowExceptionBundle(DatabaseTranslation databaseTranslation) throws ExceptionBundle {
-    if (databaseTranslation.getId() == null || databaseTranslation.getOriginalText() == null
-        || databaseTranslation.getTranslatedText() == null || databaseTranslation.isFavorite() == null) {
+  public void checkDatabaseTranslationForExceptions(DatabaseTranslation databaseTranslation) throws ExceptionBundle {
+    if (databaseTranslation == null || databaseTranslation.getId() == null
+        || databaseTranslation.getOriginalText() == null
+        || databaseTranslation.getTranslatedText() == null
+        ||databaseTranslation.isFavorite() == null) {
       throw new ExceptionBundle(ExceptionBundle.Reason.NULL_FIELD);
     }
   }
@@ -127,8 +160,8 @@ public class TranslateLocalService extends DatabaseService implements ITranslate
     private Factory() {
     }
 
-    public static ITranslateLocalService create(StorIOSQLite sqLite) {
-      return new TranslateLocalService(sqLite);
+    public static ITranslationsLocalService create(StorIOSQLite sqLite) {
+      return new TranslationsLocalService(sqLite);
     }
 
   }

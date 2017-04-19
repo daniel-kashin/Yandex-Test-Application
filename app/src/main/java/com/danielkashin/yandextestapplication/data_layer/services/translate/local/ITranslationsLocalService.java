@@ -4,12 +4,14 @@ package com.danielkashin.yandextestapplication.data_layer.services.translate.loc
 import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguage;
 import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
+import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.Presenter;
+import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteByQuery;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
 
-public interface ITranslateLocalService {
+public interface ITranslationsLocalService {
 
   // -------------------------------- languages ---------------------------------------------------
 
@@ -21,7 +23,11 @@ public interface ITranslateLocalService {
 
   // ------------------------------- translations -------------------------------------------------
 
+  PreparedDeleteByQuery deleteTranslations(boolean favorite);
+
   PreparedGetObject<DatabaseTranslation> getLastTranslation();
+
+  PreparedGetObject<DatabaseTranslation> getTranslation(String originalText, int languageCode);
 
   PreparedPutObject<DatabaseTranslation> putTranslation(DatabaseTranslation translation);
 
@@ -32,10 +38,12 @@ public interface ITranslateLocalService {
 
   // ----------------------------- exception parsing ----------------------------------------------
 
-  void tryToThrowExceptionBundle(PutResult putResult, boolean insertIntended) throws ExceptionBundle;
+  void checkPutResultForExceptions(PutResult putResult) throws ExceptionBundle;
 
-  void tryToThrowExceptionBundle(DatabaseLanguage databaseLanguage) throws ExceptionBundle;
+  void checkInsertResultForExceptions(PutResult putResult) throws ExceptionBundle;
 
-  void tryToThrowExceptionBundle(DatabaseTranslation databaseTranslation) throws ExceptionBundle;
+  void checkDatabaseLanguageForExceptions(DatabaseLanguage databaseLanguage) throws ExceptionBundle;
+
+  void checkDatabaseTranslationForExceptions(DatabaseTranslation databaseTranslation) throws ExceptionBundle;
 
 }

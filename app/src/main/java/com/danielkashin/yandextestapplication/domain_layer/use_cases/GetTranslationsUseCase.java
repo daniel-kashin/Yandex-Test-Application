@@ -1,12 +1,11 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import java.util.ArrayList;
@@ -17,18 +16,20 @@ import static com.danielkashin.yandextestapplication.presentation_layer.view.his
 
 public class GetTranslationsUseCase implements IUseCase {
 
-  @NonNull
   private final Executor executor;
-  @NonNull
-  private final ITranslateRepository translateRepository;
+  private final ITranslationsRepository translateRepository;
   private final FragmentType fragmentType;
 
   private RepositoryResponseAsyncTask<ArrayList<Translation>> getTranslationsAsyncTask;
 
 
-  public GetTranslationsUseCase(@NonNull Executor executor,
-                                @NonNull ITranslateRepository translateRepository,
+  public GetTranslationsUseCase(Executor executor,
+                                ITranslationsRepository translateRepository,
                                 FragmentType fragmentType) {
+    if (executor == null || translateRepository == null || fragmentType == null) {
+      throw new IllegalArgumentException("All arguments of use case must be non null");
+    }
+
     this.executor = executor;
     this.translateRepository = translateRepository;
     this.fragmentType = fragmentType;
@@ -45,6 +46,12 @@ public class GetTranslationsUseCase implements IUseCase {
   }
 
   // ------------------------------------- public methods -----------------------------------------
+
+  public boolean isRunning() {
+    return getTranslationsAsyncTask != null
+        && getTranslationsAsyncTask.getStatus() == AsyncTask.Status.RUNNING
+        && !getTranslationsAsyncTask.isCancelled();
+  }
 
   public void run(final Callbacks callbacks, final int offset,
                   final int count, final String searchRequest) {
@@ -82,12 +89,6 @@ public class GetTranslationsUseCase implements IUseCase {
         listener
     );
     getTranslationsAsyncTask.executeOnExecutor(executor);
-  }
-
-  private boolean isRunning() {
-    return getTranslationsAsyncTask != null
-        && getTranslationsAsyncTask.getStatus() == AsyncTask.Status.RUNNING
-        && !getTranslationsAsyncTask.isCancelled();
   }
 
   // ------------------------------------ inner classes--------------------------------------------

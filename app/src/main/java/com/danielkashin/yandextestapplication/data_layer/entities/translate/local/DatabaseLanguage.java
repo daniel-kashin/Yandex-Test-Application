@@ -21,7 +21,7 @@ public class DatabaseLanguage {
   }
 
 
-  public DatabaseLanguage(@Nullable Long id, @NonNull String language){
+  public DatabaseLanguage(Long id, String language){
     this.id = id;
     this.language = language;
   }

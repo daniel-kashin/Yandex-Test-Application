@@ -36,8 +36,24 @@ public class TranslationContract {
 
   // --------------------------------------- public -----------------------------------------------
 
-  public static String getTranslationSearchQuery(boolean onlyFavorite, String searchRequest) {
-    StringBuilder searchBuilder = new StringBuilder("");
+  public static String getGetTranslationSearchQuery(String originalText, int languageCode) {
+    String result =  new StringBuilder().append(COLUMN_NAME_ORIGINAL_TEXT)
+        .append(" = \'")
+        .append(getEscapedString(originalText))
+        .append("\'\n")
+        .append("AND ")
+        .append(COLUMN_NAME_LANGUAGE)
+        .append(" = ")
+        .append(languageCode)
+        .toString();
+
+    return result;
+  }
+
+
+
+  public static String getGetTranslationsSearchQuery(boolean onlyFavorite, String searchRequest) {
+    StringBuilder searchBuilder = new StringBuilder();
 
     // add query to get only favorite translations
     if (onlyFavorite) {
@@ -81,12 +97,11 @@ public class TranslationContract {
     return searchBuilder.toString();
   }
 
-  // ---------------------------------------- private  --------------------------------------------
-
-  private static String getEscapedString(String string) {
+  public static String getEscapedString(String string) {
     return string.replace(ESCAPE_CHAR, ESCAPE_CHAR + ESCAPE_CHAR)
         .replace("'", "''")
         .replace("%", ESCAPE_CHAR + "%")
         .replace("_", ESCAPE_CHAR + "_");
+
   }
 }

@@ -1,33 +1,33 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.ISupportedLanguagesRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ILanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import java.util.concurrent.Executor;
 
 
 public class GetLastTranslationUseCase implements IUseCase {
 
-  @NonNull
   private final Executor executor;
-  @NonNull
-  private final ITranslateRepository translateRepository;
-  @NonNull
-  private final ISupportedLanguagesRepository supportedLanguagesRepository;
+  private final ITranslationsRepository translateRepository;
+  private final ILanguagesRepository supportedLanguagesRepository;
 
   private RepositoryResponseAsyncTask<Translation> getLastTranslationAsyncTask;
 
 
-  public GetLastTranslationUseCase(@NonNull Executor executor,
-                                   @NonNull ITranslateRepository translateRepository,
-                                   @NonNull ISupportedLanguagesRepository supportedLanguagesRepository) {
+  public GetLastTranslationUseCase(Executor executor,
+                                   ITranslationsRepository translateRepository,
+                                   ILanguagesRepository supportedLanguagesRepository) {
+    if (executor == null || translateRepository == null || supportedLanguagesRepository == null){
+      throw new IllegalArgumentException("All arguments of use case must be non null");
+    }
+
     this.executor = executor;
     this.translateRepository = translateRepository;
     this.supportedLanguagesRepository = supportedLanguagesRepository;
@@ -44,6 +44,13 @@ public class GetLastTranslationUseCase implements IUseCase {
   }
 
   // ------------------------------------- public methods -----------------------------------------
+
+  public boolean isRunning() {
+    return getLastTranslationAsyncTask != null
+        && getLastTranslationAsyncTask.getStatus() == AsyncTask.Status.RUNNING
+        && !getLastTranslationAsyncTask.isCancelled();
+  }
+
 
   public void run(final Callbacks callbacks) {
     RepositoryResponseAsyncTask.PostExecuteListener<Translation> listener =
@@ -75,11 +82,6 @@ public class GetLastTranslationUseCase implements IUseCase {
         repositoryRunnable,
         listener);
     getLastTranslationAsyncTask.executeOnExecutor(executor);
-  }
-
-  public boolean isRunning() {
-    return getLastTranslationAsyncTask != null
-        && getLastTranslationAsyncTask.getStatus() == AsyncTask.Status.RUNNING;
   }
 
   // ------------------------------------ inner classes--------------------------------------------

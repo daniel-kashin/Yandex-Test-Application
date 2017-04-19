@@ -16,6 +16,7 @@ import java.util.ArrayList;
 public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPagerAdapter {
 
   private final int FRAGMENT_COUNT = 2;
+  private int mCurrentFragment;
   private ArrayList<WeakReference<IDatabaseChangeReceiver>> mReceivers;
 
 
@@ -23,7 +24,7 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
     super(fragmentManager);
 
     mReceivers = new ArrayList<>(FRAGMENT_COUNT);
-    for (int i = 0; i < FRAGMENT_COUNT; ++i){
+    for (int i = 0; i < FRAGMENT_COUNT; ++i) {
       mReceivers.add(null);
     }
   }
@@ -59,18 +60,29 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
     return FRAGMENT_COUNT;
   }
 
+  // ------------------------------------ IMainPagerAdapter ---------------------------------------
+
+  @Override
+  public void onPageSelected(int position) {
+    mCurrentFragment = position;
+  }
+
   // --------------------------------- IDatabaseChangeReceiver ------------------------------------
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    if (mReceivers == null || mReceivers.size() == 0){
+    if (mReceivers == null || mReceivers.size() == 0) {
       return;
     }
 
-    for (int i = 0; i < mReceivers.size(); ++i){
+    for (int i = 0; i < mReceivers.size(); ++i) {
       WeakReference<IDatabaseChangeReceiver> reference = mReceivers.get(i);
-      if (reference != null && reference.get() != source){
-        reference.get().receiveOnDataChanged(null);
+      if (reference != null && reference.get() != source) {
+        if (mCurrentFragment != 1 && i == 1) {
+          reference.get().receiveOnDataChanged(null);
+        } else {
+          reference.get().receiveOnDataChanged(source);
+        }
       }
     }
   }

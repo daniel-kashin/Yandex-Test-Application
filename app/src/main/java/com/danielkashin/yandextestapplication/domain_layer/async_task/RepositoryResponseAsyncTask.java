@@ -36,12 +36,10 @@ public class RepositoryResponseAsyncTask<T> extends VoidAsyncTask<Pair<T, Except
   @Override
   protected void onPostExecute(Pair<T, ExceptionBundle> result) {
     super.onPostExecute(result);
-    if (postExecuteListener != null && !isCancelled()) {
-      if (result.second != null && !isCancelled()) {
-        postExecuteListener.onException(result.second);
-      } else if (!isCancelled()) {
-        postExecuteListener.onResult(result.first);
-      }
+    if (!isCancelled() && postExecuteListener != null && result.second != null) {
+      postExecuteListener.onException(result.second);
+    } else if (!isCancelled() && postExecuteListener != null) {
+      postExecuteListener.onResult(result.first);
     }
   }
 

@@ -14,13 +14,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.danielkashin.yandextestapplication.R;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslateLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslateRemoteService;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslateRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslationsLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslationsRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationsUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetTranslationsUseCase;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsCallbacks;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsModel;
@@ -39,7 +41,7 @@ import okhttp3.OkHttpClient;
 
 
 public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistoryView>
-    implements IHistoryView, IHistoryPage {
+    implements IHistoryView, IHistoryPage, IDatabaseChangePublisher {
 
   private State mRestoredState;
 
@@ -64,10 +66,10 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    if (!(getParentFragment() instanceof IHistoryPagerView)
-        || !(getParentFragment() instanceof IDatabaseChangeReceiver)) {
+    if (!(getParentFragment() instanceof IDatabaseChangePublisher)
+        || !(getParentFragment() instanceof IHistoryPagerView)) {
       throw new IllegalStateException("Parent fragment must implement IHistoryPagerView" +
-          " and IDatabaseChangeReceiver");
+          " and IDatabaseChangePublisher");
     }
 
     mRestoredState = new State(savedInstanceState);
@@ -125,11 +127,16 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   // ------------------------------- IDatabaseChangePublisher --------------------------------------
 
   @Override
-  public void publishOnDataChanged() {
-
+  public void publishOnDataChanged(IDatabaseChangePublisher source) {
+    ((IDatabaseChangePublisher) getParentFragment()).publishOnDataChanged(source);
   }
 
   // ------------------------------------- IHistoryPage -------------------------------------------
+
+  @Override
+  public void onDeleted() {
+    publishOnDataChanged(null);
+  }
 
   @Override
   public void onAnotherPageSelected() {
@@ -149,7 +156,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   public void onDeleteButtonClicked() {
-
+    getPresenter().deleteTranslations();
   }
 
   // ------------------------------ IHistoryView methods ------------------------------------------
@@ -206,28 +213,34 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   @Override
   protected IPresenterFactory<HistoryPresenter, IHistoryView> getPresenterFactory() {
     // bind services
-    ITranslateRemoteService remoteService = TranslateRemoteService.Factory.create(
+    ITranslationsRemoteService remoteService = TranslationsRemoteService.Factory.create(
         new OkHttpClient.Builder()
             .readTimeout(10, TimeUnit.SECONDS)
             .connectTimeout(10, TimeUnit.SECONDS)
             .build());
 
-    ITranslateLocalService localService = ((ITranslateLocalServiceProvider) getActivity()
+    ITranslationsLocalService localService = ((ITranslateLocalServiceProvider) getActivity()
         .getApplication())
         .getTranslateLocalService();
 
 
     // bind repository
-    ITranslateRepository repository = TranslateRepository.Factory.create(localService, remoteService);
+    ITranslationsRepository repository = TranslationsRepository.Factory.create(localService, remoteService);
 
 
-    // bind use case
-    GetTranslationsUseCase useCase = new GetTranslationsUseCase(AsyncTask.THREAD_POOL_EXECUTOR,
-        repository, mRestoredState.getFragmentType());
-
+    // bind use cases
+    GetTranslationsUseCase getTranslationsUseCase = new GetTranslationsUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        repository,
+        mRestoredState.getFragmentType());
+    DeleteTranslationsUseCase deleteTranslationsUseCase = new DeleteTranslationsUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        repository,
+        mRestoredState.getFragmentType()
+    );
 
     // return presenter with dependencies
-    return new HistoryPresenter.Factory(useCase);
+    return new HistoryPresenter.Factory(getTranslationsUseCase, deleteTranslationsUseCase);
   }
 
   @Override
@@ -249,6 +262,10 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
     mNoContentText = (TextView) view.findViewById(R.id.text_no_content);
 
+    mSearchLayout.setVisibility(mRestoredState.isSearchLayoutVisible() ? View.VISIBLE : View.GONE);
+    mRecyclerView.setVisibility(mRestoredState.isRecyclerViewVisible() ? View.VISIBLE : View.GONE);
+    mNoContentText.setVisibility(mRestoredState.isNoContentTextVisible() ? View.VISIBLE : View.GONE);
+
     mRecyclerView.setAdapter(mRestoredState.isTranslationsAdapterInitialized()
         ? (RecyclerView.Adapter) mRestoredState.getTranslationsAdapter()
         : new TranslationsAdapter());
@@ -260,10 +277,6 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     mNoContentText.setText(mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
         ? getString(R.string.no_content_favorites_message)
         : getString(R.string.no_content_history_message));
-
-    mSearchLayout.setVisibility(mRestoredState.isSearchLayoutVisible() ? View.VISIBLE : View.GONE);
-    mRecyclerView.setVisibility(mRestoredState.isRecyclerViewVisible() ? View.VISIBLE : View.GONE);
-    mNoContentText.setVisibility(mRestoredState.isNoContentTextVisible() ? View.VISIBLE : View.GONE);
   }
 
   // ---------------------------------- private methods -------------------------------------------

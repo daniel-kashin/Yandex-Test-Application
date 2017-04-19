@@ -6,7 +6,9 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView
 import java.util.List;
 
 
-public interface IHistoryView extends IView, IDatabaseChangePublisher {
+public interface IHistoryView extends IView {
+
+  void onDeleted();
 
   void addTranslationsToAdapter(List<Translation> translations, boolean clear);
 

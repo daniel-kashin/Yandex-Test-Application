@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.HistoryPagerAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPagerAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
@@ -16,7 +17,7 @@ import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.ID
 
 
 public class HistoryPagerFragment extends Fragment
-    implements IHistoryPagerView, IDatabaseChangeReceiver {
+    implements IHistoryPagerView, IDatabaseChangeReceiver, IDatabaseChangePublisher {
 
   private static final String KEY_CLEAR_HISTORY_IMAGE_VISIBLE = "KEY_CLEAR_HISTORY_IMAGE_VISIBLE";
 
@@ -36,8 +37,8 @@ public class HistoryPagerFragment extends Fragment
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    if (!(getActivity() instanceof IDatabaseChangeReceiver)) {
-      throw new IllegalStateException("Parent activity must implement IHistoryPagerView IDatabaseChangeReceiver");
+    if (!(getActivity() instanceof IDatabaseChangePublisher)) {
+      throw new IllegalStateException("Parent activity must implement IHistoryPagerView IDatabaseChangePublisher");
     }
   }
 
@@ -62,15 +63,14 @@ public class HistoryPagerFragment extends Fragment
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    // throw call to adapter
     ((IDatabaseChangeReceiver)mViewPager.getAdapter()).receiveOnDataChanged(source);
   }
 
   // ------------------------------ IDatabaseChangeReceiver ---------------------------------------
 
   @Override
-  public void publishOnDataChanged() {
-
+  public void publishOnDataChanged(IDatabaseChangePublisher source) {
+    ((IDatabaseChangePublisher)getActivity()).publishOnDataChanged(source);
   }
 
   // -------------------------------- IHistoryPagerView -------------------------------------------

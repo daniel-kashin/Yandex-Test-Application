@@ -4,7 +4,7 @@ import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.ID
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
 
 
-public interface IHistoryPagerView extends IDatabaseChangePublisher {
+public interface IHistoryPagerView {
 
   void hideDeleteHistoryButton(IHistoryPage source);
 

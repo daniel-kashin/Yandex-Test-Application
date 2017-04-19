@@ -48,7 +48,7 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter
     for (int i = 0; i < mPages.size(); ++i){
       WeakReference<IHistoryPage> reference = mPages.get(i);
       if (reference != null && reference.get() != source){
-        reference.get().receiveOnDataChanged(null);
+        reference.get().receiveOnDataChanged(source);
       }
     }
   }

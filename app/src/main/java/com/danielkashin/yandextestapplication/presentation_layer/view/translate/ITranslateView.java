@@ -6,7 +6,11 @@ import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
-public interface ITranslateView extends IView, IDatabaseChangePublisher {
+public interface ITranslateView extends IView {
+
+  // -------------------------------------- data change -------------------------------------------
+
+  void onTranslationSaved();
 
   // --------------------------------------- languages --------------------------------------------
 

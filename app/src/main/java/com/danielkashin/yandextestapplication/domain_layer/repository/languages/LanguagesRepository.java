@@ -1,20 +1,18 @@
-package com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages;
-
-import android.support.annotation.NonNull;
+package com.danielkashin.yandextestapplication.domain_layer.repository.languages;
 
 import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.DatabaseLanguage;
-import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.languages.local.ILanguagesLocalService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import java.util.ArrayList;
 
 
-public class SupportedLanguagesRepository implements ISupportedLanguagesRepository {
+public class LanguagesRepository implements ILanguagesRepository {
 
-  private final ISupportedLanguagesLocalService localService;
+  private final ILanguagesLocalService localService;
 
 
-  public SupportedLanguagesRepository(ISupportedLanguagesLocalService localService){
+  public LanguagesRepository(ILanguagesLocalService localService){
     if (localService == null) {
       throw new IllegalArgumentException("All arguments must be non null");
     }
@@ -22,7 +20,6 @@ public class SupportedLanguagesRepository implements ISupportedLanguagesReposito
     this.localService = localService;
   }
 
-  @NonNull
   @Override
   public LanguagePair getDefaultLanguages() {
     DatabaseLanguage original = localService.getDefaultOriginalLanguage();
@@ -34,7 +31,6 @@ public class SupportedLanguagesRepository implements ISupportedLanguagesReposito
     return new LanguagePair(originalLanguage, translatedLanguage);
   }
 
-  @NonNull
   @Override
   public LanguagePair getLanguages(String originalCode, String translatedCode) {
     DatabaseLanguage original = localService.getLanguage(originalCode);
@@ -62,8 +58,8 @@ public class SupportedLanguagesRepository implements ISupportedLanguagesReposito
     private Factory(){
     }
 
-    public static ISupportedLanguagesRepository create(ISupportedLanguagesLocalService service){
-      return new SupportedLanguagesRepository(service);
+    public static ILanguagesRepository create(ILanguagesLocalService service){
+      return new LanguagesRepository(service);
     }
 
   }

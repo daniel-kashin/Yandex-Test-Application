@@ -5,6 +5,6 @@ import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.ID
 
 public interface IMainPagerAdapter extends IDatabaseChangeReceiver {
 
-
+  void onPageSelected(int position);
 
 }

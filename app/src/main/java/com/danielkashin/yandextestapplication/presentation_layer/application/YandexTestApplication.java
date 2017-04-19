@@ -3,14 +3,14 @@ package com.danielkashin.yandextestapplication.presentation_layer.application;
 import android.app.Application;
 
 import com.danielkashin.yandextestapplication.data_layer.database.SQLiteFactory;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslateLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.local.TranslateLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslationsLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.local.TranslationsLocalService;
 import com.squareup.leakcanary.LeakCanary;
 
 
 public class YandexTestApplication extends Application implements ITranslateLocalServiceProvider {
 
-  private static volatile ITranslateLocalService translateLocalService;
+  private static volatile ITranslationsLocalService translateLocalService;
 
 
   @Override
@@ -24,13 +24,13 @@ public class YandexTestApplication extends Application implements ITranslateLoca
   }
 
   @Override
-  public ITranslateLocalService getTranslateLocalService(){
-    ITranslateLocalService localInstance = translateLocalService;
+  public ITranslationsLocalService getTranslateLocalService(){
+    ITranslationsLocalService localInstance = translateLocalService;
     if (localInstance == null) {
-      synchronized (ITranslateLocalService.class) {
+      synchronized (ITranslationsLocalService.class) {
         localInstance = translateLocalService;
         if (localInstance == null) {
-          translateLocalService = localInstance = TranslateLocalService.Factory
+          translateLocalService = localInstance = TranslationsLocalService.Factory
               .create(SQLiteFactory.create(this));
         }
       }

@@ -5,11 +5,11 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 
 import retrofit2.Call;
 
-public interface ITranslateRemoteService {
+public interface ITranslationsRemoteService {
 
   Call<NetworkTranslation> translate(String text, String lang);
 
-  void tryToThrowExceptionBundle(Exception exception) throws ExceptionBundle;
+  void checkNetworkCodesForExceptions(Exception exception) throws ExceptionBundle;
 
-  void tryToThrowExceptionBundle(int networkResponseCode) throws ExceptionBundle;
+  void checkNetworkCodesForExceptions(int networkResponseCode) throws ExceptionBundle;
 }

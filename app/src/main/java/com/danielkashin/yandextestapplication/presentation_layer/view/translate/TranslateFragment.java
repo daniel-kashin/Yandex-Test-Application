@@ -22,19 +22,20 @@ import android.widget.Toast;
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
-import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.SupportedLanguagesLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslateLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslateRemoteService;
-import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslateRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.languages.local.ILanguagesLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.languages.local.LanguagesLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslationsLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslationsRemoteService;
+import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
-import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.ISupportedLanguagesRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.supported_languages.SupportedLanguagesRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslateRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslateRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ILanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.LanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
@@ -47,7 +48,7 @@ import okhttp3.OkHttpClient;
 
 
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
-    implements ITranslateView, IDatabaseChangeReceiver {
+    implements ITranslateView, IDatabaseChangeReceiver, IDatabaseChangePublisher {
 
   private TextView mOriginalLanguageText;
   private TextView mTranslatedLanguageText;
@@ -74,8 +75,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    if (!(getActivity() instanceof IDatabaseChangeReceiver)) {
-      throw new IllegalStateException("Parent activity must implement IDatabaseChangeReceiver");
+    if (!(getActivity() instanceof IDatabaseChangePublisher)) {
+      throw new IllegalStateException("Parent activity must implement IDatabaseChangePublisher");
     }
 
     // try to restore state from saved instance
@@ -124,11 +125,18 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   // ---------------------------------- IDatabaseNotifier -----------------------------------------
 
   @Override
-  public void publishOnDataChanged() {
-    ((IDatabaseChangeReceiver)getActivity()).receiveOnDataChanged(this);
+  public void publishOnDataChanged(IDatabaseChangePublisher source) {
+    ((IDatabaseChangePublisher)getActivity()).publishOnDataChanged(this);
   }
 
   // ------------------------------------ ITranslateView ------------------------------------------
+
+  //                        ------------- data changed -----------------
+
+  @Override
+  public void onTranslationSaved() {
+    publishOnDataChanged(this);
+  }
 
   //                        --------------- languages ------------------
 
@@ -291,24 +299,24 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         .readTimeout(10, TimeUnit.SECONDS)
         .connectTimeout(10, TimeUnit.SECONDS)
         .build();
-    ITranslateRemoteService translateRemoteService = TranslateRemoteService.Factory
+    ITranslationsRemoteService translateRemoteService = TranslationsRemoteService.Factory
         .create(okHttpClient);
 
-    ITranslateLocalService translateLocalService = ((ITranslateLocalServiceProvider) getActivity()
+    ITranslationsLocalService translateLocalService = ((ITranslateLocalServiceProvider) getActivity()
         .getApplication())
         .getTranslateLocalService();
 
-    ISupportedLanguagesLocalService supportedLanguagesLocalService =
-        SupportedLanguagesLocalService.Factory
+    ILanguagesLocalService supportedLanguagesLocalService =
+        LanguagesLocalService.Factory
             .create(getContext());
 
 
     // bind repositories
-    ITranslateRepository translateRepository = TranslateRepository.Factory
+    ITranslationsRepository translateRepository = TranslationsRepository.Factory
         .create(translateLocalService, translateRemoteService);
 
-    ISupportedLanguagesRepository supportedLanguagesRepository =
-        SupportedLanguagesRepository.Factory
+    ILanguagesRepository supportedLanguagesRepository =
+        LanguagesRepository.Factory
             .create(supportedLanguagesLocalService);
 
 

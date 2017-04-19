@@ -8,11 +8,14 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IMainPagerAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.MainPagerAdapter;
 
 
-public class MainTabActivity extends AppCompatActivity implements IDatabaseChangeReceiver {
+public class MainTabActivity extends AppCompatActivity
+    implements IDatabaseChangePublisher {
 
   private final static String SELECTED_MENU_ITEM_ID = "selected_tab_id";
 
@@ -40,11 +43,15 @@ public class MainTabActivity extends AppCompatActivity implements IDatabaseChang
     outState.putInt(SELECTED_MENU_ITEM_ID, getSelectedMenuItem());
   }
 
-  // -------------------------------- IDatabaseChangeReceiver -------------------------------------
+  // -------------------------------- IDatabaseChangePublisher ------------------------------------
 
   @Override
-  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    ((IDatabaseChangeReceiver)mViewPager.getAdapter()).receiveOnDataChanged(source);
+  public void publishOnDataChanged(IDatabaseChangePublisher source) {
+    if (source instanceof IDatabaseChangeReceiver) {
+      ((IDatabaseChangeReceiver) mViewPager.getAdapter()).receiveOnDataChanged((IDatabaseChangeReceiver)source);
+    } else {
+      ((IDatabaseChangeReceiver) mViewPager.getAdapter()).receiveOnDataChanged(null);
+    }
   }
 
   // --------------------------------------- lifecycle --------------------------------------------
@@ -55,6 +62,23 @@ public class MainTabActivity extends AppCompatActivity implements IDatabaseChang
     mBottomNavigationView = (BottomNavigationView) findViewById(R.id.bottom_navigation);
 
     mViewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
+
+    mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+      @Override
+      public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+      }
+
+      @Override
+      public void onPageSelected(int position) {
+        ((IMainPagerAdapter)mViewPager.getAdapter()).onPageSelected(position);
+      }
+
+      @Override
+      public void onPageScrollStateChanged(int state) {
+
+      }
+    });
 
     mBottomNavigationView.setOnNavigationItemSelectedListener(
         new BottomNavigationView.OnNavigationItemSelectedListener() {

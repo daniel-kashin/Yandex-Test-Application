@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local;
+package com.danielkashin.yandextestapplication.data_layer.services.languages.local;
 
 import android.content.Context;
 
@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class SupportedLanguagesLocalService implements ISupportedLanguagesLocalService {
+public class LanguagesLocalService implements ILanguagesLocalService {
 
   private final Context context;
   private final HashMap<String, Integer> codes;
 
 
-  private SupportedLanguagesLocalService(Context context) {
+  private LanguagesLocalService(Context context) {
     this.context = context.getApplicationContext();
 
     checkLengths();
@@ -82,8 +82,8 @@ public class SupportedLanguagesLocalService implements ISupportedLanguagesLocalS
     private Factory() {
     }
 
-    public static ISupportedLanguagesLocalService create(Context context){
-      return new SupportedLanguagesLocalService(context);
+    public static ILanguagesLocalService create(Context context){
+      return new LanguagesLocalService(context);
     }
 
   }

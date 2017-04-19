@@ -18,10 +18,10 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 
 
-public class TranslateRemoteService extends NetworkService<ITranslationRemoteContract>
-    implements ITranslateRemoteService {
+public class TranslationsRemoteService extends NetworkService<ITranslationRemoteContract>
+    implements ITranslationsRemoteService {
 
-  private TranslateRemoteService(OkHttpClient okHttpClient) {
+  private TranslationsRemoteService(OkHttpClient okHttpClient) {
     super(Endpoints.YANDEX_TRANSLATE_BASE_URL, okHttpClient);
   }
 
@@ -30,7 +30,7 @@ public class TranslateRemoteService extends NetworkService<ITranslationRemoteCon
     return retrofit.create(ITranslationRemoteContract.class);
   }
 
-  // -------------------------- ITranslateRemoteService methods ----------------------------
+  // -------------------------- ITranslationsRemoteService methods ----------------------------
 
   @Override
   public Call<NetworkTranslation> translate(String text, String lang) {
@@ -38,7 +38,7 @@ public class TranslateRemoteService extends NetworkService<ITranslationRemoteCon
   }
 
   @Override
-  public void tryToThrowExceptionBundle(Exception exception) throws ExceptionBundle {
+  public void checkNetworkCodesForExceptions(Exception exception) throws ExceptionBundle {
     if (exception instanceof ExceptionBundle) {
       throw (ExceptionBundle) exception;
     } else if (exception instanceof ConnectException || exception instanceof SocketTimeoutException
@@ -50,7 +50,7 @@ public class TranslateRemoteService extends NetworkService<ITranslationRemoteCon
   }
 
   @Override
-  public void tryToThrowExceptionBundle(int networkResponseCode) throws ExceptionBundle {
+  public void checkNetworkCodesForExceptions(int networkResponseCode) throws ExceptionBundle {
     if (networkResponseCode == 200) {
       // do nothing, everything is alright
     } else if (networkResponseCode == 401) {
@@ -75,8 +75,8 @@ public class TranslateRemoteService extends NetworkService<ITranslationRemoteCon
     private Factory() {
     }
 
-    public static ITranslateRemoteService create(OkHttpClient okHttpClient) {
-      return new TranslateRemoteService(okHttpClient);
+    public static ITranslationsRemoteService create(OkHttpClient okHttpClient) {
+      return new TranslationsRemoteService(okHttpClient);
     }
   }
 }
