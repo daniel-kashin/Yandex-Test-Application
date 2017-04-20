@@ -5,14 +5,14 @@ import android.util.Pair;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 
 
-public class RepositoryResponseAsyncTask<T> extends VoidAsyncTask<Pair<T, ExceptionBundle>> {
+public class RepositoryAsyncTaskResponse<T> extends VoidAsyncTask<Pair<T, ExceptionBundle>> {
 
-  private final RepositoryRunnable<T> repositoryRunnable;
-  private final PostExecuteListener<T> postExecuteListener;
+  private final RepositoryRunnableResponse<T> repositoryRunnable;
+  private final PostExecuteListenerResponse<T> postExecuteListener;
 
 
-  public RepositoryResponseAsyncTask(RepositoryRunnable<T> repositoryRunnable,
-                                     PostExecuteListener<T> postExecuteListener) {
+  public RepositoryAsyncTaskResponse(RepositoryRunnableResponse<T> repositoryRunnable,
+                                     PostExecuteListenerResponse<T> postExecuteListener) {
     this.repositoryRunnable = repositoryRunnable;
     this.postExecuteListener = postExecuteListener;
   }
@@ -44,7 +44,7 @@ public class RepositoryResponseAsyncTask<T> extends VoidAsyncTask<Pair<T, Except
   }
 
 
-  public interface PostExecuteListener<T> {
+  public interface PostExecuteListenerResponse<T> {
 
     void onResult(T result);
 
@@ -52,7 +52,7 @@ public class RepositoryResponseAsyncTask<T> extends VoidAsyncTask<Pair<T, Except
 
   }
 
-  public interface RepositoryRunnable<T> {
+  public interface RepositoryRunnableResponse<T> {
 
     T run() throws ExceptionBundle;
 

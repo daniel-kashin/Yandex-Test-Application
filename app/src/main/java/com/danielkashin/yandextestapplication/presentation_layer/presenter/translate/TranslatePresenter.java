@@ -1,6 +1,5 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.translate;
 
-import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 
 import com.danielkashin.yandextestapplication.R;
@@ -11,6 +10,7 @@ import com.danielkashin.yandextestapplication.data_layer.managers.network.Networ
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.SetTranslationFavoriteUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.Presenter;
@@ -18,23 +18,33 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.translate.
 
 
 public class TranslatePresenter extends Presenter<ITranslateView>
-    implements TranslateUseCase.Callbacks, GetLastTranslationUseCase.Callbacks {
+    implements TranslateUseCase.Callbacks, GetLastTranslationUseCase.Callbacks,
+    SetTranslationFavoriteUseCase.Callbacks {
 
   private final TranslateUseCase mTranslateUseCase;
   private final GetLastTranslationUseCase mGetLastTranslationUseCase;
+  private final SetTranslationFavoriteUseCase mSetTranslationFavoriteUseCase;
   private final INetworkManager mNetworkManager;
 
   private NetworkSubscriber mTranslationOnInternetAvailable;
-  private String mTextCache;
-  private boolean mCacheTranslationSaved;
+  private Translation mCachedTranslation;
+  private boolean mCachedTranslationSaved;
+  private boolean mCachedTranslationFavoriteChanged;
   private LanguagePair mLanguageCache;
 
 
-  public TranslatePresenter(TranslateUseCase translateUseCase,
-                            GetLastTranslationUseCase getLastTranslationUseCase,
-                            INetworkManager manager) {
+  private TranslatePresenter(TranslateUseCase translateUseCase,
+                             GetLastTranslationUseCase getLastTranslationUseCase,
+                             SetTranslationFavoriteUseCase setTranslationFavoriteUseCase,
+                             INetworkManager manager) {
+    if (translateUseCase == null || getLastTranslationUseCase == null
+        || manager == null || setTranslationFavoriteUseCase == null) {
+      throw new IllegalArgumentException("All presenter arguments must be non null");
+    }
+
     mTranslateUseCase = translateUseCase;
     mGetLastTranslationUseCase = getLastTranslationUseCase;
+    mSetTranslationFavoriteUseCase = setTranslationFavoriteUseCase;
     mNetworkManager = manager;
   }
 
@@ -44,20 +54,25 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   protected void onViewAttached() {
     mLanguageCache = null;
 
-    if (mTextCache != null && !mTextCache.equals("")) {
-      getView().setTranslatedText(mTextCache);
-      mTextCache = "";
+    if (mCachedTranslation != null) {
+      getView().setTranslationData(mCachedTranslation.getOriginalText(), mCachedTranslation.ifFavorite());
+      getView().setToggleFavoriteListener();
+      mCachedTranslation = null;
     }
 
-    if (mCacheTranslationSaved) {
+    if (mCachedTranslationSaved) {
       getView().onTranslationSaved();
-      mCacheTranslationSaved = false;
+      mCachedTranslationSaved = false;
+    }
+
+    if (mCachedTranslationFavoriteChanged) {
+      getView().onTranslationFavoriteChanged();
+      mCachedTranslationFavoriteChanged = false;
     }
 
     if (mTranslateUseCase.isRunning()) {
       getView().showProgressBar();
     }
-
 
     if (mTranslationOnInternetAvailable != null && !mTranslationOnInternetAvailable.isDisposed()) {
       getView().showProgressBar();
@@ -67,8 +82,10 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   protected void onViewDetached() {
-    mLanguageCache = getView().getLanguages();
+    mLanguageCache = getView().getLanguagesIfInitialized();
     getView().removeTextWatcher();
+    getView().removeSwapLanguagesListener();
+    getView().removeToggleFavoriteListener();
   }
 
   @Override
@@ -86,10 +103,11 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       getView().initializeLanguages(result.second);
       getView().setInputText(result.first.getOriginalText());
-      getView().setTranslatedText(result.first.getTranslatedText());
+      getView().setTranslationData(result.first.getTranslatedText(), result.first.ifFavorite());
       getView().showImageClear();
       getView().setTextWatcher();
       getView().setSwapLanguagesListener();
+      getView().setToggleFavoriteListener();
     }
   }
 
@@ -111,7 +129,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       getView().onTranslationSaved();
     } else {
-      mCacheTranslationSaved = true;
+      mCachedTranslationSaved = true;
     }
   }
 
@@ -127,9 +145,10 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       getView().hideProgressBar();
       getView().hideNoInternet();
-      getView().setTranslatedText(translation.getTranslatedText());
+      getView().setTranslationData(translation.getTranslatedText(), translation.ifFavorite());
+      getView().setToggleFavoriteListener();
     } else {
-      mTextCache = translation.getTranslatedText();
+      mCachedTranslation = translation;
     }
   }
 
@@ -141,7 +160,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
       subscribeTranslationOnNetworkAvailable(pairOriginalTextException.second);
 
       if (getView() != null) {
-        getView().setTranslatedText("");
+        getView().hideTranslationLayout();
         getView().showNoInternet();
         getView().showProgressBar();
       }
@@ -178,7 +197,23 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     }
   }
 
-  // ------------------------------------ public methods -----------------------------------------
+  // ------------------------- SetTranslationFavoriteUseCase callbacks ----------------------------
+
+  @Override
+  public void onSetTranslationFavoriteSuccess() {
+    if (getView() != null) {
+      getView().onTranslationFavoriteChanged();
+    } else {
+      mCachedTranslationFavoriteChanged = true;
+    }
+  }
+
+  @Override
+  public void onSetTranslationFavoriteException(ExceptionBundle exceptionBundle) {
+
+  }
+
+  // ------------------------------------- public methods -----------------------------------------
 
 
   public void onFirstStart() {
@@ -192,6 +227,11 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     }
   }
 
+  public void onToggleCheckedChanged(String originalText, String translatedText,
+                                     String languageCodePair, boolean favorite) {
+    mSetTranslationFavoriteUseCase.run(this, originalText, translatedText, languageCodePair, favorite);
+  }
+
   public void onInputTextClear() {
     mTranslateUseCase.cancel();
     disposeTranslationSubscription();
@@ -199,7 +239,8 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       getView().hideProgressBar();
       getView().hideNoInternet();
-      getView().setTranslatedText("");
+      getView().hideTranslationLayout();
+      getView().removeToggleFavoriteListener();
     }
   }
 
@@ -210,21 +251,11 @@ public class TranslatePresenter extends Presenter<ITranslateView>
       getView().showProgressBar();
     }
 
-    //if (mNetworkManager.getCurrentNetworkStatus() != NetworkStatus.DISCONNECTED) {
-      if (getView() != null) {
-        mTranslateUseCase.run(this, originalText, getView().getLanguages().getLanguageCodePair());
-      } else {
-        mTranslateUseCase.run(this, originalText, mLanguageCache.getLanguageCodePair());
-      }
-    //} else {
-    //  if (getView() != null) {
-    //    getView().setTranslatedText("");
-    //    getView().showNoInternet();
-    //  }
-    //
-    //  disposeTranslationSubscription();
-    //  subscribeTranslationOnNetworkAvailable(originalText);
-    //}
+    if (getView() != null) {
+      mTranslateUseCase.run(this, originalText, getView().getLanguages().getLanguageCodePair());
+    } else {
+      mTranslateUseCase.run(this, originalText, mLanguageCache.getLanguageCodePair());
+    }
   }
 
   // ------------------------------------ private methods ----------------------------------------
@@ -254,25 +285,28 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   public static final class Factory
       implements IPresenterFactory<TranslatePresenter, ITranslateView> {
 
-    @NonNull
     private final TranslateUseCase translateUseCase;
-    @NonNull
     private final GetLastTranslationUseCase getLastTranslationUseCase;
-    @NonNull
+    private final SetTranslationFavoriteUseCase setTranslationFavoriteUseCase;
     private final INetworkManager networkManager;
 
 
-    public Factory(@NonNull TranslateUseCase translateUseCase,
-                   @NonNull GetLastTranslationUseCase getLastTranslationUseCase,
-                   @NonNull INetworkManager networkManager) {
+    public Factory(TranslateUseCase translateUseCase,
+                   GetLastTranslationUseCase getLastTranslationUseCase,
+                   SetTranslationFavoriteUseCase setTranslationFavoriteUseCase,
+                   INetworkManager networkManager) {
       this.translateUseCase = translateUseCase;
       this.getLastTranslationUseCase = getLastTranslationUseCase;
+      this.setTranslationFavoriteUseCase = setTranslationFavoriteUseCase;
       this.networkManager = networkManager;
     }
 
     @Override
     public TranslatePresenter create() {
-      return new TranslatePresenter(translateUseCase, getLastTranslationUseCase, networkManager);
+      return new TranslatePresenter(translateUseCase,
+          getLastTranslationUseCase,
+          setTranslationFavoriteUseCase,
+          networkManager);
     }
   }
 }

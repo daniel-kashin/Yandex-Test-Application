@@ -4,7 +4,7 @@ package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryVoidAsyncTask;
+import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
@@ -19,7 +19,7 @@ public class DeleteTranslationsUseCase implements IUseCase {
   private final ITranslationsRepository translateRepository;
   private final FragmentType fragmentType;
 
-  private RepositoryVoidAsyncTask deleteTranslationsAsyncTask;
+  private RepositoryAsyncTaskVoid deleteTranslationsAsyncTask;
 
 
   public DeleteTranslationsUseCase(Executor executor,
@@ -53,16 +53,16 @@ public class DeleteTranslationsUseCase implements IUseCase {
   }
 
   public void run(final Callbacks callbacks) {
-    RepositoryVoidAsyncTask.RepositoryRunnable runnable =
-        new RepositoryVoidAsyncTask.RepositoryRunnable() {
+    RepositoryAsyncTaskVoid.RepositoryRunnableVoid runnable =
+        new RepositoryAsyncTaskVoid.RepositoryRunnableVoid() {
           @Override
           public void run() throws ExceptionBundle {
             translateRepository.deleteTranslations(fragmentType == FragmentType.ONLY_FAVORITE_HISTORY);
           }
         };
 
-    RepositoryVoidAsyncTask.PostExecuteListener listener =
-        new RepositoryVoidAsyncTask.PostExecuteListener() {
+    RepositoryAsyncTaskVoid.PostExecuteListenerVoid listener =
+        new RepositoryAsyncTaskVoid.PostExecuteListenerVoid() {
           @Override
           public void onResult() {
             if (callbacks != null) {
@@ -79,7 +79,7 @@ public class DeleteTranslationsUseCase implements IUseCase {
         };
 
 
-    deleteTranslationsAsyncTask = new RepositoryVoidAsyncTask(
+    deleteTranslationsAsyncTask = new RepositoryAsyncTaskVoid(
         runnable,
         listener
     );

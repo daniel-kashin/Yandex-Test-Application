@@ -3,6 +3,8 @@ package com.danielkashin.yandextestapplication.presentation_layer.adapter.main_p
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
 import android.view.ViewGroup;
 
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
@@ -78,7 +80,7 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
     for (int i = 0; i < mReceivers.size(); ++i) {
       WeakReference<IDatabaseChangeReceiver> reference = mReceivers.get(i);
       if (reference != null && reference.get() != source) {
-        if (mCurrentFragment != 1 && i == 1) {
+        if (mCurrentFragment != i) {
           reference.get().receiveOnDataChanged(null);
         } else {
           reference.get().receiveOnDataChanged(source);

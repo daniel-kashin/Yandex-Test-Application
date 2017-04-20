@@ -10,11 +10,15 @@ public interface ITranslateView extends IView {
 
   // -------------------------------------- data change -------------------------------------------
 
+  void onTranslationFavoriteChanged();
+
   void onTranslationSaved();
 
   // --------------------------------------- languages --------------------------------------------
 
   LanguagePair getLanguages();
+
+  LanguagePair getLanguagesIfInitialized();
 
   void initializeLanguages(LanguagePair languages);
 
@@ -23,6 +27,10 @@ public interface ITranslateView extends IView {
   void setTranslatedLanguage(Language language);
 
   // ---------------------------------------- listeners -------------------------------------------
+
+  void setToggleFavoriteListener();
+
+  void removeToggleFavoriteListener();
 
   void setSwapLanguagesListener();
 
@@ -46,11 +54,13 @@ public interface ITranslateView extends IView {
 
   void hideImageClear();
 
+  void hideTranslationLayout();
+
   // ------------------------------------ other view handling -------------------------------------
 
   void setInputText(String text);
 
-  void setTranslatedText(String text);
+  void setTranslationData(String text, boolean isFavorite);
 
   void showAlertDialog(String text);
 

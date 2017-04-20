@@ -102,6 +102,5 @@ public class TranslationContract {
         .replace("'", "''")
         .replace("%", ESCAPE_CHAR + "%")
         .replace("_", ESCAPE_CHAR + "_");
-
   }
 }

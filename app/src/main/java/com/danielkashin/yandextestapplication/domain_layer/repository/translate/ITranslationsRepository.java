@@ -14,11 +14,12 @@ public interface ITranslationsRepository {
 
   // ------------------------------------ translations --------------------------------------------
 
-  void deleteTranslations(boolean favorite);
+  void deleteTranslations(boolean favorite) throws ExceptionBundle;
 
   void saveTranslation(Translation translation) throws ExceptionBundle;
 
-  Pair<Translation, Boolean> getTranslationAndItsSource(String originalText, String language) throws ExceptionBundle;
+  Pair<Translation, Translation.Source> getTranslationAndItsSource(String originalText, String language)
+      throws ExceptionBundle;
 
   Translation getLastTranslation() throws ExceptionBundle;
 

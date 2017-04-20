@@ -3,14 +3,14 @@ package com.danielkashin.yandextestapplication.domain_layer.async_task;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 
 
-public class RepositoryVoidAsyncTask<T> extends VoidAsyncTask<ExceptionBundle> {
+public class RepositoryAsyncTaskVoid<T> extends VoidAsyncTask<ExceptionBundle> {
 
-  private final RepositoryRunnable repositoryRunnable;
-  private final PostExecuteListener postExecuteListener;
+  private final RepositoryRunnableVoid repositoryRunnable;
+  private final PostExecuteListenerVoid postExecuteListener;
 
 
-  public RepositoryVoidAsyncTask(RepositoryRunnable repositoryRunnable,
-                                     PostExecuteListener postExecuteListener) {
+  public RepositoryAsyncTaskVoid(RepositoryRunnableVoid repositoryRunnable,
+                                 PostExecuteListenerVoid postExecuteListener) {
     this.repositoryRunnable = repositoryRunnable;
     this.postExecuteListener = postExecuteListener;
   }
@@ -44,7 +44,7 @@ public class RepositoryVoidAsyncTask<T> extends VoidAsyncTask<ExceptionBundle> {
   }
 
 
-  public interface PostExecuteListener {
+  public interface PostExecuteListenerVoid {
 
     void onResult();
 
@@ -52,7 +52,7 @@ public class RepositoryVoidAsyncTask<T> extends VoidAsyncTask<ExceptionBundle> {
 
   }
 
-  public interface RepositoryRunnable {
+  public interface RepositoryRunnableVoid {
 
     void run() throws ExceptionBundle;
 

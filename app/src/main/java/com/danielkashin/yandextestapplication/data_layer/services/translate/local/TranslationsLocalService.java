@@ -10,10 +10,15 @@ import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteByQuery;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetObject;
+import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutCollectionOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
+import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
 import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class TranslationsLocalService extends DatabaseService implements ITranslationsLocalService {
@@ -58,13 +63,20 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
   //               -------------------- database translations ------------------------
 
   @Override
-  public PreparedDeleteByQuery deleteTranslations(boolean favorite) {
+  public PreparedDeleteByQuery deleteNotFavoriteTranslations() {
     return getSQLite().delete()
         .byQuery(DeleteQuery.builder()
             .table(TranslationContract.TABLE_NAME)
-            .where(TranslationContract.COLUMN_NAME_IS_FAVOURITE + " = " + (favorite? 1 : 0))
+            .where(TranslationContract.COLUMN_NAME_IS_FAVOURITE + " = " + 0)
             .build()
         ).prepare();
+  }
+
+  @Override
+  public PreparedPutCollectionOfObjects putTranslations(List<DatabaseTranslation> translations) {
+    return getSQLite().put()
+        .objects(translations)
+        .prepare();
   }
 
   @Override
@@ -120,11 +132,29 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
         .prepare();
   }
 
+  @Override
+  public PreparedGetListOfObjects<DatabaseTranslation> getAllFavoriteTranslations() {
+    return getSQLite().get()
+        .listOfObjects(DatabaseTranslation.class)
+        .withQuery(Query.builder()
+            .table(TranslationContract.TABLE_NAME)
+            .where(TranslationContract.COLUMN_NAME_IS_FAVOURITE + " =" + 1)
+            .build())
+        .prepare();
+  }
+
   //               ------------------- exceptions parsing --------------------------
 
   @Override
   public void checkPutResultForExceptions(PutResult putResult) throws ExceptionBundle {
     if (putResult.wasNotInserted() && putResult.wasNotUpdated()) {
+      throw new ExceptionBundle(ExceptionBundle.Reason.PUT_DENIED);
+    }
+  }
+
+  @Override
+  public void checkPutResultsForException(PutResults putResults) throws ExceptionBundle {
+    if (putResults.numberOfInserts() == 0 && putResults.numberOfUpdates() == 0) {
       throw new ExceptionBundle(ExceptionBundle.Reason.PUT_DENIED);
     }
   }
@@ -148,7 +178,7 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
     if (databaseTranslation == null || databaseTranslation.getId() == null
         || databaseTranslation.getOriginalText() == null
         || databaseTranslation.getTranslatedText() == null
-        ||databaseTranslation.isFavorite() == null) {
+        || databaseTranslation.isFavorite() == null) {
       throw new ExceptionBundle(ExceptionBundle.Reason.NULL_FIELD);
     }
   }

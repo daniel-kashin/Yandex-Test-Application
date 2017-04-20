@@ -13,11 +13,15 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
@@ -34,6 +38,7 @@ import com.danielkashin.yandextestapplication.domain_layer.repository.languages.
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.SetTranslationFavoriteUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
@@ -50,6 +55,7 @@ import okhttp3.OkHttpClient;
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
     implements ITranslateView, IDatabaseChangeReceiver, IDatabaseChangePublisher {
 
+  private LinearLayout mRootView;
   private TextView mOriginalLanguageText;
   private TextView mTranslatedLanguageText;
   private ImageView mSwapLanguagesImage;
@@ -60,6 +66,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   private RelativeLayout mProgressBarLayout;
   private RelativeLayout mNoInternetLayout;
   private TextWatcher mTextWatcher;
+  private ToggleButton mToggleFavorite;
 
   private State mRestoredState;
 
@@ -112,6 +119,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     mRestoredState.setClearImageVisible(mClearImage.getVisibility() == View.VISIBLE);
+    mRestoredState.setTranslationLayoutVisible(mTranslationLayout.getVisibility() == View.VISIBLE);
     mRestoredState.saveToOutState(outState);
   }
 
@@ -126,12 +134,18 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void publishOnDataChanged(IDatabaseChangePublisher source) {
-    ((IDatabaseChangePublisher)getActivity()).publishOnDataChanged(this);
+    ((IDatabaseChangePublisher) getActivity()).publishOnDataChanged(this);
   }
 
   // ------------------------------------ ITranslateView ------------------------------------------
 
   //                        ------------- data changed -----------------
+
+
+  @Override
+  public void onTranslationFavoriteChanged() {
+    publishOnDataChanged(this);
+  }
 
   @Override
   public void onTranslationSaved() {
@@ -154,6 +168,15 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   @Override
+  public LanguagePair getLanguagesIfInitialized() {
+    if (mRestoredState.isLanguagePairInitialized()) {
+      return mRestoredState.getLanguagePair();
+    } else {
+      return null;
+    }
+  }
+
+  @Override
   public void setOriginalLanguage(Language language) {
     mRestoredState.setOriginalLanguage(language);
     mOriginalLanguageText.setText(language.getText());
@@ -166,6 +189,24 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   //                        --------------- listeners ------------------
+
+  @Override
+  public void setToggleFavoriteListener() {
+    mToggleFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        getPresenter().onToggleCheckedChanged(mOriginalTextEdit.getText().toString(),
+            mTranslatedText.getText().toString(),
+            mRestoredState.getLanguagePair().getLanguageCodePair(),
+            isChecked);
+      }
+    });
+  }
+
+  @Override
+  public void removeToggleFavoriteListener() {
+    mToggleFavorite.setOnCheckedChangeListener(null);
+  }
 
   @Override
   public void setSwapLanguagesListener() {
@@ -242,12 +283,16 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void showProgressBar() {
+    mToggleFavorite.setEnabled(false);
+    mTranslationLayout.setAlpha(0.5f);
     mProgressBarLayout.setVisibility(View.VISIBLE);
   }
 
   @Override
   public void hideProgressBar() {
     mProgressBarLayout.setVisibility(View.INVISIBLE);
+    mTranslationLayout.setAlpha(1.0f);
+    mToggleFavorite.setEnabled(true);
   }
 
   @Override
@@ -260,6 +305,12 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mClearImage.setVisibility(View.INVISIBLE);
   }
 
+  @Override
+  public void hideTranslationLayout() {
+    mTranslationLayout.setVisibility(View.INVISIBLE);
+    mTranslatedText.setText("");
+  }
+
   //                        ----------- other view handling ------------
 
   @Override
@@ -268,8 +319,10 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   @Override
-  public void setTranslatedText(String text) {
+  public void setTranslationData(String text, boolean isFavorite) {
+    mTranslationLayout.setVisibility(View.VISIBLE);
     mTranslatedText.setText(text);
+    mToggleFavorite.setChecked(isFavorite);
   }
 
   @Override
@@ -330,13 +383,20 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         translateRepository,
         supportedLanguagesRepository);
 
+    SetTranslationFavoriteUseCase setTranslationFavoriteUseCase = new SetTranslationFavoriteUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        translateRepository);
+
 
     // bind network manager
     INetworkManager networkManager = NetworkManager.Factory.create(getContext());
 
 
     // return presenter with dependencies
-    return new TranslatePresenter.Factory(translateUseCase, getLastTranslationUseCase, networkManager);
+    return new TranslatePresenter.Factory(translateUseCase,
+        getLastTranslationUseCase,
+        setTranslationFavoriteUseCase,
+        networkManager);
   }
 
   @Override
@@ -351,6 +411,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   protected void initializeView(View view) {
+    mRootView = (LinearLayout) view.findViewById(R.id.root_view);
     mOriginalLanguageText = (TextView) view.findViewById(R.id.text_original_language);
     mTranslatedLanguageText = (TextView) view.findViewById(R.id.text_translated_language);
     mSwapLanguagesImage = (ImageView) view.findViewById(R.id.image_swap_languages);
@@ -360,18 +421,32 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mTranslatedText = (TextView) view.findViewById(R.id.text_translated);
     mProgressBarLayout = (RelativeLayout) view.findViewById(R.id.layout_progress_bar);
     mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
+    mToggleFavorite = (ToggleButton) view.findViewById(R.id.toggle_favorite);
 
     if (mRestoredState.isLanguagePairInitialized()) {
       mOriginalLanguageText.setText(mRestoredState.getLanguagePair().getOriginalLanguage().getText());
       mTranslatedLanguageText.setText(mRestoredState.getLanguagePair().getTranslatedLanguage().getText());
     }
 
-    mClearImage.setVisibility(mRestoredState.clearImageVisible ? View.VISIBLE : View.INVISIBLE);
+    mClearImage.setVisibility(mRestoredState.isClearImageVisible() ? View.VISIBLE : View.INVISIBLE);
+    mTranslationLayout.setVisibility(mRestoredState.isTranslationLayoutVisible() ? View.VISIBLE : View.INVISIBLE);
   }
 
   // --------------------------------------- private ----------------------------------------------
 
   private void setListeners() {
+    mRootView.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        mOriginalTextEdit.clearFocus();
+
+        ((InputMethodManager) TranslateFragment.this
+            .getContext()
+            .getSystemService(Context.INPUT_METHOD_SERVICE))
+            .hideSoftInputFromWindow(view.getWindowToken(), 0);
+      }
+    });
+
     mClearImage.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -402,13 +477,15 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   private class State {
 
     private static final String KEY_CLEAR_IMAGE_VISIBLE = "KEY_CLEAR_IMAGE_VISIBLE";
+    private static final String KEY_TRANSLATION_LAYOUT_VISIBLE = "TRANSLATION_LAYOUT_VISIBLE";
 
     private LanguagePair languagePair;
     private boolean clearImageVisible;
+    private boolean translationLayoutVisible;
 
 
     private State(Bundle bundle) {
-      if (bundle == null){
+      if (bundle == null) {
         languagePair = null;
         clearImageVisible = false;
         return;
@@ -416,11 +493,13 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
       try {
         languagePair = LanguagePair.Factory.create(bundle);
-        clearImageVisible = bundle.containsKey(KEY_CLEAR_IMAGE_VISIBLE)
-            && bundle.getBoolean(KEY_CLEAR_IMAGE_VISIBLE);
+        clearImageVisible = bundle.containsKey(KEY_CLEAR_IMAGE_VISIBLE) && bundle.getBoolean(KEY_CLEAR_IMAGE_VISIBLE);
+        translationLayoutVisible = bundle.containsKey(KEY_TRANSLATION_LAYOUT_VISIBLE) &&
+            bundle.getBoolean(KEY_TRANSLATION_LAYOUT_VISIBLE);
       } catch (IllegalArgumentException e) {
         languagePair = null;
         clearImageVisible = false;
+        translationLayoutVisible = false;
       }
     }
 
@@ -429,11 +508,12 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         languagePair.saveToBundle(outState);
       }
       outState.putBoolean(KEY_CLEAR_IMAGE_VISIBLE, clearImageVisible);
+      outState.putBoolean(KEY_TRANSLATION_LAYOUT_VISIBLE, translationLayoutVisible);
     }
 
     //                        ------------ setters --------------
 
-    private void setLanguagePair(LanguagePair languagePair){
+    private void setLanguagePair(LanguagePair languagePair) {
       this.languagePair = languagePair;
     }
 
@@ -457,6 +537,10 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
       this.clearImageVisible = clearImageVisible;
     }
 
+    private void setTranslationLayoutVisible(boolean translationLayoutVisible) {
+      this.translationLayoutVisible = translationLayoutVisible;
+    }
+
     //                        ------------ getters --------------
 
     private boolean isLanguagePairInitialized() {
@@ -465,6 +549,10 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
     private boolean isClearImageVisible() {
       return clearImageVisible;
+    }
+
+    private boolean isTranslationLayoutVisible() {
+      return translationLayoutVisible;
     }
 
     private LanguagePair getLanguagePair() {

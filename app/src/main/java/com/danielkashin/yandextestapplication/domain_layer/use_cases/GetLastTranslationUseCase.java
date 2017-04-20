@@ -3,7 +3,7 @@ package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 import android.os.AsyncTask;
 import android.support.v4.util.Pair;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
+import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ILanguagesRepository;
@@ -18,7 +18,7 @@ public class GetLastTranslationUseCase implements IUseCase {
   private final ITranslationsRepository translateRepository;
   private final ILanguagesRepository supportedLanguagesRepository;
 
-  private RepositoryResponseAsyncTask<Translation> getLastTranslationAsyncTask;
+  private RepositoryAsyncTaskResponse<Translation> getLastTranslationAsyncTask;
 
 
   public GetLastTranslationUseCase(Executor executor,
@@ -53,8 +53,8 @@ public class GetLastTranslationUseCase implements IUseCase {
 
 
   public void run(final Callbacks callbacks) {
-    RepositoryResponseAsyncTask.PostExecuteListener<Translation> listener =
-        new RepositoryResponseAsyncTask.PostExecuteListener<Translation>() {
+    RepositoryAsyncTaskResponse.PostExecuteListenerResponse<Translation> listener =
+        new RepositoryAsyncTaskResponse.PostExecuteListenerResponse<Translation>() {
           @Override
           public void onResult(Translation translation) {
             LanguagePair languagePair = supportedLanguagesRepository.getLanguages(
@@ -70,15 +70,15 @@ public class GetLastTranslationUseCase implements IUseCase {
           }
         };
 
-    RepositoryResponseAsyncTask.RepositoryRunnable<Translation> repositoryRunnable =
-        new RepositoryResponseAsyncTask.RepositoryRunnable<Translation>() {
+    RepositoryAsyncTaskResponse.RepositoryRunnableResponse<Translation> repositoryRunnable =
+        new RepositoryAsyncTaskResponse.RepositoryRunnableResponse<Translation>() {
           @Override
           public Translation run() throws ExceptionBundle {
             return translateRepository.getLastTranslation();
           }
         };
 
-    getLastTranslationAsyncTask = new RepositoryResponseAsyncTask<>(
+    getLastTranslationAsyncTask = new RepositoryAsyncTaskResponse<>(
         repositoryRunnable,
         listener);
     getLastTranslationAsyncTask.executeOnExecutor(executor);

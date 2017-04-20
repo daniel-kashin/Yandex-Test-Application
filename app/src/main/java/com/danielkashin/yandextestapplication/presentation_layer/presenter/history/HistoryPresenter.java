@@ -24,10 +24,10 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   private boolean mCachedOnDataChanged;
 
 
-  public HistoryPresenter(GetTranslationsUseCase getTranslationsUseCase,
+  private HistoryPresenter(GetTranslationsUseCase getTranslationsUseCase,
                           DeleteTranslationsUseCase deleteTranslationsUseCase) {
     if (getTranslationsUseCase == null || deleteTranslationsUseCase == null) {
-      throw new IllegalArgumentException("All arguments must be non null");
+      throw new IllegalArgumentException("All presenter arguments must be non null");
     }
 
     mGetTranslationsUseCase = getTranslationsUseCase;

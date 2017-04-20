@@ -56,8 +56,12 @@ public class DatabaseTranslation {
     return favorite;
   }
 
-  public Long getLanguage() {
+  public Long getLanguageId() {
     return language;
+  }
+
+  public void setFavorite(Integer favorite) {
+    this.favorite = favorite;
   }
 
 }

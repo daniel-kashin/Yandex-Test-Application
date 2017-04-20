@@ -3,7 +3,7 @@ package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryResponseAsyncTask;
+import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
@@ -20,7 +20,7 @@ public class GetTranslationsUseCase implements IUseCase {
   private final ITranslationsRepository translateRepository;
   private final FragmentType fragmentType;
 
-  private RepositoryResponseAsyncTask<ArrayList<Translation>> getTranslationsAsyncTask;
+  private RepositoryAsyncTaskResponse<ArrayList<Translation>> getTranslationsAsyncTask;
 
 
   public GetTranslationsUseCase(Executor executor,
@@ -55,8 +55,8 @@ public class GetTranslationsUseCase implements IUseCase {
 
   public void run(final Callbacks callbacks, final int offset,
                   final int count, final String searchRequest) {
-    RepositoryResponseAsyncTask.PostExecuteListener<ArrayList<Translation>> listener =
-        new RepositoryResponseAsyncTask.PostExecuteListener<ArrayList<Translation>>() {
+    RepositoryAsyncTaskResponse.PostExecuteListenerResponse<ArrayList<Translation>> listener =
+        new RepositoryAsyncTaskResponse.PostExecuteListenerResponse<ArrayList<Translation>>() {
           @Override
           public void onResult(ArrayList<Translation> result) {
             if (callbacks != null) {
@@ -72,8 +72,8 @@ public class GetTranslationsUseCase implements IUseCase {
           }
         };
 
-    RepositoryResponseAsyncTask.RepositoryRunnable<ArrayList<Translation>> runnable =
-        new RepositoryResponseAsyncTask.RepositoryRunnable<ArrayList<Translation>>() {
+    RepositoryAsyncTaskResponse.RepositoryRunnableResponse<ArrayList<Translation>> runnable =
+        new RepositoryAsyncTaskResponse.RepositoryRunnableResponse<ArrayList<Translation>>() {
           @Override
           public ArrayList<Translation> run() throws ExceptionBundle {
             return translateRepository.getTranslations(
@@ -84,7 +84,7 @@ public class GetTranslationsUseCase implements IUseCase {
           }
         };
 
-    getTranslationsAsyncTask = new RepositoryResponseAsyncTask<>(
+    getTranslationsAsyncTask = new RepositoryAsyncTaskResponse<>(
         runnable,
         listener
     );

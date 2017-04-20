@@ -8,8 +8,13 @@ import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.
 import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteByQuery;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetObject;
+import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutCollectionOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
+import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public interface ITranslationsLocalService {
 
@@ -23,7 +28,9 @@ public interface ITranslationsLocalService {
 
   // ------------------------------- translations -------------------------------------------------
 
-  PreparedDeleteByQuery deleteTranslations(boolean favorite);
+  PreparedDeleteByQuery deleteNotFavoriteTranslations();
+
+  PreparedPutCollectionOfObjects putTranslations(List<DatabaseTranslation> translations);
 
   PreparedGetObject<DatabaseTranslation> getLastTranslation();
 
@@ -36,7 +43,11 @@ public interface ITranslationsLocalService {
                                                                 boolean onlyFavourite,
                                                                 String searchRequest);
 
+  PreparedGetListOfObjects<DatabaseTranslation> getAllFavoriteTranslations();
+
   // ----------------------------- exception parsing ----------------------------------------------
+
+  void checkPutResultsForException(PutResults putResults) throws ExceptionBundle;
 
   void checkPutResultForExceptions(PutResult putResult) throws ExceptionBundle;
 

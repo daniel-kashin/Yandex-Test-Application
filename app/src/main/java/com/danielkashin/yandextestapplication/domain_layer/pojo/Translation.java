@@ -75,4 +75,9 @@ public class Translation implements Parcelable {
     }
   };
 
+
+  public enum Source {
+    LOCAL,
+    REMOTE
+  }
 }
