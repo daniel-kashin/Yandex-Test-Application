@@ -8,7 +8,13 @@ import java.util.List;
 
 public interface IHistoryView extends IView {
 
-  void onDeleted();
+  void onDeleteTranslationsSuccess();
+
+  void onTranslationRefreshedSuccess();
+
+  void setAdapterCallbacks();
+
+  void removeAdapterCallbacks();
 
   void addTranslationsToAdapter(List<Translation> translations, boolean clear);
 
@@ -18,7 +24,6 @@ public interface IHistoryView extends IView {
 
   void showEmptySearchContentInterface();
 
-  int getTranslationAdapterCount();
-
   void clearTranslationAdapter();
+
 }

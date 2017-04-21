@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import java.util.ArrayList;

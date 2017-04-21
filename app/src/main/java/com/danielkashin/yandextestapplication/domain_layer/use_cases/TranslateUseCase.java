@@ -7,7 +7,7 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse.RepositoryRunnableResponse;
@@ -23,7 +23,7 @@ public class TranslateUseCase implements IUseCase {
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
 
-  private RepositoryAsyncTaskResponse<Pair<Translation, Translation.Source>> getTranslationAsyncTask;
+  private RepositoryAsyncTaskResponse<Pair<Translation, Translation.Source>> getTranslation;
 
 
   public TranslateUseCase(Executor executor, ITranslationsRepository translateRepository) {
@@ -40,17 +40,17 @@ public class TranslateUseCase implements IUseCase {
   @Override
   public void cancel() {
     if (isRunning()) {
-      getTranslationAsyncTask.cancel(false);
-      getTranslationAsyncTask = null;
+      getTranslation.cancel(false);
+      getTranslation = null;
     }
   }
 
   // -------------------------------------- public methods ----------------------------------------
 
   public boolean isRunning() {
-    return getTranslationAsyncTask != null
-        && getTranslationAsyncTask.getStatus() == AsyncTask.Status.RUNNING
-        && !getTranslationAsyncTask.isCancelled();
+    return getTranslation != null
+        && getTranslation.getStatus() == AsyncTask.Status.RUNNING
+        && !getTranslation.isCancelled();
   }
 
   public void run(final Callbacks uiCallbacks, final String originalText, final String language) {
@@ -66,7 +66,7 @@ public class TranslateUseCase implements IUseCase {
             uiCallbacks.onTranslateSuccess(result.first);
 
             if (result.second == Translation.Source.LOCAL) {
-              uiCallbacks.onSaveTranslationSuccess();
+              uiCallbacks.onSaveTranslationAfterGettingSuccess();
             } else if (result.second == Translation.Source.REMOTE) {
               RepositoryRunnableVoid saveTranslationRunnable = new RepositoryRunnableVoid() {
                 @Override
@@ -78,12 +78,12 @@ public class TranslateUseCase implements IUseCase {
               PostExecuteListenerVoid saveTranslationListener = new PostExecuteListenerVoid() {
                 @Override
                 public void onResult() {
-                  uiCallbacks.onSaveTranslationSuccess();
+                  uiCallbacks.onSaveTranslationAfterGettingSuccess();
                 }
 
                 @Override
                 public void onException(ExceptionBundle exception) {
-                  uiCallbacks.onSaveTranslationException(exception);
+                  uiCallbacks.onSaveTranslationAfterGettingException(exception);
                 }
               };
 
@@ -102,17 +102,17 @@ public class TranslateUseCase implements IUseCase {
         };
 
 
-    getTranslationAsyncTask = new RepositoryAsyncTaskResponse<>(translateRunnable, translateListener);
-    getTranslationAsyncTask.executeOnExecutor(executor);
+    getTranslation = new RepositoryAsyncTaskResponse<>(translateRunnable, translateListener);
+    getTranslation.executeOnExecutor(executor);
   }
 
   // ------------------------------------ callbacks ----------------------------------------------
 
   public interface Callbacks {
 
-    void onSaveTranslationSuccess();
+    void onSaveTranslationAfterGettingSuccess();
 
-    void onSaveTranslationException(ExceptionBundle exceptionBundle);
+    void onSaveTranslationAfterGettingException(ExceptionBundle exceptionBundle);
 
     void onTranslateSuccess(Translation result);
 

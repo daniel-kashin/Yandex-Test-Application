@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.domain_layer.repository.languages;
+package com.danielkashin.yandextestapplication.data_layer.repository.languages;
 
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;

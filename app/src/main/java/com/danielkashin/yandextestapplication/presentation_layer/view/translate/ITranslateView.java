@@ -58,6 +58,9 @@ public interface ITranslateView extends IView {
 
   // ------------------------------------ other view handling -------------------------------------
 
+
+  void setToggleFavoriteValue(boolean favorite);
+
   void setInputText(String text);
 
   void setTranslationData(String text, boolean isFavorite);

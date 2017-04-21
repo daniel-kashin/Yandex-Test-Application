@@ -6,8 +6,8 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ILanguagesRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.languages.ILanguagesRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import java.util.concurrent.Executor;
 
@@ -18,7 +18,7 @@ public class GetLastTranslationUseCase implements IUseCase {
   private final ITranslationsRepository translateRepository;
   private final ILanguagesRepository supportedLanguagesRepository;
 
-  private RepositoryAsyncTaskResponse<Translation> getLastTranslationAsyncTask;
+  private RepositoryAsyncTaskResponse<Translation> getLastTranslation;
 
 
   public GetLastTranslationUseCase(Executor executor,
@@ -38,17 +38,17 @@ public class GetLastTranslationUseCase implements IUseCase {
   @Override
   public void cancel() {
     if (isRunning()) {
-      getLastTranslationAsyncTask.cancel(false);
-      getLastTranslationAsyncTask = null;
+      getLastTranslation.cancel(false);
+      getLastTranslation = null;
     }
   }
 
   // ------------------------------------- public methods -----------------------------------------
 
   public boolean isRunning() {
-    return getLastTranslationAsyncTask != null
-        && getLastTranslationAsyncTask.getStatus() == AsyncTask.Status.RUNNING
-        && !getLastTranslationAsyncTask.isCancelled();
+    return getLastTranslation != null
+        && getLastTranslation.getStatus() == AsyncTask.Status.RUNNING
+        && !getLastTranslation.isCancelled();
   }
 
 
@@ -78,10 +78,10 @@ public class GetLastTranslationUseCase implements IUseCase {
           }
         };
 
-    getLastTranslationAsyncTask = new RepositoryAsyncTaskResponse<>(
+    getLastTranslation = new RepositoryAsyncTaskResponse<>(
         repositoryRunnable,
         listener);
-    getLastTranslationAsyncTask.executeOnExecutor(executor);
+    getLastTranslation.executeOnExecutor(executor);
   }
 
   // ------------------------------------ inner classes--------------------------------------------

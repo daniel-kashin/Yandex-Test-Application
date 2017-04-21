@@ -11,20 +11,20 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslationsLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslationsRemoteService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.TranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationsUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetTranslationsUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.RefreshTranslationUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
-import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsCallbacks;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsModelCallbacks;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsModel;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.TranslationsAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
@@ -41,9 +41,10 @@ import okhttp3.OkHttpClient;
 
 
 public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistoryView>
-    implements IHistoryView, IHistoryPage, IDatabaseChangePublisher {
+    implements IHistoryView, IHistoryPage, IDatabaseChangePublisher, ITranslationsModelCallbacks {
 
   private State mRestoredState;
+  private boolean mRefreshBeforeWhenChangingAnotherPage;
 
   private ImageView mSearchImage;
   private EditText mSearchEdit;
@@ -92,18 +93,12 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     super.onStart();
 
     if (!mRestoredState.isTranslationsAdapterInitialized()) {
-      getPresenter().refreshTranslations(null);
+      getPresenter().refreshTranslations(0, null);
+    } else {
+      setAdapterCallbacks();
     }
 
-    setAdapterCallbacks();
     setListeners();
-  }
-
-  @Override
-  public void onStop() {
-    super.onStop();
-
-    removeAdapterCallbacks();
   }
 
   @Override
@@ -121,27 +116,43 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    getPresenter().refreshTranslations(null);
+    getPresenter().refreshTranslations(getTranslationAdapterCount(), null);
   }
 
-  // ------------------------------- IDatabaseChangePublisher --------------------------------------
+  // ------------------------------- IDatabaseChangePublisher -------------------------------------
 
   @Override
   public void publishOnDataChanged(IDatabaseChangePublisher source) {
     ((IDatabaseChangePublisher) getParentFragment()).publishOnDataChanged(source);
   }
 
-  // ------------------------------------- IHistoryPage -------------------------------------------
+  // ----------------------------- ITranslationsModelCallbacks ------------------------------------
 
   @Override
-  public void onDeleted() {
-    publishOnDataChanged(null);
+  public void onFavoriteToggleClicked(Translation translation) {
+    getPresenter().onToggleClicked(translation);
   }
+
+  @Override
+  public void onItemClicked(Translation translation) {
+
+  }
+
+  @Override
+  public void onLongItemClicked(Translation translation) {
+
+  }
+
+  // ------------------------------------- IHistoryPage -------------------------------------------
 
   @Override
   public void onAnotherPageSelected() {
     if (mSearchEdit != null && !mSearchEdit.getText().toString().equals("")) {
       mSearchEdit.setText("");
+    } else if (mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
+        && mRefreshBeforeWhenChangingAnotherPage) {
+      mRefreshBeforeWhenChangingAnotherPage = false;
+      getPresenter().refreshTranslations(0, null);
     }
   }
 
@@ -162,6 +173,27 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   // ------------------------------ IHistoryView methods ------------------------------------------
 
   @Override
+  public void onDeleteTranslationsSuccess() {
+    publishOnDataChanged(null);
+  }
+
+  @Override
+  public void onTranslationRefreshedSuccess() {
+    mRefreshBeforeWhenChangingAnotherPage = true;
+    publishOnDataChanged(this);
+  }
+
+  @Override
+  public void setAdapterCallbacks() {
+    ((ITranslationsModel) mRecyclerView.getAdapter()).addCallbacks(this);
+  }
+
+  @Override
+  public void removeAdapterCallbacks() {
+    ((ITranslationsModel) mRecyclerView.getAdapter()).removeCallbacks();
+  }
+
+  @Override
   public void showEmptyContentInterface() {
     ((IHistoryPagerView) getParentFragment()).hideDeleteHistoryButton(this);
     mSearchLayout.setVisibility(View.GONE);
@@ -174,6 +206,9 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     ((IHistoryPagerView) getParentFragment()).showDeleteHistoryButton(this);
     mSearchLayout.setVisibility(View.VISIBLE);
     mRecyclerView.setVisibility(View.VISIBLE);
+    mNoContentText.setText(mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
+        ? getString(R.string.no_content_favorites_message)
+        : getString(R.string.no_content_history_message));
     mNoContentText.setVisibility(View.GONE);
   }
 
@@ -187,15 +222,6 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   @Override
   public void addTranslationsToAdapter(List<Translation> translations, boolean clear) {
     ((ITranslationsModel) mRecyclerView.getAdapter()).addTranslations(translations, clear);
-  }
-
-  @Override
-  public int getTranslationAdapterCount() {
-    if (mRecyclerView == null || mRecyclerView.getAdapter() == null) {
-      return 0;
-    } else {
-      return ((ITranslationsModel) mRecyclerView.getAdapter()).getSize();
-    }
   }
 
   @Override
@@ -236,11 +262,13 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     DeleteTranslationsUseCase deleteTranslationsUseCase = new DeleteTranslationsUseCase(
         AsyncTask.THREAD_POOL_EXECUTOR,
         repository,
-        mRestoredState.getFragmentType()
-    );
+        mRestoredState.getFragmentType());
+    RefreshTranslationUseCase refreshTranslationUseCase = new RefreshTranslationUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        repository);
 
     // return presenter with dependencies
-    return new HistoryPresenter.Factory(getTranslationsUseCase, deleteTranslationsUseCase);
+    return new HistoryPresenter.Factory(getTranslationsUseCase, deleteTranslationsUseCase, refreshTranslationUseCase);
   }
 
   @Override
@@ -266,9 +294,11 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     mRecyclerView.setVisibility(mRestoredState.isRecyclerViewVisible() ? View.VISIBLE : View.GONE);
     mNoContentText.setVisibility(mRestoredState.isNoContentTextVisible() ? View.VISIBLE : View.GONE);
 
-    mRecyclerView.setAdapter(mRestoredState.isTranslationsAdapterInitialized()
-        ? (RecyclerView.Adapter) mRestoredState.getTranslationsAdapter()
-        : new TranslationsAdapter());
+    if (mRestoredState.isTranslationsAdapterInitialized()) {
+      mRecyclerView.setAdapter((RecyclerView.Adapter) mRestoredState.getTranslationsAdapter());
+    } else {
+      mRecyclerView.setAdapter(new TranslationsAdapter());
+    }
 
     mSearchEdit.setHint(mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
         ? getString(R.string.hint_search_favorite_history)
@@ -280,6 +310,14 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   }
 
   // ---------------------------------- private methods -------------------------------------------
+
+  public int getTranslationAdapterCount() {
+    if (mRecyclerView == null || mRecyclerView.getAdapter() == null) {
+      return 0;
+    } else {
+      return ((ITranslationsModel) mRecyclerView.getAdapter()).getSize();
+    }
+  }
 
   private void setListeners() {
     mSearchEdit.addTextChangedListener(new TextWatcher() {
@@ -293,32 +331,9 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
       @Override
       public void afterTextChanged(Editable editable) {
-        getPresenter().refreshTranslations(editable.toString());
+        getPresenter().refreshTranslations(0, editable.toString());
       }
     });
-  }
-
-  private void setAdapterCallbacks() {
-    ((ITranslationsModel) mRecyclerView.getAdapter()).addCallbacks(new ITranslationsCallbacks() {
-      @Override
-      public void onFavoriteToggleClicked(int position) {
-        Toast.makeText(getContext(), "ICON " + position, Toast.LENGTH_SHORT).show();
-      }
-
-      @Override
-      public void onItemClicked(int position) {
-        Toast.makeText(getContext(), "SHORT CLICK " + position, Toast.LENGTH_SHORT).show();
-      }
-
-      @Override
-      public void onLongItemClicked(int position) {
-        Toast.makeText(getContext(), "LONG CLICK " + position, Toast.LENGTH_SHORT).show();
-      }
-    });
-  }
-
-  private void removeAdapterCallbacks() {
-    ((ITranslationsModel) mRecyclerView.getAdapter()).removeCallbacks();
   }
 
   // ----------------------------------- inner classes --------------------------------------------

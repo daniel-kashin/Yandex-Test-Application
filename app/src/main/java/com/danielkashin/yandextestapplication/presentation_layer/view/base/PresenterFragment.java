@@ -1,6 +1,7 @@
 package com.danielkashin.yandextestapplication.presentation_layer.view.base;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -26,8 +27,11 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   // --------------------------------- Lifecycle methods ------------------------------------------
 
+
   @Override
-  public void onCreate(Bundle savedInstanceState) {
+  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+
     super.onCreate(savedInstanceState);
 
     Loader loader = getLoaderManager().getLoader(getFragmentId());
@@ -39,6 +43,7 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
       getLoaderManager().initLoader(getFragmentId(), null, this);
     }
   }
+
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {

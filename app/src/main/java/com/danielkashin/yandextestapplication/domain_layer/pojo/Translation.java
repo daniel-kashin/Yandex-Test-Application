@@ -50,6 +50,10 @@ public class Translation implements Parcelable {
     return languageCodePair.split("-");
   }
 
+  public void setFavorite(boolean favorite) {
+    this.favorite = favorite;
+  }
+
   @Override
   public int describeContents() {
     return 0;

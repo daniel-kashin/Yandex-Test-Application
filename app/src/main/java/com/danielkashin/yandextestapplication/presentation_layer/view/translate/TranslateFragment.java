@@ -33,15 +33,17 @@ import com.danielkashin.yandextestapplication.data_layer.services.translate.remo
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
-import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ILanguagesRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.languages.LanguagesRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.languages.ILanguagesRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.languages.LanguagesRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.TranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.SetTranslationFavoriteUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetRefreshedTranslationUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.SaveTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IMainPage;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.TranslatePresenter;
@@ -53,7 +55,7 @@ import okhttp3.OkHttpClient;
 
 
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
-    implements ITranslateView, IDatabaseChangeReceiver, IDatabaseChangePublisher {
+    implements ITranslateView, IMainPage, IDatabaseChangePublisher {
 
   private LinearLayout mRootView;
   private TextView mOriginalLanguageText;
@@ -127,15 +129,32 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-
+    getPresenter().refreshFavoriteValue(
+        mOriginalTextEdit.getText().toString(),
+        mTranslatedText.getText().toString(),
+        mRestoredState.getLanguagePair().getLanguageCodePair(),
+        mToggleFavorite.isChecked());
   }
 
-  // ---------------------------------- IDatabaseNotifier -----------------------------------------
+  // ----------------------------------- IDatabaseNotifier ----------------------------------------
 
   @Override
   public void publishOnDataChanged(IDatabaseChangePublisher source) {
     ((IDatabaseChangePublisher) getActivity()).publishOnDataChanged(this);
   }
+
+  // --------------------------------------- IMainPage --------------------------------------------
+
+  @Override
+  public void onAnotherPageSelected() {
+    // TODO
+  }
+
+  @Override
+  public void onSelected() {
+    // TODO
+  }
+
 
   // ------------------------------------ ITranslateView ------------------------------------------
 
@@ -314,6 +333,11 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   //                        ----------- other view handling ------------
 
   @Override
+  public void setToggleFavoriteValue(boolean favorite) {
+    mToggleFavorite.setChecked(favorite);
+  }
+
+  @Override
   public void setInputText(String text) {
     mOriginalTextEdit.setText(text);
   }
@@ -383,7 +407,11 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         translateRepository,
         supportedLanguagesRepository);
 
-    SetTranslationFavoriteUseCase setTranslationFavoriteUseCase = new SetTranslationFavoriteUseCase(
+    SaveTranslationUseCase setTranslationFavoriteUseCase = new SaveTranslationUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        translateRepository);
+
+    GetRefreshedTranslationUseCase getRefreshedTranslationUseCase = new GetRefreshedTranslationUseCase(
         AsyncTask.THREAD_POOL_EXECUTOR,
         translateRepository);
 
@@ -396,6 +424,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     return new TranslatePresenter.Factory(translateUseCase,
         getLastTranslationUseCase,
         setTranslationFavoriteUseCase,
+        getRefreshedTranslationUseCase,
         networkManager);
   }
 

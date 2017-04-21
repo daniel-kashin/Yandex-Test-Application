@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
 
@@ -19,7 +19,7 @@ public class DeleteTranslationsUseCase implements IUseCase {
   private final ITranslationsRepository translateRepository;
   private final FragmentType fragmentType;
 
-  private RepositoryAsyncTaskVoid deleteTranslationsAsyncTask;
+  private RepositoryAsyncTaskVoid deleteTranslations;
 
 
   public DeleteTranslationsUseCase(Executor executor,
@@ -39,17 +39,17 @@ public class DeleteTranslationsUseCase implements IUseCase {
   @Override
   public void cancel() {
     if (isRunning()) {
-      deleteTranslationsAsyncTask.cancel(false);
-      deleteTranslationsAsyncTask = null;
+      deleteTranslations.cancel(false);
+      deleteTranslations = null;
     }
   }
 
   // ------------------------------------- public methods -----------------------------------------
 
   public boolean isRunning() {
-    return deleteTranslationsAsyncTask != null
-        && deleteTranslationsAsyncTask.getStatus() == AsyncTask.Status.RUNNING
-        && !deleteTranslationsAsyncTask.isCancelled();
+    return deleteTranslations != null
+        && deleteTranslations.getStatus() == AsyncTask.Status.RUNNING
+        && !deleteTranslations.isCancelled();
   }
 
   public void run(final Callbacks callbacks) {
@@ -79,11 +79,11 @@ public class DeleteTranslationsUseCase implements IUseCase {
         };
 
 
-    deleteTranslationsAsyncTask = new RepositoryAsyncTaskVoid(
+    deleteTranslations = new RepositoryAsyncTaskVoid(
         runnable,
         listener
     );
-    deleteTranslationsAsyncTask.executeOnExecutor(executor);
+    deleteTranslations.executeOnExecutor(executor);
   }
 
   // ------------------------------------ inner classes--------------------------------------------

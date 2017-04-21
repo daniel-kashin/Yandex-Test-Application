@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.domain_layer.repository.languages;
+package com.danielkashin.yandextestapplication.data_layer.repository.languages;
 
 import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.DatabaseLanguage;
 import com.danielkashin.yandextestapplication.data_layer.services.languages.local.ILanguagesLocalService;

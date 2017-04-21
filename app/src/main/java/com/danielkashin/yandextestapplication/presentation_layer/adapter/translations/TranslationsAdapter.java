@@ -1,12 +1,12 @@
 package com.danielkashin.yandextestapplication.presentation_layer.adapter.translations;
 
-
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -16,11 +16,12 @@ import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapter.TranslationViewHolder>
     implements ITranslationsModel {
 
   private static final String KEY_TRANSLATIONS = "KEY_TRANSLATIONS";
-  private static ITranslationsCallbacks mCallbacks;
+  private ITranslationsModelCallbacks mCallbacks;
   private ArrayList<Translation> mTranslations;
 
 
@@ -35,7 +36,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   // ------------------------------ ITranslationsModel methods ------------------------------------
 
   @Override
-  public void addCallbacks(ITranslationsCallbacks callbacks) {
+  public void addCallbacks(ITranslationsModelCallbacks callbacks) {
     mCallbacks = callbacks;
   }
 
@@ -80,18 +81,19 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
 
   @Override
   public void onBindViewHolder(final TranslationViewHolder holder, final int position) {
-    Translation translation = mTranslations.get(holder.getAdapterPosition());
+    final Translation translation = mTranslations.get(holder.getAdapterPosition());
 
     holder.setOriginalText(translation.getOriginalText());
     holder.setTranslatedText(translation.getTranslatedText());
     holder.setIsFavourite(translation.ifFavorite());
     holder.setLanguage(translation.getLanguageCodePair());
 
-    holder.setOnFavoriteToggleListener(new View.OnClickListener() {
+    holder.setOnFavoriteToggleListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
-      public void onClick(View view) {
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (mCallbacks != null) {
-          mCallbacks.onFavoriteToggleClicked(holder.getAdapterPosition());
+          translation.setFavorite(isChecked);
+          mCallbacks.onFavoriteToggleClicked(translation);
         }
       }
     });
@@ -100,7 +102,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       @Override
       public void onClick(View view) {
         if (mCallbacks != null) {
-         mCallbacks.onItemClicked(holder.getAdapterPosition());
+         mCallbacks.onItemClicked(translation);
         }
       }
     });
@@ -109,7 +111,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       @Override
       public boolean onLongClick(View view) {
         if (mCallbacks != null) {
-          mCallbacks.onLongItemClicked(holder.getAdapterPosition());
+          mCallbacks.onLongItemClicked(translation);
           return true;
         } else {
           return false;
@@ -167,6 +169,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     }
 
     private void setIsFavourite(boolean isFavourite) {
+      favoriteToggle.setOnCheckedChangeListener(null);
       favoriteToggle.setChecked(isFavourite);
     }
 
@@ -182,8 +185,8 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       language.setText(text);
     }
 
-    private void setOnFavoriteToggleListener(View.OnClickListener listener) {
-      favoriteToggle.setOnClickListener(listener);
+    private void setOnFavoriteToggleListener(CompoundButton.OnCheckedChangeListener listener) {
+      favoriteToggle.setOnCheckedChangeListener(listener);
     }
 
     public void setOnClickListener(View.OnClickListener listener) {

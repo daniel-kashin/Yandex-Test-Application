@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.domain_layer.repository.translate;
+package com.danielkashin.yandextestapplication.data_layer.repository.translate;
 
 
 import android.support.v4.util.Pair;
@@ -36,6 +36,7 @@ public class TranslationsRepository implements ITranslationsRepository {
 
   // ------------------------------ ITranslationRepository methods ----------------------------------
 
+  //                          -------------- delete ----------------
 
   @Override
   public void deleteTranslations(boolean favorite) throws ExceptionBundle {
@@ -56,6 +57,8 @@ public class TranslationsRepository implements ITranslationsRepository {
           .executeAsBlocking();
     }
   }
+
+  //                          ---------------- put -----------------
 
   @Override
   public void saveTranslation(Translation translation) throws ExceptionBundle {
@@ -78,6 +81,50 @@ public class TranslationsRepository implements ITranslationsRepository {
   }
 
   @Override
+  public void refreshTranslation(Translation translation)
+      throws ExceptionBundle {
+    Long languageId = getLanguageIdByText(translation.getLanguageCodePair());
+
+    // get translation and throw exception if it is not valid
+    DatabaseTranslation databaseTranslation = localService.getTranslation(
+        translation.getOriginalText(),
+        languageId.intValue())
+        .executeAsBlocking();
+    localService.checkDatabaseTranslationForExceptions(databaseTranslation);
+
+    DatabaseTranslation translationToSave = new DatabaseTranslation(databaseTranslation.getId(),
+        databaseTranslation.getOriginalText(),
+        databaseTranslation.getTranslatedText(),
+        databaseTranslation.getLanguageId(),
+        translation.ifFavorite() ? 1 : 0);
+
+    // put created translation to database
+    PutResult result = localService.putTranslation(translationToSave)
+        .executeAsBlocking();
+    localService.checkPutResultForExceptions(result);
+  }
+
+  //                          ---------------- get -----------------
+
+
+  @Override
+  public Translation getRefreshedTranslation(Translation translation) throws ExceptionBundle {
+    Long languageId = getLanguageIdByText(translation.getLanguageCodePair());
+
+    // get translation and throw exception if it is not valid
+    DatabaseTranslation databaseTranslation = localService.getTranslation(
+        translation.getOriginalText(),
+        languageId.intValue())
+        .executeAsBlocking();
+    localService.checkDatabaseTranslationForExceptions(databaseTranslation);
+
+    return new Translation(databaseTranslation.getOriginalText(),
+        databaseTranslation.getTranslatedText(),
+        translation.getLanguageCodePair(),
+        databaseTranslation.isFavorite() == 1);
+  }
+
+  @Override
   public Pair<Translation, Translation.Source> getTranslationAndItsSource(final String originalText,
                                                                           final String languageText) throws ExceptionBundle {
     try {
@@ -96,6 +143,7 @@ public class TranslationsRepository implements ITranslationsRepository {
         DatabaseTranslation translationToPut = getDatabaseTranslationCopy(databaseTranslation);
         PutResult putResult = localService.putTranslation(translationToPut)
             .executeAsBlocking();
+        localService.checkPutResultForExceptions(putResult);
 
         Translation translation = new Translation(databaseTranslation.getOriginalText(),
             databaseTranslation.getTranslatedText(),

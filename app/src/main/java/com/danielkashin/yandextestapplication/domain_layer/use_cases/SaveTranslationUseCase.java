@@ -1,13 +1,11 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
 import android.os.AsyncTask;
-import android.support.v4.util.Pair;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.RepositoryRunnableVoid;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.PostExecuteListenerVoid;
@@ -15,15 +13,16 @@ import static com.danielkashin.yandextestapplication.domain_layer.async_task.Rep
 import java.util.concurrent.Executor;
 
 
-public class SetTranslationFavoriteUseCase implements IUseCase {
+public class SaveTranslationUseCase implements IUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
 
-  private RepositoryAsyncTaskVoid setTranslationFavoriteAsyncTask;
+  private RepositoryAsyncTaskVoid saveTranslation;
 
 
-  public SetTranslationFavoriteUseCase(Executor executor, ITranslationsRepository translateRepository) {
+  public SaveTranslationUseCase(Executor executor,
+                                ITranslationsRepository translateRepository) {
     if (executor == null || translateRepository == null) {
       throw new IllegalArgumentException("All arguments of use case must be non null");
     }
@@ -37,25 +36,23 @@ public class SetTranslationFavoriteUseCase implements IUseCase {
   @Override
   public void cancel() {
     if (isRunning()) {
-      setTranslationFavoriteAsyncTask.cancel(false);
-      setTranslationFavoriteAsyncTask = null;
+      saveTranslation.cancel(false);
+      saveTranslation = null;
     }
   }
 
   // -------------------------------------- public methods ----------------------------------------
 
   public boolean isRunning() {
-    return setTranslationFavoriteAsyncTask != null
-        && setTranslationFavoriteAsyncTask.getStatus() == AsyncTask.Status.RUNNING
-        && !setTranslationFavoriteAsyncTask.isCancelled();
+    return saveTranslation != null
+        && saveTranslation.getStatus() == AsyncTask.Status.RUNNING
+        && !saveTranslation.isCancelled();
   }
 
-  public void run(final Callbacks uiCallbacks, final String originalText, final String translatedText,
-                  final String languageCodePair, final boolean favorite) {
+  public void run(final Callbacks uiCallbacks, final Translation translation) {
     RepositoryRunnableVoid setTranslationRunnable = new RepositoryRunnableVoid() {
       @Override
       public void run() throws ExceptionBundle {
-        Translation translation = new Translation(originalText, translatedText, languageCodePair, favorite);
         translateRepository.saveTranslation(translation);
       }
     };
@@ -63,26 +60,26 @@ public class SetTranslationFavoriteUseCase implements IUseCase {
     PostExecuteListenerVoid setTranslationListener = new PostExecuteListenerVoid() {
       @Override
       public void onResult() {
-        uiCallbacks.onSetTranslationFavoriteSuccess();
+        uiCallbacks.onSaveTranslationSuccess();
       }
 
       @Override
       public void onException(ExceptionBundle exception) {
-        uiCallbacks.onSetTranslationFavoriteException(exception);
+        uiCallbacks.onSaveTranslationException(exception);
       }
     };
 
-    setTranslationFavoriteAsyncTask = new RepositoryAsyncTaskVoid(setTranslationRunnable, setTranslationListener);
-    setTranslationFavoriteAsyncTask.executeOnExecutor(executor);
+    saveTranslation = new RepositoryAsyncTaskVoid(setTranslationRunnable, setTranslationListener);
+    saveTranslation.executeOnExecutor(executor);
   }
 
   // ------------------------------------ callbacks ----------------------------------------------
 
   public interface Callbacks {
 
-    void onSetTranslationFavoriteSuccess();
+    void onSaveTranslationSuccess();
 
-    void onSetTranslationFavoriteException(ExceptionBundle exceptionBundle);
+    void onSaveTranslationException(ExceptionBundle exceptionBundle);
 
   }
 

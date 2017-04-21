@@ -3,11 +3,10 @@ package com.danielkashin.yandextestapplication.presentation_layer.adapter.main_p
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.text.SpannableString;
-import android.text.style.ImageSpan;
 import android.view.ViewGroup;
 
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
 import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.HistoryPagerFragment;
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
 
@@ -19,15 +18,15 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
 
   private final int FRAGMENT_COUNT = 2;
   private int mCurrentFragment;
-  private ArrayList<WeakReference<IDatabaseChangeReceiver>> mReceivers;
+  private ArrayList<WeakReference<IMainPage>> mPages;
 
 
   public MainPagerAdapter(FragmentManager fragmentManager) {
     super(fragmentManager);
 
-    mReceivers = new ArrayList<>(FRAGMENT_COUNT);
+    mPages = new ArrayList<>(FRAGMENT_COUNT);
     for (int i = 0; i < FRAGMENT_COUNT; ++i) {
-      mReceivers.add(null);
+      mPages.add(null);
     }
   }
 
@@ -37,10 +36,10 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
   public Fragment instantiateItem(ViewGroup container, int position) {
     Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
 
-    if (!(createdFragment instanceof IDatabaseChangeReceiver)) {
-      throw new IllegalStateException("Fragment must be an instance of IDatabaseChangeReceiver type");
+    if (!(createdFragment instanceof IMainPage)) {
+      throw new IllegalStateException("Fragment must be an instance of IMainPage type");
     } else {
-      mReceivers.set(position, new WeakReference<>((IDatabaseChangeReceiver) createdFragment));
+      mPages.set(position, new WeakReference<>((IMainPage) createdFragment));
     }
 
     return createdFragment;
@@ -66,22 +65,34 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
 
   @Override
   public void onPageSelected(int position) {
-    mCurrentFragment = position;
+    if (mPages != null) {
+      for (int i = 0; i < mPages.size(); ++i) {
+        WeakReference<IMainPage> reference = mPages.get(i);
+        if (reference != null && reference.get() != null) {
+          if (i == position) {
+            mCurrentFragment = position;
+            reference.get().onSelected();
+          } else {
+            reference.get().onAnotherPageSelected();
+          }
+        }
+      }
+    }
   }
 
   // --------------------------------- IDatabaseChangeReceiver ------------------------------------
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    if (mReceivers == null || mReceivers.size() == 0) {
+    if (mPages == null || mPages.size() == 0) {
       return;
     }
 
-    for (int i = 0; i < mReceivers.size(); ++i) {
-      WeakReference<IDatabaseChangeReceiver> reference = mReceivers.get(i);
+    for (int i = 0; i < mPages.size(); ++i) {
+      WeakReference<IMainPage> reference = mPages.get(i);
       if (reference != null && reference.get() != source) {
         if (mCurrentFragment != i) {
-          reference.get().receiveOnDataChanged(null);
+            reference.get().receiveOnDataChanged(null);
         } else {
           reference.get().receiveOnDataChanged(source);
         }

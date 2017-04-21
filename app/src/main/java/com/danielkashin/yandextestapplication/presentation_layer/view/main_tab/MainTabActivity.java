@@ -79,11 +79,11 @@ public class MainTabActivity extends AppCompatActivity
     mTabLayout.setupWithViewPager(mViewPager);
 
     int[] tabIcons = {R.drawable.ic_compare_arrows, R.drawable.ic_compare_arrows};
-    if (mTabLayout.getTabCount() != tabIcons.length){
+    if (mTabLayout.getTabCount() != tabIcons.length) {
       throw new IllegalStateException("Tab icons size and tab layout size must be equal");
     }
 
-    for (int i = 0; i < mTabLayout.getTabCount(); ++i){
+    for (int i = 0; i < mTabLayout.getTabCount(); ++i) {
       TabLayout.Tab tab = mTabLayout.getTabAt(i);
       mTabLayout.getTabAt(i).setIcon(tabIcons[i]);
     }

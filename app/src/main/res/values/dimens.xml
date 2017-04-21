@@ -1,8 +1,6 @@
 <resources>
     <dimen name="icon_size">24dp</dimen>
 
-    <dimen name="act_tab_tab_view_height">60dp</dimen>
-
     <dimen name="toolbar_end">15dp</dimen>
     <dimen name="toolbar_text_size">17sp</dimen>
 
