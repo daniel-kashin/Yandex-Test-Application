@@ -14,7 +14,7 @@ import static com.danielkashin.yandextestapplication.domain_layer.async_task.Rep
 import java.util.concurrent.Executor;
 
 
-public class RefreshTranslationUseCase implements IUseCase {
+public class SetTranslationDataUseCase implements IUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -22,7 +22,7 @@ public class RefreshTranslationUseCase implements IUseCase {
   private RepositoryAsyncTaskVoid refreshTranslation;
 
 
-  public RefreshTranslationUseCase(Executor executor,
+  public SetTranslationDataUseCase(Executor executor,
                                    ITranslationsRepository translateRepository) {
     if (executor == null || translateRepository == null) {
       throw new IllegalArgumentException("All arguments of use case must be non null");

@@ -3,6 +3,7 @@ package com.danielkashin.yandextestapplication.presentation_layer.view.translate
 
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
@@ -20,7 +21,7 @@ public interface ITranslateView extends IView {
 
   LanguagePair getLanguagesIfInitialized();
 
-  void initializeLanguages(LanguagePair languages);
+  void setLanguages(LanguagePair languages);
 
   void setOriginalLanguage(Language language);
 
@@ -58,12 +59,9 @@ public interface ITranslateView extends IView {
 
   // ------------------------------------ other view handling -------------------------------------
 
+  void setTranslation(Translation translation);
 
   void setToggleFavoriteValue(boolean favorite);
-
-  void setInputText(String text);
-
-  void setTranslationData(String text, boolean isFavorite);
 
   void showAlertDialog(String text);
 

@@ -5,7 +5,9 @@ import com.danielkashin.yandextestapplication.data_layer.entities.translate.loca
 import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.Presenter;
+import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteByQuery;
+import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteObject;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutCollectionOfObjects;
@@ -28,15 +30,19 @@ public interface ITranslationsLocalService {
 
   // ------------------------------- translations -------------------------------------------------
 
+  //                    -------------- delete ---------------
+
+  PreparedDeleteObject<DatabaseTranslation> deleteTranslation(DatabaseTranslation translation);
+
   PreparedDeleteByQuery deleteNotFavoriteTranslations();
 
-  PreparedPutCollectionOfObjects putTranslations(List<DatabaseTranslation> translations);
+  //                    ---------------- get ----------------
 
   PreparedGetObject<DatabaseTranslation> getLastTranslation();
 
-  PreparedGetObject<DatabaseTranslation> getTranslation(String originalText, int languageCode);
+  PreparedGetObject<DatabaseTranslation> getLastTranslationOfType(boolean favorite);
 
-  PreparedPutObject<DatabaseTranslation> putTranslation(DatabaseTranslation translation);
+  PreparedGetObject<DatabaseTranslation> getTranslation(String originalText, int languageCode);
 
   PreparedGetListOfObjects<DatabaseTranslation> getTranslations(int offset,
                                                                 int count,
@@ -45,9 +51,17 @@ public interface ITranslationsLocalService {
 
   PreparedGetListOfObjects<DatabaseTranslation> getAllFavoriteTranslations();
 
+  //                    ---------------- put ----------------
+
+  PreparedPutCollectionOfObjects putTranslations(List<DatabaseTranslation> translations);
+
+  PreparedPutObject<DatabaseTranslation> putTranslation(DatabaseTranslation translation);
+
   // ----------------------------- exception parsing ----------------------------------------------
 
-  void checkPutResultsForException(PutResults putResults) throws ExceptionBundle;
+  void checkDeleteResultForExceptions(DeleteResult deleteResult) throws ExceptionBundle;
+
+  void checkPutResultsForExceptions(PutResults putResults) throws ExceptionBundle;
 
   void checkPutResultForExceptions(PutResult putResult) throws ExceptionBundle;
 

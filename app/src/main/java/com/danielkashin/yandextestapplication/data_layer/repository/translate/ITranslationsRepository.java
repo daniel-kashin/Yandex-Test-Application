@@ -15,6 +15,8 @@ public interface ITranslationsRepository {
 
   //                          -------------- delete ----------------
 
+  void deleteTranslation(Translation translation) throws ExceptionBundle;
+
   void deleteTranslations(boolean favorite) throws ExceptionBundle;
 
   //                          ---------------- put -----------------

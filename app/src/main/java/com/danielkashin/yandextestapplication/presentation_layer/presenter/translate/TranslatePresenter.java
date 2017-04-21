@@ -9,6 +9,7 @@ import com.danielkashin.yandextestapplication.data_layer.managers.network.Networ
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkSubscriber;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLanguagesFromTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetRefreshedTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.SaveTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
@@ -19,30 +20,34 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.translate.
 
 
 public class TranslatePresenter extends Presenter<ITranslateView>
-    implements TranslateUseCase.Callbacks, GetLastTranslationUseCase.Callbacks,
-    SaveTranslationUseCase.Callbacks, GetRefreshedTranslationUseCase.Callbacks {
+    implements ITranslatePresenter, TranslateUseCase.Callbacks, GetLastTranslationUseCase.Callbacks,
+    SaveTranslationUseCase.Callbacks, GetRefreshedTranslationUseCase.Callbacks,
+    GetLanguagesFromTranslationUseCase.Callbacks {
 
   private final TranslateUseCase mTranslateUseCase;
   private final GetLastTranslationUseCase mGetLastTranslationUseCase;
   private final SaveTranslationUseCase mSaveTranslationUseCase;
   private final GetRefreshedTranslationUseCase mGetRefreshedTranslationUseCase;
+  private final GetLanguagesFromTranslationUseCase mGetLanguagesFromTranslationUseCase;
   private final INetworkManager mNetworkManager;
 
   private NetworkSubscriber mTranslationOnInternetAvailable;
   private Translation mCachedTranslation;
   private boolean mCachedTranslationSaved;
   private boolean mCachedTranslationFavoriteChanged;
-  private LanguagePair mLanguageCache;
+  private boolean mCachedSetFavoriteToggleToFalse;
+  private LanguagePair mCachedLanguages;
 
 
   private TranslatePresenter(TranslateUseCase translateUseCase,
                              GetLastTranslationUseCase getLastTranslationUseCase,
                              SaveTranslationUseCase setTranslationFavoriteUseCase,
                              GetRefreshedTranslationUseCase getRefreshedTranslationUseCase,
+                             GetLanguagesFromTranslationUseCase getLanguagesFromTranslationUseCase,
                              INetworkManager manager) {
     if (translateUseCase == null || getLastTranslationUseCase == null
         || manager == null || setTranslationFavoriteUseCase == null
-        || getRefreshedTranslationUseCase == null) {
+        || getRefreshedTranslationUseCase == null || getLanguagesFromTranslationUseCase == null) {
       throw new IllegalArgumentException("All presenter arguments must be non null");
     }
 
@@ -50,6 +55,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     mGetLastTranslationUseCase = getLastTranslationUseCase;
     mSaveTranslationUseCase = setTranslationFavoriteUseCase;
     mGetRefreshedTranslationUseCase = getRefreshedTranslationUseCase;
+    mGetLanguagesFromTranslationUseCase = getLanguagesFromTranslationUseCase;
     mNetworkManager = manager;
   }
 
@@ -57,12 +63,17 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   protected void onViewAttached() {
-    mLanguageCache = null;
-
     if (mCachedTranslation != null) {
-      getView().setTranslationData(mCachedTranslation.getOriginalText(), mCachedTranslation.ifFavorite());
-      getView().setToggleFavoriteListener();
+      getView().setTranslation(mCachedTranslation);
       mCachedTranslation = null;
+    } else if (mCachedSetFavoriteToggleToFalse) {
+      mCachedSetFavoriteToggleToFalse = false;
+      getView().setToggleFavoriteValue(false);
+    }
+
+    if (mCachedLanguages != null) {
+      getView().setLanguages(mCachedLanguages);
+      mCachedLanguages = null;
     }
 
     if (mCachedTranslationSaved) {
@@ -87,7 +98,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   protected void onViewDetached() {
-    mLanguageCache = getView().getLanguagesIfInitialized();
+    mCachedLanguages = getView().getLanguagesIfInitialized();
     getView().removeTextWatcher();
     getView().removeSwapLanguagesListener();
     getView().removeToggleFavoriteListener();
@@ -106,9 +117,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   @Override
   public void onGetRefreshedTranslationResult(Translation translation) {
     if (getView() != null) {
-      getView().removeToggleFavoriteListener();
       getView().setToggleFavoriteValue(translation.ifFavorite());
-      getView().setToggleFavoriteListener();
     } else {
       mCachedTranslation = translation;
     }
@@ -116,29 +125,49 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   public void onGetRefreshedTranslationException(ExceptionBundle exceptionBundle) {
-    // TODO
+    if (exceptionBundle.getReason() == ExceptionBundle.Reason.NULL_POINTER) {
+      if (getView() != null) {
+        getView().setToggleFavoriteValue(false);
+      } else {
+        mCachedSetFavoriteToggleToFalse = true;
+      }
+    }
   }
 
+  // ----------------------- GetLanguagesFromTranslationUseCase callbacks -------------------------
+
+  @Override
+  public void onGetLanguagesFromTranslationSuccess(Pair<Translation, LanguagePair> result) {
+    if (getView() != null) {
+      getView().setTranslation(result.first);
+      getView().setLanguages(result.second);
+    } else {
+      mCachedTranslation = result.first;
+      mCachedLanguages = result.second;
+    }
+  }
+
+  @Override
+  public void onGetLanguagesFromTranslationException(ExceptionBundle exception) {
+
+  }
 
   // ---------------------------- GetLastTranslationUseCase callbacks -----------------------------
 
   @Override
   public void onGetLastTranslationSuccess(Pair<Translation, LanguagePair> result) {
     if (getView() != null) {
-      getView().initializeLanguages(result.second);
-      getView().setInputText(result.first.getOriginalText());
-      getView().setTranslationData(result.first.getTranslatedText(), result.first.ifFavorite());
+      getView().setLanguages(result.second);
+      getView().setTranslation(result.first);
       getView().showImageClear();
-      getView().setTextWatcher();
       getView().setSwapLanguagesListener();
-      getView().setToggleFavoriteListener();
     }
   }
 
   @Override
   public void onGetLastTranslationException(Pair<ExceptionBundle, LanguagePair> result) {
     if (getView() != null) {
-      getView().initializeLanguages(result.second);
+      getView().setLanguages(result.second);
       getView().hideImageClear();
       getView().setTextWatcher();
       getView().setSwapLanguagesListener();
@@ -169,8 +198,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       getView().hideProgressBar();
       getView().hideNoInternet();
-      getView().setTranslationData(translation.getTranslatedText(), translation.ifFavorite());
-      getView().setToggleFavoriteListener();
+      getView().setTranslation(translation);
     } else {
       mCachedTranslation = translation;
     }
@@ -211,7 +239,6 @@ public class TranslatePresenter extends Presenter<ITranslateView>
             errorMessage = getView().getStringById(R.string.wrong_langs);
             break;
           case UNKNOWN:
-            errorMessage = getView().getStringById(R.string.unknown);
             break;
         }
         if (errorMessage != null) {
@@ -234,13 +261,13 @@ public class TranslatePresenter extends Presenter<ITranslateView>
 
   @Override
   public void onSaveTranslationException(ExceptionBundle exceptionBundle) {
-
+    // TODO
   }
 
   // ------------------------------------- public methods -----------------------------------------
 
-  public void refreshFavoriteValue(String originalText, String translatedText,
-                                   String languagePairText, boolean favorite) {
+  public void onRefreshFavoriteValue(String originalText, String translatedText,
+                                     String languagePairText, boolean favorite) {
     Translation translation = new Translation(
         originalText,
         translatedText,
@@ -248,6 +275,10 @@ public class TranslatePresenter extends Presenter<ITranslateView>
         false);
 
     mGetRefreshedTranslationUseCase.run(this, translation);
+  }
+
+  public void onSetTranslationData(Translation translation) {
+    mGetLanguagesFromTranslationUseCase.run(this, translation);
   }
 
   public void onFirstStart() {
@@ -258,6 +289,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       getView().setTextWatcher();
       getView().setSwapLanguagesListener();
+      getView().setToggleFavoriteListener();
     }
   }
 
@@ -275,7 +307,6 @@ public class TranslatePresenter extends Presenter<ITranslateView>
       getView().hideProgressBar();
       getView().hideNoInternet();
       getView().hideTranslationLayout();
-      getView().removeToggleFavoriteListener();
     }
   }
 
@@ -289,7 +320,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       mTranslateUseCase.run(this, originalText, getView().getLanguages().getLanguageCodePair());
     } else {
-      mTranslateUseCase.run(this, originalText, mLanguageCache.getLanguageCodePair());
+      mTranslateUseCase.run(this, originalText, mCachedLanguages.getLanguageCodePair());
     }
   }
 
@@ -324,6 +355,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     private final GetLastTranslationUseCase getLastTranslationUseCase;
     private final SaveTranslationUseCase setTranslationFavoriteUseCase;
     private final GetRefreshedTranslationUseCase getRefreshedTranslationUseCase;
+    private final GetLanguagesFromTranslationUseCase getLanguagesFromTranslationUseCase;
     private final INetworkManager networkManager;
 
 
@@ -331,11 +363,13 @@ public class TranslatePresenter extends Presenter<ITranslateView>
                    GetLastTranslationUseCase getLastTranslationUseCase,
                    SaveTranslationUseCase setTranslationFavoriteUseCase,
                    GetRefreshedTranslationUseCase getRefreshedTranslationUseCase,
+                   GetLanguagesFromTranslationUseCase getLanguagesFromTranslationUseCase,
                    INetworkManager networkManager) {
       this.translateUseCase = translateUseCase;
       this.getLastTranslationUseCase = getLastTranslationUseCase;
       this.setTranslationFavoriteUseCase = setTranslationFavoriteUseCase;
       this.getRefreshedTranslationUseCase = getRefreshedTranslationUseCase;
+      this.getLanguagesFromTranslationUseCase = getLanguagesFromTranslationUseCase;
       this.networkManager = networkManager;
     }
 
@@ -345,6 +379,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
           getLastTranslationUseCase,
           setTranslationFavoriteUseCase,
           getRefreshedTranslationUseCase,
+          getLanguagesFromTranslationUseCase,
           networkManager);
     }
   }

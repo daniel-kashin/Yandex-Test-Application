@@ -11,6 +11,7 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslationsLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
+import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
@@ -39,22 +40,39 @@ public class TranslationsRepository implements ITranslationsRepository {
   //                          -------------- delete ----------------
 
   @Override
+  public void deleteTranslation(Translation translation) throws ExceptionBundle {
+    Long languageId = getLanguageIdByText(translation.getLanguageCodePair());
+
+    DatabaseTranslation databaseTranslation = localService.getTranslation(
+        translation.getOriginalText(),
+        languageId.intValue())
+        .executeAsBlocking();
+
+    DeleteResult deleteResult = localService.deleteTranslation(databaseTranslation)
+        .executeAsBlocking();
+    localService.checkDeleteResultForExceptions(deleteResult);
+  }
+
+  @Override
   public void deleteTranslations(boolean favorite) throws ExceptionBundle {
     if (favorite) {
       List<DatabaseTranslation> translations = localService.getAllFavoriteTranslations()
           .executeAsBlocking();
-      if (translations.size() != 0) {
-        for (DatabaseTranslation translation : translations) {
-          translation.setFavorite(0);
-        }
 
-        PutResults results = localService.putTranslations(translations)
-            .executeAsBlocking();
-        localService.checkPutResultsForException(results);
+      for (DatabaseTranslation translation : translations) {
+        translation.setFavorite(0);
       }
-    } else {
-      localService.deleteNotFavoriteTranslations()
+
+      localService.putTranslations(translations)
           .executeAsBlocking();
+    } else {
+      DatabaseTranslation lastTranslation = localService.getLastTranslationOfType(false)
+          .executeAsBlocking();
+      if (lastTranslation == null) throw new ExceptionBundle(Reason.DELETE_SOURCE_IS_EMPTY);
+
+      DeleteResult deleteResult = localService.deleteNotFavoriteTranslations()
+          .executeAsBlocking();
+      localService.checkDeleteResultForExceptions(deleteResult);
     }
   }
 

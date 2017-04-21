@@ -2,6 +2,7 @@ package com.danielkashin.yandextestapplication.presentation_layer.view.history;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -19,15 +20,17 @@ import com.danielkashin.yandextestapplication.data_layer.services.translate.remo
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.TranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationsUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetTranslationsUseCase;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.RefreshTranslationUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.SetTranslationDataUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsModelCallbacks;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsModel;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.TranslationsAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
+import com.danielkashin.yandextestapplication.presentation_layer.custom_views.DividerItemDecoration;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.history.HistoryPresenter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.PresenterFragment;
@@ -44,7 +47,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     implements IHistoryView, IHistoryPage, IDatabaseChangePublisher, ITranslationsModelCallbacks {
 
   private State mRestoredState;
-  private boolean mRefreshBeforeWhenChangingAnotherPage;
+  private boolean mRefreshWhenNavigatingToAnotherPage;
 
   private ImageView mSearchImage;
   private EditText mSearchEdit;
@@ -129,18 +132,18 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   // ----------------------------- ITranslationsModelCallbacks ------------------------------------
 
   @Override
-  public void onFavoriteToggleClicked(Translation translation) {
-    getPresenter().onToggleClicked(translation);
+  public void onToggleFavoriteClicked(Translation translation) {
+    getPresenter().onAdapterToggleClicked(translation);
   }
 
   @Override
   public void onItemClicked(Translation translation) {
-
+    ((IHistoryPagerView)getParentFragment()).openTranslatePage(translation);
   }
 
   @Override
   public void onLongItemClicked(Translation translation) {
-
+    getPresenter().onAdapterItemLongClicked(translation);
   }
 
   // ------------------------------------- IHistoryPage -------------------------------------------
@@ -150,8 +153,8 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     if (mSearchEdit != null && !mSearchEdit.getText().toString().equals("")) {
       mSearchEdit.setText("");
     } else if (mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
-        && mRefreshBeforeWhenChangingAnotherPage) {
-      mRefreshBeforeWhenChangingAnotherPage = false;
+        && mRefreshWhenNavigatingToAnotherPage) {
+      mRefreshWhenNavigatingToAnotherPage = false;
       getPresenter().refreshTranslations(0, null);
     }
   }
@@ -173,14 +176,34 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   // ------------------------------ IHistoryView methods ------------------------------------------
 
   @Override
-  public void onDeleteTranslationsSuccess() {
+  public void onDeleteSuccess() {
     publishOnDataChanged(null);
   }
 
   @Override
+  public String getStringById(int id) {
+    return getResources().getString(id);
+  }
+
+  @Override
+  public void showDeleteTranslationsSourceIsEmpty() {
+    if (mRestoredState.getFragmentType() == State.FragmentType.ALL_HISTORY) {
+      showAlertDialog(getStringById(R.string.delete_translations_source_is_empty_all_history));
+    }
+  }
+
+  @Override
   public void onTranslationRefreshedSuccess() {
-    mRefreshBeforeWhenChangingAnotherPage = true;
+    mRefreshWhenNavigatingToAnotherPage = true;
     publishOnDataChanged(this);
+  }
+
+  @Override
+  public void showAlertDialog(String text) {
+    new AlertDialog.Builder(getContext())
+        .setMessage(text)
+        .create()
+        .show();
   }
 
   @Override
@@ -259,16 +282,24 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
         AsyncTask.THREAD_POOL_EXECUTOR,
         repository,
         mRestoredState.getFragmentType());
+
     DeleteTranslationsUseCase deleteTranslationsUseCase = new DeleteTranslationsUseCase(
         AsyncTask.THREAD_POOL_EXECUTOR,
         repository,
         mRestoredState.getFragmentType());
-    RefreshTranslationUseCase refreshTranslationUseCase = new RefreshTranslationUseCase(
+
+    SetTranslationDataUseCase setTranslationDataUseCase = new SetTranslationDataUseCase(
         AsyncTask.THREAD_POOL_EXECUTOR,
         repository);
 
+    DeleteTranslationUseCase deleteTranslationUseCase = new DeleteTranslationUseCase(
+        AsyncTask.THREAD_POOL_EXECUTOR,
+        repository);
+
+
     // return presenter with dependencies
-    return new HistoryPresenter.Factory(getTranslationsUseCase, deleteTranslationsUseCase, refreshTranslationUseCase);
+    return new HistoryPresenter.Factory(getTranslationsUseCase, deleteTranslationsUseCase,
+        setTranslationDataUseCase, deleteTranslationUseCase);
   }
 
   @Override
@@ -299,6 +330,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     } else {
       mRecyclerView.setAdapter(new TranslationsAdapter());
     }
+    mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext(), R.drawable.divider));
 
     mSearchEdit.setHint(mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
         ? getString(R.string.hint_search_favorite_history)

@@ -93,7 +93,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (mCallbacks != null) {
           translation.setFavorite(isChecked);
-          mCallbacks.onFavoriteToggleClicked(translation);
+          mCallbacks.onToggleFavoriteClicked(translation);
         }
       }
     });

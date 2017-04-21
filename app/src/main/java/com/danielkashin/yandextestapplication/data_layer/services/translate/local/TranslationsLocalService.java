@@ -7,7 +7,9 @@ import com.danielkashin.yandextestapplication.data_layer.entities.translate.loca
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.services.base.DatabaseService;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
+import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteByQuery;
+import com.pushtorefresh.storio.sqlite.operations.delete.PreparedDeleteObject;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetObject;
 import com.pushtorefresh.storio.sqlite.operations.put.PreparedPutCollectionOfObjects;
@@ -17,7 +19,6 @@ import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
 import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -27,9 +28,9 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
     super(sqLite);
   }
 
-  // ------------------------------- ITranslationsLocalService ---------------------------------------
+  // ---------------------------- ITranslationsLocalService ---------------------------------------
 
-  //               -------------------- database languages -------------------
+  //               ------------------ database languages -------------------
 
   @Override
   public PreparedGetObject<DatabaseLanguage> getLanguage(String language) {
@@ -60,7 +61,15 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
         .prepare();
   }
 
-  //               -------------------- database translations ------------------------
+  //               ---------------- database translations --------------------
+
+  //                          ----------- delete -------------
+
+  public PreparedDeleteObject<DatabaseTranslation> deleteTranslation(DatabaseTranslation translation) {
+    return getSQLite().delete()
+        .object(translation)
+        .prepare();
+  }
 
   @Override
   public PreparedDeleteByQuery deleteNotFavoriteTranslations() {
@@ -72,12 +81,7 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
         ).prepare();
   }
 
-  @Override
-  public PreparedPutCollectionOfObjects putTranslations(List<DatabaseTranslation> translations) {
-    return getSQLite().put()
-        .objects(translations)
-        .prepare();
-  }
+  //                           ------------ get ------------
 
   @Override
   public PreparedGetObject<DatabaseTranslation> getLastTranslation() {
@@ -92,6 +96,19 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
   }
 
   @Override
+  public PreparedGetObject<DatabaseTranslation> getLastTranslationOfType(boolean favorite) {
+    return getSQLite().get()
+        .object(DatabaseTranslation.class)
+        .withQuery(Query.builder()
+            .table(TranslationContract.TABLE_NAME)
+            .orderBy(TranslationContract.COLUMN_NAME_ID + " DESC")
+            .where(TranslationContract.COLUMN_NAME_IS_FAVOURITE + " = " + (favorite ? 1 : 0))
+            .limit(1)
+            .build())
+        .prepare();
+  }
+
+  @Override
   public PreparedGetObject<DatabaseTranslation> getTranslation(String originalText, int languageCode) {
     return getSQLite().get()
         .object(DatabaseTranslation.class)
@@ -99,13 +116,6 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
             .table(TranslationContract.TABLE_NAME)
             .where(TranslationContract.getGetTranslationSearchQuery(originalText, languageCode))
             .build())
-        .prepare();
-  }
-
-  @Override
-  public PreparedPutObject<DatabaseTranslation> putTranslation(DatabaseTranslation translation) {
-    return getSQLite().put()
-        .object(translation)
         .prepare();
   }
 
@@ -143,7 +153,31 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
         .prepare();
   }
 
-  //               ------------------- exceptions parsing --------------------------
+  //                          ------------- put ------------
+
+  @Override
+  public PreparedPutCollectionOfObjects putTranslations(List<DatabaseTranslation> translations) {
+    return getSQLite().put()
+        .objects(translations)
+        .prepare();
+  }
+
+  @Override
+  public PreparedPutObject<DatabaseTranslation> putTranslation(DatabaseTranslation translation) {
+    return getSQLite().put()
+        .object(translation)
+        .prepare();
+  }
+
+  //               ------------------ exceptions parsing -----------------------
+
+
+  @Override
+  public void checkDeleteResultForExceptions(DeleteResult deleteResult) throws ExceptionBundle {
+    if (deleteResult.numberOfRowsDeleted() == 0) {
+      throw new ExceptionBundle(ExceptionBundle.Reason.DELETE_DENIED);
+    }
+  }
 
   @Override
   public void checkPutResultForExceptions(PutResult putResult) throws ExceptionBundle {
@@ -153,7 +187,7 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
   }
 
   @Override
-  public void checkPutResultsForException(PutResults putResults) throws ExceptionBundle {
+  public void checkPutResultsForExceptions(PutResults putResults) throws ExceptionBundle {
     if (putResults.numberOfInserts() == 0 && putResults.numberOfUpdates() == 0) {
       throw new ExceptionBundle(ExceptionBundle.Reason.PUT_DENIED);
     }
@@ -169,7 +203,7 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
   @Override
   public void checkDatabaseLanguageForExceptions(DatabaseLanguage databaseLanguage) throws ExceptionBundle {
     if (databaseLanguage.getId() == null || databaseLanguage.getLanguage() == null) {
-      throw new ExceptionBundle(ExceptionBundle.Reason.NULL_FIELD);
+      throw new ExceptionBundle(ExceptionBundle.Reason.NULL_POINTER);
     }
   }
 
@@ -179,7 +213,7 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
         || databaseTranslation.getOriginalText() == null
         || databaseTranslation.getTranslatedText() == null
         || databaseTranslation.isFavorite() == null) {
-      throw new ExceptionBundle(ExceptionBundle.Reason.NULL_FIELD);
+      throw new ExceptionBundle(ExceptionBundle.Reason.NULL_POINTER);
     }
   }
 

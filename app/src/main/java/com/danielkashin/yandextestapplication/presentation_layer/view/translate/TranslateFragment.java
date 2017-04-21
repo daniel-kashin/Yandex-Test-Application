@@ -37,15 +37,19 @@ import com.danielkashin.yandextestapplication.data_layer.repository.languages.IL
 import com.danielkashin.yandextestapplication.data_layer.repository.languages.LanguagesRepository;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.TranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLanguagesFromTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetRefreshedTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.SaveTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.TranslateUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.ITranslateHolder;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IMainPage;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
+import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.ITranslatePresenter;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.TranslatePresenter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.PresenterFragment;
 
@@ -55,7 +59,7 @@ import okhttp3.OkHttpClient;
 
 
 public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITranslateView>
-    implements ITranslateView, IMainPage, IDatabaseChangePublisher {
+    implements ITranslateView, IMainPage, IDatabaseChangePublisher, ITranslateHolder {
 
   private LinearLayout mRootView;
   private TextView mOriginalLanguageText;
@@ -129,7 +133,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    getPresenter().refreshFavoriteValue(
+    getPresenter().onRefreshFavoriteValue(
         mOriginalTextEdit.getText().toString(),
         mTranslatedText.getText().toString(),
         mRestoredState.getLanguagePair().getLanguageCodePair(),
@@ -141,6 +145,15 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   public void publishOnDataChanged(IDatabaseChangePublisher source) {
     ((IDatabaseChangePublisher) getActivity()).publishOnDataChanged(this);
+  }
+
+  // ----------------------------------- ITranslateHolder -----------------------------------------
+
+  @Override
+  public void setTranslationData(Translation translation) {
+    if (getPresenter() != null) {
+      getPresenter().onSetTranslationData(translation);
+    }
   }
 
   // --------------------------------------- IMainPage --------------------------------------------
@@ -174,11 +187,13 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   //                        --------------- languages ------------------
 
   @Override
-  public void initializeLanguages(LanguagePair languages) {
+  public void setLanguages(LanguagePair languages) {
     // state handles exceptions by itself -- no need to check it here
+    removeSwapLanguagesListener();
     mRestoredState.setLanguagePair(languages);
     mOriginalLanguageText.setText(languages.getOriginalLanguage().getText());
     mTranslatedLanguageText.setText(languages.getTranslatedLanguage().getText());
+    setSwapLanguagesListener();
   }
 
   @Override
@@ -326,6 +341,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void hideTranslationLayout() {
+    removeToggleFavoriteListener();
     mTranslationLayout.setVisibility(View.INVISIBLE);
     mTranslatedText.setText("");
   }
@@ -334,19 +350,21 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void setToggleFavoriteValue(boolean favorite) {
+    removeToggleFavoriteListener();
     mToggleFavorite.setChecked(favorite);
+    setToggleFavoriteListener();
   }
 
   @Override
-  public void setInputText(String text) {
-    mOriginalTextEdit.setText(text);
-  }
-
-  @Override
-  public void setTranslationData(String text, boolean isFavorite) {
+  public void setTranslation(Translation translation) {
+    removeToggleFavoriteListener();
+    removeTextWatcher();
+    mOriginalTextEdit.setText(translation.getOriginalText());
+    mTranslatedText.setText(translation.getTranslatedText());
+    mToggleFavorite.setChecked(translation.ifFavorite());
     mTranslationLayout.setVisibility(View.VISIBLE);
-    mTranslatedText.setText(text);
-    mToggleFavorite.setChecked(isFavorite);
+    setTextWatcher();
+    setToggleFavoriteListener();
   }
 
   @Override
@@ -415,6 +433,10 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         AsyncTask.THREAD_POOL_EXECUTOR,
         translateRepository);
 
+    GetLanguagesFromTranslationUseCase getLanguagesFromTranslationUseCase =
+        new GetLanguagesFromTranslationUseCase(AsyncTask.THREAD_POOL_EXECUTOR,
+            supportedLanguagesRepository);
+
 
     // bind network manager
     INetworkManager networkManager = NetworkManager.Factory.create(getContext());
@@ -425,6 +447,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         getLastTranslationUseCase,
         setTranslationFavoriteUseCase,
         getRefreshedTranslationUseCase,
+        getLanguagesFromTranslationUseCase,
         networkManager);
   }
 

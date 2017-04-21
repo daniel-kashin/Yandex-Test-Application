@@ -1,5 +1,6 @@
 package com.danielkashin.yandextestapplication.presentation_layer.view.history_pager;
 
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
 
@@ -9,5 +10,7 @@ public interface IHistoryPagerView {
   void hideDeleteHistoryButton(IHistoryPage source);
 
   void showDeleteHistoryButton(IHistoryPage source);
+
+  void openTranslatePage(Translation translation);
 
 }

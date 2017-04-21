@@ -3,9 +3,12 @@ package com.danielkashin.yandextestapplication.presentation_layer.adapter.main_p
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.view.ViewGroup;
 
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
+import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.ITranslateHolder;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
 import com.danielkashin.yandextestapplication.presentation_layer.view.history_pager.HistoryPagerFragment;
 import com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment;
@@ -17,8 +20,10 @@ import java.util.ArrayList;
 public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPagerAdapter {
 
   private final int FRAGMENT_COUNT = 2;
+  private final int TRANSLATE_HOLDER_POSITION = 0;
   private int mCurrentFragment;
   private ArrayList<WeakReference<IMainPage>> mPages;
+  private WeakReference<ITranslateHolder> mTranslateHolder;
 
 
   public MainPagerAdapter(FragmentManager fragmentManager) {
@@ -40,6 +45,15 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
       throw new IllegalStateException("Fragment must be an instance of IMainPage type");
     } else {
       mPages.set(position, new WeakReference<>((IMainPage) createdFragment));
+
+      if (position == TRANSLATE_HOLDER_POSITION) {
+        if (!(createdFragment instanceof ITranslateHolder)) {
+          throw new IllegalStateException("Fragment must be an istance of ITranslateHolder");
+        } else {
+          mTranslateHolder = new WeakReference<>((ITranslateHolder)createdFragment);
+        }
+      }
+
     }
 
     return createdFragment;
@@ -61,6 +75,26 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
     return FRAGMENT_COUNT;
   }
 
+  // --------------------------------- IDatabaseChangeReceiver ------------------------------------
+
+  @Override
+  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
+    if (mPages == null || mPages.size() == 0) {
+      return;
+    }
+
+    for (int i = 0; i < mPages.size(); ++i) {
+      WeakReference<IMainPage> reference = mPages.get(i);
+      if (reference != null && reference.get() != source) {
+        if (mCurrentFragment != i) {
+          reference.get().receiveOnDataChanged(null);
+        } else {
+          reference.get().receiveOnDataChanged(source);
+        }
+      }
+    }
+  }
+
   // ------------------------------------ IMainPagerAdapter ---------------------------------------
 
   @Override
@@ -80,24 +114,21 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
     }
   }
 
-  // --------------------------------- IDatabaseChangeReceiver ------------------------------------
+  @Override
+  public void setTranslationData(Translation translation) {
+    if (mTranslateHolder != null && mTranslateHolder.get() != null) {
+      mTranslateHolder.get().setTranslationData(translation);
+    }
+  }
 
   @Override
-  public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    if (mPages == null || mPages.size() == 0) {
-      return;
-    }
+  public int getTranslateHolderPosition() {
+    return TRANSLATE_HOLDER_POSITION;
+  }
 
-    for (int i = 0; i < mPages.size(); ++i) {
-      WeakReference<IMainPage> reference = mPages.get(i);
-      if (reference != null && reference.get() != source) {
-        if (mCurrentFragment != i) {
-            reference.get().receiveOnDataChanged(null);
-        } else {
-          reference.get().receiveOnDataChanged(source);
-        }
-      }
-    }
+  @Override
+  public boolean translationHolderIsCurrent() {
+    return mCurrentFragment == TRANSLATE_HOLDER_POSITION;
   }
 
 }

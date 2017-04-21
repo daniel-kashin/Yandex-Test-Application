@@ -30,6 +30,12 @@
             android:scrollHorizontally="true"
             android:inputType="textFilter|textNoSuggestions"/>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@color/light_light_grey"/>
+
     </RelativeLayout>
 
     <RelativeLayout

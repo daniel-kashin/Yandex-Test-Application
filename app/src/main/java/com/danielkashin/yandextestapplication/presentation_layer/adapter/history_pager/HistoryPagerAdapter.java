@@ -49,7 +49,6 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter
       WeakReference<IHistoryPage> reference = mPages.get(i);
       if (reference != null && reference.get() != source){
         reference.get().receiveOnDataChanged(source);
-        reference.get().receiveOnDataChanged(source);
       }
     }
   }

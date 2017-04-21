@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IMainPagerAdapter;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 
 
 public class MainTabActivity extends AppCompatActivity
-    implements IDatabaseChangePublisher {
+    implements IMainTabView, IDatabaseChangePublisher {
 
   private ViewPager mViewPager;
   private TabLayout mTabLayout;
@@ -37,6 +38,17 @@ public class MainTabActivity extends AppCompatActivity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_tab);
     initializeView();
+  }
+
+  @Override
+  public void onBackPressed() {
+    IMainPagerAdapter adapter = (IMainPagerAdapter)mViewPager.getAdapter();
+
+    if (adapter == null || adapter.translationHolderIsCurrent()) {
+      super.onBackPressed();
+    } else {
+      mViewPager.setCurrentItem(adapter.getTranslateHolderPosition(), true);
+    }
   }
 
   // -------------------------------- IDatabaseChangePublisher ------------------------------------
@@ -87,5 +99,15 @@ public class MainTabActivity extends AppCompatActivity
       TabLayout.Tab tab = mTabLayout.getTabAt(i);
       mTabLayout.getTabAt(i).setIcon(tabIcons[i]);
     }
+  }
+
+  // ------------------------------------- IMainTabView -------------------------------------------
+
+  @Override
+  public void openTranslatePage(Translation translation) {
+    IMainPagerAdapter adapter = (IMainPagerAdapter)mViewPager.getAdapter();
+
+    mViewPager.setCurrentItem(adapter.getTranslateHolderPosition(), true);
+    adapter.setTranslationData(translation);
   }
 }

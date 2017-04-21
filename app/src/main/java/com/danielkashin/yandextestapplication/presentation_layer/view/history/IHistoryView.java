@@ -8,9 +8,11 @@ import java.util.List;
 
 public interface IHistoryView extends IView {
 
-  void onDeleteTranslationsSuccess();
+  void onDeleteSuccess();
 
   void onTranslationRefreshedSuccess();
+
+  void showDeleteTranslationsSourceIsEmpty();
 
   void setAdapterCallbacks();
 
@@ -25,5 +27,9 @@ public interface IHistoryView extends IView {
   void showEmptySearchContentInterface();
 
   void clearTranslationAdapter();
+
+  void showAlertDialog(String text);
+
+  String getStringById(int id);
 
 }

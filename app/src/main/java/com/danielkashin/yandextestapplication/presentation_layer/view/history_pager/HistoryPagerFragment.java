@@ -10,12 +10,14 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.danielkashin.yandextestapplication.R;
+import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.HistoryPagerAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPagerAdapter;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IMainPage;
+import com.danielkashin.yandextestapplication.presentation_layer.view.main_tab.IMainTabView;
 
 
 public class HistoryPagerFragment extends Fragment
@@ -39,8 +41,10 @@ public class HistoryPagerFragment extends Fragment
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    if (!(getActivity() instanceof IDatabaseChangePublisher)) {
-      throw new IllegalStateException("Parent activity must implement IHistoryPagerView IDatabaseChangePublisher");
+    if (!(getActivity() instanceof IDatabaseChangePublisher
+        || !(getActivity() instanceof IMainTabView))) {
+      throw new IllegalStateException("Parent activity must be an instance of IMainTabView " +
+          "and IDatabaseChangePublisher");
     }
   }
 
@@ -88,6 +92,12 @@ public class HistoryPagerFragment extends Fragment
   }
 
   // -------------------------------- IHistoryPagerView -------------------------------------------
+
+
+  @Override
+  public void openTranslatePage(Translation translation) {
+    ((IMainTabView)getActivity()).openTranslatePage(translation);
+  }
 
   @Override
   public void hideDeleteHistoryButton(IHistoryPage source) {

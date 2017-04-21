@@ -32,10 +32,10 @@
 
     <dimen name="it_transl_top">15dp</dimen>
     <dimen name="it_transl_bottom">15dp</dimen>
-    <dimen name="it_transl_toggle_start">20dp</dimen>
-    <dimen name="it_transl_toggle_end">20dp</dimen>
-    <dimen name="it_transl_toggle_width">30dp</dimen>
-    <dimen name="it_transl_toggle_height">30dp</dimen>
+    <dimen name="it_transl_toggle_start">15dp</dimen>
+    <dimen name="it_transl_toggle_end">15dp</dimen>
+    <dimen name="it_transl_toggle_width">35dp</dimen>
+    <dimen name="it_transl_toggle_height">35dp</dimen>
     <dimen name="it_transl_original_size">15sp</dimen>
     <dimen name="it_transl_translated_size">14sp</dimen>
     <dimen name="it_transl_vertical_separation">4dp</dimen>
