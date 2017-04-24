@@ -17,7 +17,7 @@ import com.danielkashin.yandextestapplication.presentation_layer.adapter.history
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.history_pager.IHistoryPage;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IMainPage;
-import com.danielkashin.yandextestapplication.presentation_layer.view.main_tab.IMainTabView;
+import com.danielkashin.yandextestapplication.presentation_layer.view.main_pager.IMainPagerView;
 
 
 public class HistoryPagerFragment extends Fragment
@@ -42,8 +42,8 @@ public class HistoryPagerFragment extends Fragment
     super.onCreate(savedInstanceState);
 
     if (!(getActivity() instanceof IDatabaseChangePublisher
-        || !(getActivity() instanceof IMainTabView))) {
-      throw new IllegalStateException("Parent activity must be an instance of IMainTabView " +
+        || !(getActivity() instanceof IMainPagerView))) {
+      throw new IllegalStateException("Parent activity must be an instance of IMainPagerView " +
           "and IDatabaseChangePublisher");
     }
   }
@@ -88,7 +88,7 @@ public class HistoryPagerFragment extends Fragment
 
   @Override
   public void onSelected() {
-    // TODO
+    // do nothing
   }
 
   // -------------------------------- IHistoryPagerView -------------------------------------------
@@ -96,7 +96,7 @@ public class HistoryPagerFragment extends Fragment
 
   @Override
   public void openTranslatePage(Translation translation) {
-    ((IMainTabView)getActivity()).openTranslatePage(translation);
+    ((IMainPagerView)getActivity()).openTranslatePage(translation);
   }
 
   @Override

@@ -13,12 +13,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".presentation_layer.view.main_tab.MainTabActivity"
+            android:name=".presentation_layer.view.main_pager.MainPagerActivity"
             android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+        </activity>
+        <activity android:name=".presentation_layer.view.pick_language_holder.PickLanguageHolderActivity">
         </activity>
     </application>
 

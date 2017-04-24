@@ -6,7 +6,6 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.RepositoryRunnableVoid;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.PostExecuteListenerVoid;
@@ -14,7 +13,7 @@ import static com.danielkashin.yandextestapplication.domain_layer.async_task.Rep
 import java.util.concurrent.Executor;
 
 
-public class DeleteTranslationUseCase implements IUseCase {
+public class DeleteTranslationUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -32,9 +31,8 @@ public class DeleteTranslationUseCase implements IUseCase {
     this.translateRepository = translateRepository;
   }
 
-  // --------------------------------------- IUseCase ---------------------------------------------
+  // ------------------------------------- public methods -----------------------------------------
 
-  @Override
   public void cancel() {
     if (isRunning()) {
       deleteTranslation.cancel(false);
@@ -42,24 +40,22 @@ public class DeleteTranslationUseCase implements IUseCase {
     }
   }
 
-  // ------------------------------------- public methods -----------------------------------------
-
   public boolean isRunning() {
     return deleteTranslation != null
         && deleteTranslation.getStatus() == AsyncTask.Status.RUNNING
         && !deleteTranslation.isCancelled();
   }
 
-  public void run(final DeleteTranslationsUseCase.Callbacks callbacks, final Translation translation) {
+  public void run(final Callbacks callbacks, final Translation translation) {
     PostExecuteListenerVoid deleteListener = new PostExecuteListenerVoid() {
       @Override
       public void onResult() {
-        callbacks.onDeleteTranslationsSuccess();
+        callbacks.onDeleteTranslationSuccess(translation);
       }
 
       @Override
       public void onException(ExceptionBundle exception) {
-        callbacks.onDeleteTranslationsException(exception);
+        callbacks.onDeleteTranslationException(exception);
       }
     };
 
@@ -78,7 +74,7 @@ public class DeleteTranslationUseCase implements IUseCase {
 
   public interface Callbacks {
 
-    void onDeleteTranslationSuccess();
+    void onDeleteTranslationSuccess(Translation translation);
 
     void onDeleteTranslationException(ExceptionBundle exception);
 

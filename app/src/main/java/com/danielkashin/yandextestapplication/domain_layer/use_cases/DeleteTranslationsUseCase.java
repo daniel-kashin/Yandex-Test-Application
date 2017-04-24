@@ -1,19 +1,17 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
-
 import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
 
 import java.util.concurrent.Executor;
 
 
 
-public class DeleteTranslationsUseCase implements IUseCase {
+public class DeleteTranslationsUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -34,17 +32,14 @@ public class DeleteTranslationsUseCase implements IUseCase {
     this.fragmentType = fragmentType;
   }
 
-  // --------------------------------------- IUseCase ---------------------------------------------
+  // ------------------------------------- public methods -----------------------------------------
 
-  @Override
   public void cancel() {
     if (isRunning()) {
       deleteTranslations.cancel(false);
       deleteTranslations = null;
     }
   }
-
-  // ------------------------------------- public methods -----------------------------------------
 
   public boolean isRunning() {
     return deleteTranslations != null

@@ -6,24 +6,23 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.ILanguagesRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.languages.ISupportedLanguagesRepository;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import java.util.concurrent.Executor;
 
 
-public class GetLastTranslationUseCase implements IUseCase {
+public class GetLastTranslationUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
-  private final ILanguagesRepository supportedLanguagesRepository;
+  private final ISupportedLanguagesRepository supportedLanguagesRepository;
 
   private RepositoryAsyncTaskResponse<Translation> getLastTranslation;
 
 
   public GetLastTranslationUseCase(Executor executor,
                                    ITranslationsRepository translateRepository,
-                                   ILanguagesRepository supportedLanguagesRepository) {
+                                   ISupportedLanguagesRepository supportedLanguagesRepository) {
     if (executor == null || translateRepository == null || supportedLanguagesRepository == null){
       throw new IllegalArgumentException("All arguments of use case must be non null");
     }
@@ -33,9 +32,8 @@ public class GetLastTranslationUseCase implements IUseCase {
     this.supportedLanguagesRepository = supportedLanguagesRepository;
   }
 
-  // --------------------------------------- IUseCase ---------------------------------------------
+  // ------------------------------------- public methods -----------------------------------------
 
-  @Override
   public void cancel() {
     if (isRunning()) {
       getLastTranslation.cancel(false);
@@ -43,14 +41,11 @@ public class GetLastTranslationUseCase implements IUseCase {
     }
   }
 
-  // ------------------------------------- public methods -----------------------------------------
-
   public boolean isRunning() {
     return getLastTranslation != null
         && getLastTranslation.getStatus() == AsyncTask.Status.RUNNING
         && !getLastTranslation.isCancelled();
   }
-
 
   public void run(final Callbacks callbacks) {
     RepositoryAsyncTaskResponse.PostExecuteListenerResponse<Translation> listener =

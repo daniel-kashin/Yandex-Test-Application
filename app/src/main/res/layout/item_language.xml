@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_marginTop="1dp"
+             android:paddingBottom="@dimen/it_lang_bottom"
+             android:paddingTop="@dimen/it_lang_top"
+             android:background="@drawable/selector_item_primary_light"
+             android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text_language"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/it_lang_start"
+        android:textColor="@color/black"
+        android:textSize="@dimen/toolbar_text_size"/>
+
+</FrameLayout>

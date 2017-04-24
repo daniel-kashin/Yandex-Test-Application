@@ -1,12 +1,14 @@
 <resources>
+    <dimen name="horizontal_margin_orientation">0dp</dimen>
+    <dimen name="border_padding">8dp</dimen>
     <dimen name="icon_size">24dp</dimen>
 
     <dimen name="toolbar_end">15dp</dimen>
+    <dimen name="toolbar_icon_end">20dp</dimen>
     <dimen name="toolbar_text_size">17sp</dimen>
 
     <dimen name="fg_transl_toolbar_margin">15dp</dimen>
     <dimen name="fg_transl_margin">10dp</dimen>
-    <dimen name="fg_transl_main_layout_padding">8dp</dimen>
     <dimen name="fg_transl_main_layout_height">150dp</dimen>
     <dimen name="fg_transl_edit_text_bottom">3dp</dimen>
     <dimen name="fg_transl_result_horizontal">4dp</dimen>
@@ -21,14 +23,19 @@
     <dimen name="fg_transl_result_toggle_size">40dp</dimen>
     <dimen name="fg_transl_result_toggle_margin">10dp</dimen>
     <dimen name="fg_transl_result_toggle_start">10dp</dimen>
-    
+    <dimen name="fg_transl_disclaimer_top">15dp</dimen>
+
     <dimen name="fg_history_search_height">50dp</dimen>
     <dimen name="fg_history_clear_history_icon_size">28dp</dimen>
     <dimen name="fg_history_clear_history_icon_end">10dp</dimen>
-    <dimen name="fg_history_search_icon_horizontal">12dp</dimen>
+    <dimen name="fg_history_icon_horizontal">12dp</dimen>
     <dimen name="fg_history_tab_layout_left">55dp</dimen>
     <dimen name="fg_history_no_content_top">20dp</dimen>
     <dimen name="fg_history_no_content_size">18sp</dimen>
+
+    <dimen name="fg_info_vertical_small_margin">8dp</dimen>
+    <dimen name="fg_info_vertical_big_margin">35dp</dimen>
+    <dimen name="fg_info_horizontal">10dp</dimen>
 
     <dimen name="it_transl_top">15dp</dimen>
     <dimen name="it_transl_bottom">15dp</dimen>
@@ -42,5 +49,10 @@
     <dimen name="it_transl_language_start">10dp</dimen>
     <dimen name="it_transl_language_end">15dp</dimen>
 
+    <dimen name="it_lang_top">12dp</dimen>
+    <dimen name="it_lang_bottom">12dp</dimen>
+    <dimen name="it_lang_start">18dp</dimen>
+
+    <dimen name="it_tab_main_icon_size">35dp</dimen>
 
 </resources>

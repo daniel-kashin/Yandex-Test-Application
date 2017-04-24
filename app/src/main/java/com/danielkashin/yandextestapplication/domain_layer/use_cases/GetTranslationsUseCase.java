@@ -6,7 +6,6 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
@@ -14,7 +13,7 @@ import java.util.concurrent.Executor;
 import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
 
 
-public class GetTranslationsUseCase implements IUseCase {
+public class GetTranslationsUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -35,17 +34,14 @@ public class GetTranslationsUseCase implements IUseCase {
     this.fragmentType = fragmentType;
   }
 
-  // --------------------------------------- IUseCase ---------------------------------------------
+  // ------------------------------------- public methods -----------------------------------------
 
-  @Override
   public void cancel() {
     if (isRunning()) {
       getTranslationsAsyncTask.cancel(false);
       getTranslationsAsyncTask = null;
     }
   }
-
-  // ------------------------------------- public methods -----------------------------------------
 
   public boolean isRunning() {
     return getTranslationsAsyncTask != null

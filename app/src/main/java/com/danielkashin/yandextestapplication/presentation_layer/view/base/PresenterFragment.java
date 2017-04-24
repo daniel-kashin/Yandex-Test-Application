@@ -21,7 +21,7 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
 
   // ------------------------ provide presenter to extended classes -------------------------------
 
-  protected final P getPresenter() {
+  protected final Presenter<V> getPresenter() {
     return this.mPresenter;
   }
 

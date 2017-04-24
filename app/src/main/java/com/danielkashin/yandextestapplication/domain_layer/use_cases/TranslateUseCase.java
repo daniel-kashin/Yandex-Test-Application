@@ -8,7 +8,6 @@ import com.danielkashin.yandextestapplication.domain_layer.async_task.Repository
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse.RepositoryRunnableResponse;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.RepositoryRunnableVoid;
@@ -18,7 +17,7 @@ import static com.danielkashin.yandextestapplication.domain_layer.async_task.Rep
 import java.util.concurrent.Executor;
 
 
-public class TranslateUseCase implements IUseCase {
+public class TranslateUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -35,9 +34,8 @@ public class TranslateUseCase implements IUseCase {
     this.translateRepository = translateRepository;
   }
 
-  // ---------------------------------------- IUseCase --------------------------------------------
+  // -------------------------------------- public methods ----------------------------------------
 
-  @Override
   public void cancel() {
     if (isRunning()) {
       getTranslation.cancel(false);
@@ -45,7 +43,6 @@ public class TranslateUseCase implements IUseCase {
     }
   }
 
-  // -------------------------------------- public methods ----------------------------------------
 
   public boolean isRunning() {
     return getTranslation != null

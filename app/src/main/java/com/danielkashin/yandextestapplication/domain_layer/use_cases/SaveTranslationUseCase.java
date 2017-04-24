@@ -6,14 +6,13 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.RepositoryRunnableVoid;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.PostExecuteListenerVoid;
 
 import java.util.concurrent.Executor;
 
 
-public class SaveTranslationUseCase implements IUseCase {
+public class SaveTranslationUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -31,17 +30,14 @@ public class SaveTranslationUseCase implements IUseCase {
     this.translateRepository = translateRepository;
   }
 
-  // ---------------------------------------- IUseCase --------------------------------------------
+  // -------------------------------------- public methods ----------------------------------------
 
-  @Override
   public void cancel() {
     if (isRunning()) {
       saveTranslation.cancel(false);
       saveTranslation = null;
     }
   }
-
-  // -------------------------------------- public methods ----------------------------------------
 
   public boolean isRunning() {
     return saveTranslation != null

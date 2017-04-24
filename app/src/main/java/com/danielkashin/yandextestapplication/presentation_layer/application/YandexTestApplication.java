@@ -5,7 +5,6 @@ import android.app.Application;
 import com.danielkashin.yandextestapplication.data_layer.database.SQLiteFactory;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslationsLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.local.TranslationsLocalService;
-import com.squareup.leakcanary.LeakCanary;
 
 
 public class YandexTestApplication extends Application implements ITranslateLocalServiceProvider {
@@ -14,17 +13,12 @@ public class YandexTestApplication extends Application implements ITranslateLoca
 
 
   @Override
-  public void onCreate(){
+  public void onCreate() {
     super.onCreate();
-    if (LeakCanary.isInAnalyzerProcess(this)) {
-      // do nothing
-    } else {
-      LeakCanary.install(this);
-    }
   }
 
   @Override
-  public ITranslationsLocalService getTranslateLocalService(){
+  public ITranslationsLocalService getTranslateLocalService() {
     ITranslationsLocalService localInstance = translateLocalService;
     if (localInstance == null) {
       synchronized (ITranslationsLocalService.class) {

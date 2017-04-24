@@ -4,6 +4,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:background="@android:color/white"
+              android:focusableInTouchMode="true"
               android:orientation="vertical"
               tools:context="com.danielkashin.yandextestapplication.presentation_layer.view.translate.TranslateFragment">
 
@@ -68,7 +69,7 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="@dimen/fg_transl_landscape_center_separator"
             android:layout_weight="1"
-            android:background="@drawable/fragment_translate_main_layout_border">
+            android:background="@drawable/light_grey_border">
 
             <com.danielkashin.yandextestapplication.presentation_layer.custom_views.NonMultilineableEditText
                 android:id="@+id/edit_original"
@@ -78,7 +79,9 @@
                 android:layout_toStartOf="@id/image_clear"
                 android:background="@android:color/transparent"
                 android:gravity="top"
-                android:hint="@string/hint_translation_edit_text"/>
+                android:hint="@string/hint_translation_edit_text"
+                android:inputType="textFilter|textMultiLine|textNoSuggestions"
+                android:scrollbars="vertical"/>
 
             <ImageView
                 android:id="@+id/image_clear"
@@ -86,96 +89,141 @@
                 android:layout_height="@dimen/icon_size"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentTop="true"
-                android:background="@mipmap/ic_clear"/>
+                android:background="@drawable/ic_clear"/>
 
         </RelativeLayout>
 
-        <RelativeLayout
-            android:id="@+id/layout_result"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/fg_transl_landscape_result_end"
-            android:layout_marginTop="@dimen/fg_transl_result_top"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <RelativeLayout
-                android:id="@+id/layout_translation"
+                android:id="@+id/layout_result"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="invisible">
+                android:layout_height="0dp"
+                android:layout_marginEnd="@dimen/fg_transl_landscape_result_end"
+                android:layout_marginTop="@dimen/fg_transl_result_top"
+                android:layout_weight="1">
+
+                <RelativeLayout
+                    android:id="@+id/layout_translation"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="invisible">
+
+                    <ScrollView
+                        android:id="@+id/scroll_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_toStartOf="@+id/toggle_favorite">
+
+                        <TextView
+                            android:id="@+id/text_translated"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:freezesText="true"
+                            android:textAlignment="textStart"
+                            android:textColor="@android:color/black"
+                            android:textSize="@dimen/fg_transl_result_text_size"/>
+
+                    </ScrollView>
+
+                    <ToggleButton
+                        android:id="@+id/toggle_favorite"
+                        android:layout_width="@dimen/fg_transl_result_toggle_size"
+                        android:layout_height="@dimen/fg_transl_result_toggle_size"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentTop="true"
+                        android:layout_marginStart="@dimen/fg_transl_result_toggle_start"
+                        android:background="@drawable/selector_toggle_favourite"
+                        android:text=""
+                        android:textOff=""
+                        android:textOn=""/>
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/layout_no_internet"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/fg_transl_progress_bar_top"
+                    android:visibility="invisible">
+
+                    <TextView
+                        android:id="@+id/text_no_internet_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:width="@dimen/fg_transl_no_internet_width"
+                        android:text="@string/no_internet_label"
+                        android:textAlignment="center"
+                        android:textSize="@dimen/fg_transl_no_internet_big_text_size"/>
+
+                    <TextView
+                        android:id="@+id/text_no_internet_message"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/text_no_internet_label"
+                        android:layout_centerHorizontal="true"
+                        android:width="@dimen/fg_transl_no_internet_width"
+                        android:text="@string/no_internet_message"
+                        android:textAlignment="center"
+                        android:textSize="@dimen/fg_transl_no_internet_small_text_size"/>
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/layout_progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/fg_transl_progress_bar_top"
+                    android:background="@color/blur"
+                    android:visibility="invisible">
+
+                    <ProgressBar
+                        android:id="@+id/progress_bar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"/>
+
+                </RelativeLayout>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/layout_disclaimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/fg_transl_disclaimer_top">
 
                 <TextView
-                    android:id="@+id/text_translated"
+                    android:id="@+id/disclaimer_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_toStartOf="@+id/toggle_favorite"
-                    android:freezesText="true"
-                    android:textAlignment="textStart"
-                    android:textColor="@android:color/black"
+                    android:layout_centerHorizontal="true"
+                    android:text="@string/disclaimer_text"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
                     android:textSize="@dimen/fg_transl_result_text_size"/>
 
-                <ToggleButton
-                    android:id="@+id/toggle_favorite"
-                    android:layout_width="@dimen/fg_transl_result_toggle_size"
-                    android:layout_height="@dimen/fg_transl_result_toggle_size"
-                    android:layout_alignParentEnd="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginStart="@dimen/fg_transl_result_toggle_start"
-                    android:background="@drawable/toggle_favourite"
-                    android:text=""
-                    android:textOff=""
-                    android:textOn=""/>
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:id="@+id/layout_no_internet"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/fg_transl_progress_bar_top"
-                android:visibility="invisible">
-
                 <TextView
-                    android:id="@+id/text_no_internet_label"
+                    android:id="@+id/disclaimer_link"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_below="@id/disclaimer_text"
                     android:layout_centerHorizontal="true"
-                    android:width="@dimen/fg_transl_no_internet_width"
-                    android:text="@string/no_internet_label"
+                    android:autoLink="web"
+                    android:text="@string/disclaimer_service_link"
                     android:textAlignment="center"
-                    android:textSize="@dimen/fg_transl_no_internet_big_text_size"/>
+                    android:textSize="@dimen/fg_transl_result_text_size"/>
 
-                <TextView
-                    android:id="@+id/text_no_internet_message"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/text_no_internet_label"
-                    android:layout_centerHorizontal="true"
-                    android:width="@dimen/fg_transl_no_internet_width"
-                    android:text="@string/no_internet_message"
-                    android:textAlignment="center"
-                    android:textSize="@dimen/fg_transl_no_internet_small_text_size"/>
 
             </RelativeLayout>
 
-            <RelativeLayout
-                android:id="@+id/layout_progress_bar"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/fg_transl_progress_bar_top"
-                android:background="@color/blur"
-                android:visibility="invisible">
-
-                <ProgressBar
-                    android:id="@+id/progress_bar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"/>
-
-            </RelativeLayout>
-
-        </RelativeLayout>
+        </LinearLayout>
 
     </LinearLayout>
 

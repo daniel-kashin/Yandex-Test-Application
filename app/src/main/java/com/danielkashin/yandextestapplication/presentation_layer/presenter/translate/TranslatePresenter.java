@@ -64,7 +64,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   @Override
   protected void onViewAttached() {
     if (mCachedTranslation != null) {
-      getView().setTranslation(mCachedTranslation);
+      getView().setTranslation(mCachedTranslation, true);
       mCachedTranslation = null;
     } else if (mCachedSetFavoriteToggleToFalse) {
       mCachedSetFavoriteToggleToFalse = false;
@@ -100,7 +100,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   protected void onViewDetached() {
     mCachedLanguages = getView().getLanguagesIfInitialized();
     getView().removeTextWatcher();
-    getView().removeSwapLanguagesListener();
+    getView().removeLanguagesListeners();
     getView().removeToggleFavoriteListener();
   }
 
@@ -139,17 +139,12 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   @Override
   public void onGetLanguagesFromTranslationSuccess(Pair<Translation, LanguagePair> result) {
     if (getView() != null) {
-      getView().setTranslation(result.first);
+      getView().setTranslation(result.first, true);
       getView().setLanguages(result.second);
     } else {
       mCachedTranslation = result.first;
       mCachedLanguages = result.second;
     }
-  }
-
-  @Override
-  public void onGetLanguagesFromTranslationException(ExceptionBundle exception) {
-
   }
 
   // ---------------------------- GetLastTranslationUseCase callbacks -----------------------------
@@ -158,9 +153,9 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   public void onGetLastTranslationSuccess(Pair<Translation, LanguagePair> result) {
     if (getView() != null) {
       getView().setLanguages(result.second);
-      getView().setTranslation(result.first);
+      getView().setTranslation(result.first, true);
       getView().showImageClear();
-      getView().setSwapLanguagesListener();
+      getView().setLanguagesListeners();
     }
   }
 
@@ -170,7 +165,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
       getView().setLanguages(result.second);
       getView().hideImageClear();
       getView().setTextWatcher();
-      getView().setSwapLanguagesListener();
+      getView().setLanguagesListeners();
     }
   }
 
@@ -198,7 +193,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
     if (getView() != null) {
       getView().hideProgressBar();
       getView().hideNoInternet();
-      getView().setTranslation(translation);
+      getView().setTranslation(translation, false);
     } else {
       mCachedTranslation = translation;
     }
@@ -288,7 +283,7 @@ public class TranslatePresenter extends Presenter<ITranslateView>
   public void onNotFirstStart() {
     if (getView() != null) {
       getView().setTextWatcher();
-      getView().setSwapLanguagesListener();
+      getView().setLanguagesListeners();
       getView().setToggleFavoriteListener();
     }
   }

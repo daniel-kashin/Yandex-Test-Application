@@ -3,22 +3,29 @@ package com.danielkashin.yandextestapplication.presentation_layer.view.translate
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -26,15 +33,15 @@ import android.widget.ToggleButton;
 import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.INetworkManager;
 import com.danielkashin.yandextestapplication.data_layer.managers.network.NetworkManager;
-import com.danielkashin.yandextestapplication.data_layer.services.languages.local.ILanguagesLocalService;
-import com.danielkashin.yandextestapplication.data_layer.services.languages.local.LanguagesLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
+import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.SupportedLanguagesLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.local.ITranslationsLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslationsRemoteService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.ILanguagesRepository;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.LanguagesRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.languages.ISupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.data_layer.repository.languages.SupportedLanguagesRepository;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.TranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
@@ -48,10 +55,15 @@ import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.ID
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.ITranslateHolder;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.main_pager.IMainPage;
 import com.danielkashin.yandextestapplication.presentation_layer.application.ITranslateLocalServiceProvider;
+import com.danielkashin.yandextestapplication.presentation_layer.contracts.PickLanguageContract;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.ITranslatePresenter;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.translate.TranslatePresenter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.PresenterFragment;
+import com.danielkashin.yandextestapplication.presentation_layer.view.pick_language_holder.PickLanguageHolderActivity;
+
+import static android.app.Activity.RESULT_OK;
+import static com.danielkashin.yandextestapplication.presentation_layer.contracts.PickLanguageContract.PickLanguageType;
 
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +85,12 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   private RelativeLayout mNoInternetLayout;
   private TextWatcher mTextWatcher;
   private ToggleButton mToggleFavorite;
+  private RelativeLayout mInputLayout;
+  private ScrollView mScrollView;
+  private Toolbar mToolbar;
+  private RelativeLayout mResultLayout;
+  private TextView mDisclaimerLink;
+
 
   private State mRestoredState;
 
@@ -110,12 +128,16 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   public void onStart() {
     super.onStart();
 
+    if (!(getPresenter() instanceof ITranslatePresenter)) {
+      throw new IllegalStateException("Presenter of ITranslateView must be an instance of ITranslatePresenter");
+    }
+
     if (!mRestoredState.isLanguagePairInitialized()) {
       // activity state is not initialized -- call fragment to initialized
-      getPresenter().onFirstStart();
+      ((ITranslatePresenter) getPresenter()).onFirstStart();
     } else {
       // activity state is initialized -- presenter does something else
-      getPresenter().onNotFirstStart();
+      ((ITranslatePresenter) getPresenter()).onNotFirstStart();
     }
 
     setListeners();
@@ -129,11 +151,34 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mRestoredState.saveToOutState(outState);
   }
 
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (requestCode == PickLanguageContract.REQUEST_TYPE_PICK_LANGUAGE) {
+      if (resultCode == RESULT_OK) {
+        PickLanguageType pickLanguageType = (PickLanguageType) data
+            .getSerializableExtra(PickLanguageContract.KEY_PICK_LANGUAGE_TYPE);
+        Language language = data.getParcelableExtra(PickLanguageContract.KEY_PICKED_TRANSLATION);
+
+        if (pickLanguageType == PickLanguageType.PICK_TRANSLATED_LANGUAGE) {
+          setTranslatedLanguage(language);
+        } else {
+          setOriginalLanguage(language);
+        }
+
+        if (!mOriginalTextEdit.getText().toString().trim().isEmpty()) {
+          ((ITranslatePresenter) getPresenter()).onInputTextChanged(mOriginalTextEdit.getText()
+              .toString()
+              .trim());
+        }
+      }
+    }
+  }
+
   // ------------------------------- IDatabaseChangeReceiver --------------------------------------
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    getPresenter().onRefreshFavoriteValue(
+    ((ITranslatePresenter) getPresenter()).onRefreshFavoriteValue(
         mOriginalTextEdit.getText().toString(),
         mTranslatedText.getText().toString(),
         mRestoredState.getLanguagePair().getLanguageCodePair(),
@@ -152,7 +197,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   public void setTranslationData(Translation translation) {
     if (getPresenter() != null) {
-      getPresenter().onSetTranslationData(translation);
+      ((ITranslatePresenter) getPresenter()).onSetTranslationData(translation);
     }
   }
 
@@ -189,11 +234,11 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   @Override
   public void setLanguages(LanguagePair languages) {
     // state handles exceptions by itself -- no need to check it here
-    removeSwapLanguagesListener();
+    removeLanguagesListeners();
     mRestoredState.setLanguagePair(languages);
     mOriginalLanguageText.setText(languages.getOriginalLanguage().getText());
     mTranslatedLanguageText.setText(languages.getTranslatedLanguage().getText());
-    setSwapLanguagesListener();
+    setLanguagesListeners();
   }
 
   @Override
@@ -229,7 +274,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mToggleFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        getPresenter().onToggleCheckedChanged(mOriginalTextEdit.getText().toString(),
+        ((ITranslatePresenter) getPresenter()).onToggleCheckedChanged(
+            mOriginalTextEdit.getText().toString().trim(),
             mTranslatedText.getText().toString(),
             mRestoredState.getLanguagePair().getLanguageCodePair(),
             isChecked);
@@ -243,7 +289,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   @Override
-  public void setSwapLanguagesListener() {
+  public void setLanguagesListeners() {
     // set this listener only after initialization of languages was performed
     mSwapLanguagesImage.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -252,12 +298,28 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         mOriginalTextEdit.setText(mTranslatedText.getText());
       }
     });
+
+    mOriginalLanguageText.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startPickLanguageActivityForResult(PickLanguageType.PICK_ORIGINAL_LANGUAGE);
+      }
+    });
+
+    mTranslatedLanguageText.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startPickLanguageActivityForResult(PickLanguageType.PICK_TRANSLATED_LANGUAGE);
+      }
+    });
   }
 
   @Override
-  public void removeSwapLanguagesListener() {
+  public void removeLanguagesListeners() {
     // when presenter unbinds view
     mSwapLanguagesImage.setOnClickListener(null);
+    mOriginalLanguageText.setOnClickListener(null);
+    mTranslatedLanguageText.setOnClickListener(null);
   }
 
   @Override
@@ -279,15 +341,15 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
       @Override
       public void afterTextChanged(final Editable editable) {
-        if (editable.toString().replace(" ", "").isEmpty()) {
+        if (editable.toString().trim().isEmpty()) {
           mClearImage.setVisibility(View.INVISIBLE);
-          getPresenter().onInputTextClear();
+          ((ITranslatePresenter) getPresenter()).onInputTextClear();
         } else {
           mClearImage.setVisibility(View.VISIBLE);
           workRunnable = new Runnable() {
             @Override
             public void run() {
-              getPresenter().onInputTextChanged(editable.toString());
+              ((ITranslatePresenter) getPresenter()).onInputTextChanged(editable.toString().trim());
             }
           };
           handler.postDelayed(workRunnable, INPUT_DELAY_IN_MS);
@@ -356,15 +418,21 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   }
 
   @Override
-  public void setTranslation(Translation translation) {
+  public void setTranslation(Translation translation, boolean setOriginalText) {
     removeToggleFavoriteListener();
-    removeTextWatcher();
-    mOriginalTextEdit.setText(translation.getOriginalText());
-    mTranslatedText.setText(translation.getTranslatedText());
     mToggleFavorite.setChecked(translation.ifFavorite());
-    mTranslationLayout.setVisibility(View.VISIBLE);
-    setTextWatcher();
     setToggleFavoriteListener();
+
+    mTranslatedText.setText(translation.getTranslatedText());
+
+    if (setOriginalText) {
+      removeTextWatcher();
+      mOriginalTextEdit.setText(translation.getOriginalText());
+      mClearImage.setVisibility(View.VISIBLE);
+      setTextWatcher();
+    }
+
+    mTranslationLayout.setVisibility(View.VISIBLE);
   }
 
   @Override
@@ -401,8 +469,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         .getApplication())
         .getTranslateLocalService();
 
-    ILanguagesLocalService supportedLanguagesLocalService =
-        LanguagesLocalService.Factory
+    ISupportedLanguagesLocalService supportedLanguagesLocalService =
+        SupportedLanguagesLocalService.Factory
             .create(getContext());
 
 
@@ -410,8 +478,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     ITranslationsRepository translateRepository = TranslationsRepository.Factory
         .create(translateLocalService, translateRemoteService);
 
-    ILanguagesRepository supportedLanguagesRepository =
-        LanguagesRepository.Factory
+    ISupportedLanguagesRepository supportedLanguagesRepository =
+        SupportedLanguagesRepository.Factory
             .create(supportedLanguagesLocalService);
 
 
@@ -434,8 +502,7 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         translateRepository);
 
     GetLanguagesFromTranslationUseCase getLanguagesFromTranslationUseCase =
-        new GetLanguagesFromTranslationUseCase(AsyncTask.THREAD_POOL_EXECUTOR,
-            supportedLanguagesRepository);
+        new GetLanguagesFromTranslationUseCase(supportedLanguagesRepository);
 
 
     // bind network manager
@@ -474,6 +541,11 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mProgressBarLayout = (RelativeLayout) view.findViewById(R.id.layout_progress_bar);
     mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
     mToggleFavorite = (ToggleButton) view.findViewById(R.id.toggle_favorite);
+    mInputLayout = (RelativeLayout) view.findViewById(R.id.layout_input);
+    mScrollView = (ScrollView) view.findViewById(R.id.scroll_view);
+    mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+    mResultLayout = (RelativeLayout) view.findViewById(R.id.layout_result);
+    mDisclaimerLink = (TextView) view.findViewById(R.id.disclaimer_link);
 
     if (mRestoredState.isLanguagePairInitialized()) {
       mOriginalLanguageText.setText(mRestoredState.getLanguagePair().getOriginalLanguage().getText());
@@ -487,21 +559,20 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   // --------------------------------------- private ----------------------------------------------
 
   private void setListeners() {
-    mRootView.setOnClickListener(new View.OnClickListener() {
+    View.OnClickListener hideSoftKeyboardListener = new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        mOriginalTextEdit.clearFocus();
-
-        ((InputMethodManager) TranslateFragment.this
-            .getContext()
-            .getSystemService(Context.INPUT_METHOD_SERVICE))
-            .hideSoftInputFromWindow(view.getWindowToken(), 0);
+        hideSoftKeyboard(view);
       }
-    });
+    };
+
+    mRootView.setOnClickListener(hideSoftKeyboardListener);
+    mToolbar.setOnClickListener(hideSoftKeyboardListener);
+    mResultLayout.setOnClickListener(hideSoftKeyboardListener);
 
     mClearImage.setOnClickListener(new View.OnClickListener() {
       @Override
-      public void onClick(View view) {
+      public void onClick(View v) {
         mOriginalTextEdit.setText("");
       }
     });
@@ -509,6 +580,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mTranslatedText.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+        hideSoftKeyboard(view);
+
         ClipboardManager manager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         if (manager != null) {
           manager.setPrimaryClip(ClipData.newPlainText("", mTranslatedText.getText().toString()));
@@ -516,6 +589,33 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
         }
       }
     });
+
+    mOriginalTextEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+      @Override
+      public void onFocusChange(View v, boolean hasFocus) {
+        if (hasFocus) {
+          mInputLayout.setBackground(ContextCompat.getDrawable(getContext(),
+              R.drawable.primary_color_border));
+        } else {
+          mInputLayout.setBackground(ContextCompat.getDrawable(getContext(),
+              R.drawable.light_grey_border));
+        }
+      }
+    });
+  }
+
+  private void hideSoftKeyboard(View view) {
+    mOriginalTextEdit.clearFocus();
+
+    ((InputMethodManager) TranslateFragment.this.getContext()
+        .getSystemService(Context.INPUT_METHOD_SERVICE))
+        .hideSoftInputFromWindow(view.getWindowToken(), 0);
+  }
+
+  private void startPickLanguageActivityForResult(PickLanguageType languageType) {
+    Intent intent = new Intent(getContext(), PickLanguageHolderActivity.class);
+    intent.putExtra(PickLanguageContract.KEY_PICK_LANGUAGE_TYPE, languageType);
+    startActivityForResult(intent, PickLanguageContract.REQUEST_TYPE_PICK_LANGUAGE);
   }
 
   private void swapLanguages() {

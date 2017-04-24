@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <android.support.v7.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/toolbar_info_text"
+            android:textColor="@color/black"
+            android:textSize="@dimen/toolbar_text_size"/>
+
+    </android.support.v7.widget.Toolbar>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/fg_info_horizontal"
+            android:layout_marginStart="@dimen/fg_info_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/fg_info_vertical_small_margin"
+                android:text="@string/disclaimer_full_info"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="@dimen/fg_transl_result_text_size"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/fg_info_vertical_small_margin"
+                android:autoLink="web"
+                android:text="@string/disclaimer_rules_link"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="@dimen/fg_transl_result_text_size"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/fg_info_vertical_big_margin"
+                android:text="@string/disclaimer_full_info_sub"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="@dimen/fg_transl_result_text_size"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/fg_info_vertical_small_margin"
+                android:layout_marginTop="@dimen/fg_info_vertical_small_margin"
+                android:autoLink="web"
+                android:text="@string/disclaimer_service_link"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="@dimen/fg_transl_result_text_size"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

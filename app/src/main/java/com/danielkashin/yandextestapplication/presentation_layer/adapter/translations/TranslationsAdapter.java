@@ -18,25 +18,33 @@ import java.util.List;
 
 
 public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapter.TranslationViewHolder>
-    implements ITranslationsModel {
+    implements ITranslationsAdapter {
 
+  private static final int ITEM_DIFFERENCE_START_UPLOADING_TO_END = 10;
   private static final String KEY_TRANSLATIONS = "KEY_TRANSLATIONS";
-  private ITranslationsModelCallbacks mCallbacks;
+  private ITranslationsAdapter.Callbacks mCallbacks;
   private ArrayList<Translation> mTranslations;
+  private boolean mEndReached;
+  private boolean mDataUploadingToEnd;
 
 
   public TranslationsAdapter() {
     mTranslations = new ArrayList<>();
   }
 
-  public TranslationsAdapter(Bundle savedInstanceState) throws IllegalArgumentException {
+  public TranslationsAdapter(Bundle savedInstanceState) {
     mTranslations = restoreTranslations(savedInstanceState);
   }
 
-  // ------------------------------ ITranslationsModel methods ------------------------------------
+  // ------------------------------ ITranslationsAdapter methods ------------------------------------
 
   @Override
-  public void addCallbacks(ITranslationsModelCallbacks callbacks) {
+  public void setDataUploadingToEndTrue() {
+    mDataUploadingToEnd = true;
+  }
+
+  @Override
+  public void addCallbacks(ITranslationsAdapter.Callbacks callbacks) {
     mCallbacks = callbacks;
   }
 
@@ -48,20 +56,31 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   @Override
   public void clear() {
     mTranslations.clear();
+    mEndReached = false;
+    mDataUploadingToEnd = false;
     notifyDataSetChanged();
   }
 
   @Override
   public void addTranslations(List<Translation> translations, boolean clear) {
     if (clear) {
-      mTranslations.clear();
-      notifyDataSetChanged();
+      clear();
     }
 
     for (Translation translation : translations) {
       mTranslations.add(translation);
-      notifyItemChanged(mTranslations.size() - 1);
+      notifyItemInserted(mTranslations.size() - 1);
     }
+
+    if (!clear) {
+      mDataUploadingToEnd = false;
+    }
+  }
+
+  @Override
+  public void setEndReached() {
+    mEndReached = true;
+    mDataUploadingToEnd = false;
   }
 
   @Override
@@ -69,7 +88,53 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     return getItemCount();
   }
 
-  // ----------------------------- RecyclerView.Adapter methods -----------------------------------
+  @Override
+  public boolean isInitialized() {
+    return mTranslations != null;
+  }
+
+  @Override
+  public void onSaveInstanceState(Bundle outState) {
+    outState.putParcelableArrayList(KEY_TRANSLATIONS, mTranslations);
+  }
+
+  @Override
+  public boolean isDataUploadingToEndNeeded(int lastVisibleItem) {
+    boolean result = !mDataUploadingToEnd && !mEndReached && !(mTranslations == null)
+        && (lastVisibleItem > mTranslations.size() - ITEM_DIFFERENCE_START_UPLOADING_TO_END);
+
+    return result;
+  }
+
+  @Override
+  public boolean isOnlyFavorite() {
+    if (mTranslations == null) {
+      return false;
+    }
+
+    for (int i = 0; i < mTranslations.size(); ++i) {
+      if (!mTranslations.get(i).ifFavorite()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @Override
+  public void deleteTranslation(Translation translation) {
+    if (mTranslations != null) {
+      for (int i = 0; i < mTranslations.size(); ++i) {
+        if (mTranslations.get(i) == translation) {
+          mTranslations.remove(i);
+          notifyItemRemoved(i);
+          return;
+        }
+      }
+    }
+  }
+
+  // ---------------------------------- RecyclerView.Adapter --------------------------------------
 
   @Override
   public TranslationViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -86,7 +151,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     holder.setOriginalText(translation.getOriginalText());
     holder.setTranslatedText(translation.getTranslatedText());
     holder.setIsFavourite(translation.ifFavorite());
-    holder.setLanguage(translation.getLanguageCodePair());
+    holder.setLanguageText(translation.getLanguageCodePair());
 
     holder.setOnFavoriteToggleListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
@@ -102,7 +167,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       @Override
       public void onClick(View view) {
         if (mCallbacks != null) {
-         mCallbacks.onItemClicked(translation);
+          mCallbacks.onItemClicked(translation);
         }
       }
     });
@@ -125,20 +190,18 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     return mTranslations.size();
   }
 
-  @Override
-  public void onSaveInstanceState(Bundle outState) {
-    outState.putParcelableArrayList(KEY_TRANSLATIONS, mTranslations);
-  }
+  // -------------------------------------- private -----------------------------------------------
 
-  private ArrayList<Translation> restoreTranslations(Bundle savedInstanceState) throws IllegalArgumentException{
+  private ArrayList<Translation> restoreTranslations(Bundle savedInstanceState) {
     if (savedInstanceState == null || !savedInstanceState.containsKey(KEY_TRANSLATIONS)) {
-      throw new IllegalStateException("Bundle must be non null and contain KEY_TRANSLATIONS key");
+      return null;
     }
 
-    ArrayList<Parcelable> parcelableArrayList = savedInstanceState.getParcelableArrayList(KEY_TRANSLATIONS);
+    ArrayList<Parcelable> parcelableArrayList = savedInstanceState
+        .getParcelableArrayList(KEY_TRANSLATIONS);
 
     if (parcelableArrayList == null) {
-      throw new IllegalStateException("Field in bundle cannot be null");
+      return null;
     }
 
     ArrayList<Translation> result = new ArrayList<>();
@@ -156,7 +219,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
     private final ToggleButton favoriteToggle;
     private final TextView originalText;
     private final TextView translatedText;
-    private final TextView language;
+    private final TextView languageText;
 
 
     private TranslationViewHolder(View view) {
@@ -165,7 +228,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       favoriteToggle = (ToggleButton) view.findViewById(R.id.toggle_favorite);
       originalText = (TextView) view.findViewById(R.id.text_original);
       translatedText = (TextView) view.findViewById(R.id.text_translated);
-      language = (TextView) view.findViewById(R.id.text_language);
+      languageText = (TextView) view.findViewById(R.id.text_language);
     }
 
     private void setIsFavourite(boolean isFavourite) {
@@ -181,8 +244,8 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
       translatedText.setText(text);
     }
 
-    private void setLanguage(String text) {
-      language.setText(text);
+    private void setLanguageText(String text) {
+      languageText.setText(text);
     }
 
     private void setOnFavoriteToggleListener(CompoundButton.OnCheckedChangeListener listener) {

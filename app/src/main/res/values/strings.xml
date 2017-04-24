@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">YandexTestApplication</string>
+    <string name="app_name">Переводчик</string>
     <string name="hint_translation_edit_text">Введите текст</string>
     <string name="wrong_key">Ключ Яндекс.Переводчика перестал действовать. Обратитесь к разработчику.</string>
     <string name="limit_expired">Вы используете пробную версию Яндекс.Переводчика. Количество переводов на сегодня исчерпано.</string>
@@ -15,10 +15,29 @@
     <string name="no_content_favorites_message">В избранном пока ничего нет</string>
     <string name="no_content_search_message">Ничего не найдено</string>
     <string name="search_image_description">Поиск</string>
-    <string name="text_copied">Текст скопирован</string>
+    <string name="text_copied">Перевод скопирован</string>
     <string name="delete_denied">Удаление невозможно. Повторите попытку еще раз.</string>
-    <string name="delete_translations_source_is_empty_all_history">В истории остались только избранные записи</string>
-
+    <string name="delete_translations_source_is_empty_all_history">В истории остались только
+        избранные записи. Вы можете очистить избранное.</string>
+    <string name="original_language_label">Язык текста</string>
+    <string name="translated_language_label">Язык перевода</string>
+    <string name="content_description_back">Назад</string>
+    <string name="toolbar_info_text">О приложении</string>
+    <string name="history">История</string>
+    <string name="delete_all_history_confirmation_message">Вы уверены, что хотите очистить историю?</string>
+    <string name="delete_only_favorite_history_confirmation_message">Вы уверены, что хотите очистить избранное?</string>
+    <string name="confirmation_cancel">Отмена</string>
+    <string name="confirmation_confirm">Да</string>
+    <string name="delete">удалить</string>
+    <string name="disclaimer_text">Переведено сервисом Яндекс.Переводчик</string>
+    <string name="disclaimer_service_link">http://translate.yandex.ru/</string>
+    <string name="disclaimer_full_info">Приложение использует сервис Яндекс.Переводчик
+        для перевода текста, содержит список поддерживаемых сервисом языков,
+        а также сохраняет переведунную с помощью сервиса информацию на устройство.
+        Монетизация и выкладывание программы в свободный доступ не предусмотрены ни в каком виде.
+        Условия использования сервиса Яндекс.Переводчик размещены по адресу: </string>
+    <string name="disclaimer_rules_link">https://yandex.ru/legal/translate_termsofuse/</string>
+    <string name="disclaimer_full_info_sub">Сервис Яндекс.Переводчик размещен по адресу: </string>
 
     <string-array name="view_pager_labels">
         <item>История</item>

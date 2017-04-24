@@ -14,8 +14,8 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.history.IH
 import java.util.ArrayList;
 
 
-public class HistoryPresenter extends Presenter<IHistoryView>
-    implements GetTranslationsUseCase.Callbacks, DeleteTranslationsUseCase.Callbacks,
+public class HistoryPresenter extends Presenter<IHistoryView> implements IHistoryPresenter,
+    GetTranslationsUseCase.Callbacks, DeleteTranslationsUseCase.Callbacks,
     SetTranslationDataUseCase.Callbacks, DeleteTranslationUseCase.Callbacks {
 
   private static final int TRANSLATIONS_PER_UPLOAD = 50;
@@ -26,9 +26,13 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   private final DeleteTranslationUseCase mDeleteTranslationUseCase;
 
   private ArrayList<Translation> mCachedTranslations;
+  private Translation mCachedTranslationDeleted;
   private boolean mCachedTranslationsClearBeforeAdd;
-  private boolean mCachedOnDeleteSuccess;
+  private boolean mCachedOnDeleteTranslationsSuccess;
   private boolean mCachedOnTranslationRefreshedSuccess;
+  private boolean mCachedEmptyContentInterface;
+  private boolean mCachedEmptySearchContentInterface;
+  private boolean mCachedSetAdapterEndReached;
 
 
   private HistoryPresenter(GetTranslationsUseCase getTranslationsUseCase,
@@ -51,6 +55,7 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   @Override
   protected void onViewDetached() {
     getView().removeAdapterCallbacks();
+    getView().removeRecyclerViewScrollListener();
   }
 
   @Override
@@ -61,14 +66,38 @@ public class HistoryPresenter extends Presenter<IHistoryView>
       mCachedTranslations = null;
     }
 
-    if (mCachedOnDeleteSuccess) {
-      mCachedOnDeleteSuccess = false;
-      getView().onDeleteSuccess();
+    if (mCachedEmptySearchContentInterface || mCachedEmptyContentInterface) {
+      getView().clearAdapter();
+      getView().removeAdapterCallbacks();
+      getView().removeRecyclerViewScrollListener();
+      if (mCachedEmptyContentInterface) {
+        getView().showEmptyContentInterface();
+      } else {
+        getView().showEmptySearchContentInterface();
+      }
+
+      mCachedEmptyContentInterface = false;
+      mCachedEmptySearchContentInterface = false;
+    }
+
+    if (mCachedSetAdapterEndReached) {
+      getView().setAdapterEndReached();
+      getView().removeRecyclerViewScrollListener();
+    }
+
+    if (mCachedOnDeleteTranslationsSuccess) {
+      getView().onDeleteTranslationsSuccess();
+      mCachedOnDeleteTranslationsSuccess = false;
+    }
+
+    if (mCachedTranslationDeleted != null) {
+      getView().onDeleteTranslationSuccess(mCachedTranslationDeleted);
+      mCachedTranslationDeleted = null;
     }
 
     if (mCachedOnTranslationRefreshedSuccess) {
-      mCachedOnTranslationRefreshedSuccess = false;
       getView().onTranslationRefreshedSuccess();
+      mCachedOnTranslationRefreshedSuccess = false;
     }
   }
 
@@ -80,17 +109,16 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   // ---------------------------- DeleteTranslationUseCase callbacks ------------------------------
 
   @Override
-  public void onDeleteTranslationSuccess() {
+  public void onDeleteTranslationSuccess(Translation translation) {
     if (getView() != null) {
-      getView().onDeleteSuccess();
+      getView().onDeleteTranslationSuccess(translation);
     } else {
-      mCachedOnDeleteSuccess = true;
+      mCachedTranslationDeleted = translation;
     }
   }
 
   @Override
   public void onDeleteTranslationException(ExceptionBundle exception) {
-
     if (exception.getReason() == ExceptionBundle.Reason.DELETE_DENIED) {
       if (getView() != null) {
         getView().showAlertDialog(getView().getStringById(R.string.delete_denied));
@@ -103,9 +131,9 @@ public class HistoryPresenter extends Presenter<IHistoryView>
   @Override
   public void onDeleteTranslationsSuccess() {
     if (getView() != null) {
-      getView().onDeleteSuccess();
+      getView().onDeleteTranslationsSuccess();
     } else {
-      mCachedOnDeleteSuccess = true;
+      mCachedOnDeleteTranslationsSuccess = true;
     }
   }
 
@@ -147,6 +175,7 @@ public class HistoryPresenter extends Presenter<IHistoryView>
       getView().showNotEmptyContentInterface();
       getView().addTranslationsToAdapter(translations, offset == 0);
       getView().setAdapterCallbacks();
+      getView().setRecyclerViewScrollListener();
     } else {
       mCachedTranslations = translations;
       mCachedTranslationsClearBeforeAdd = offset == 0;
@@ -159,41 +188,55 @@ public class HistoryPresenter extends Presenter<IHistoryView>
     switch (exceptionBundle.getReason()) {
       case EMPTY_TRANSLATIONS:
         if (offset == 0) {
-          getView().removeAdapterCallbacks();
-
           if (getView() != null) {
-            getView().clearTranslationAdapter();
-            if (searchRequest == null) {
+            getView().clearAdapter();
+            getView().removeAdapterCallbacks();
+            getView().removeRecyclerViewScrollListener();
+            if (searchRequest == null || searchRequest.isEmpty()) {
               getView().showEmptyContentInterface();
             } else {
               getView().showEmptySearchContentInterface();
             }
+          } else {
+            if (searchRequest == null || searchRequest.isEmpty()) {
+              mCachedEmptyContentInterface = true;
+            } else {
+              mCachedEmptySearchContentInterface = true;
+            }
+          }
+        } else {
+          if (getView() != null) {
+            getView().setAdapterEndReached();
+            getView().removeRecyclerViewScrollListener();
+          } else {
+            mCachedSetAdapterEndReached = true;
           }
         }
         break;
     }
   }
 
-  // ---------------------------------- public methods --------------------------------------------
+  // ------------------------------------ IHistoryPresenter ----------------------------------------
 
+  @Override
   public void onAdapterItemLongClicked(Translation translation) {
     mDeleteTranslationUseCase.run(this, translation);
   }
 
+  @Override
   public void onAdapterToggleClicked(Translation translation) {
     mSetTranslationDataUseCase.run(this, translation);
   }
 
+  @Override
   public void deleteTranslations() {
     mDeleteTranslationsUseCase.run(this);
   }
 
-  public void refreshTranslations(int translationCount, String searchRequest) {
-    if (TRANSLATIONS_PER_UPLOAD > translationCount) {
-      translationCount = TRANSLATIONS_PER_UPLOAD;
-    }
-
-    mGetTranslationsUseCase.run(this, 0, translationCount, searchRequest);
+  @Override
+  public void uploadTranslations(int offset, String searchRequest) {
+    mGetTranslationsUseCase.cancel();
+    mGetTranslationsUseCase.run(this, offset, TRANSLATIONS_PER_UPLOAD, searchRequest);
   }
 
   // ------------------------------------- Inner classes -----------------------------------------

@@ -24,4 +24,13 @@ public class NonMultilineableEditText extends AppCompatEditText {
 
     return super.onKeyDown(keyCode, keyEvent);
   }
+
+  @Override
+  public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+    if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+      this.clearFocus();
+    }
+
+    return super.onKeyPreIme(keyCode, event);
+  }
 }

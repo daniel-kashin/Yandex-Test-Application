@@ -2,8 +2,6 @@ package com.danielkashin.yandextestapplication.domain_layer.pojo;
 
 import android.os.Bundle;
 
-import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.DatabaseLanguage;
-
 
 public class LanguagePair {
 
@@ -27,7 +25,7 @@ public class LanguagePair {
 
   public void setOriginalLanguage(Language originalLanguage) {
     if (originalLanguage == null) {
-      throw new IllegalArgumentException("DatabaseLanguage in parameter must be non null");
+      throw new IllegalArgumentException("DatabaseSupportedLanguage in parameter must be non null");
     }
 
     this.originalLanguage = originalLanguage;
@@ -35,7 +33,7 @@ public class LanguagePair {
 
   public void setTranslatedLanguage(Language translatedLanguage) {
     if (translatedLanguage == null) {
-      throw new IllegalArgumentException("DatabaseLanguage in parameter must be non null");
+      throw new IllegalArgumentException("DatabaseSupportedLanguage in parameter must be non null");
     }
 
     this.translatedLanguage = translatedLanguage;

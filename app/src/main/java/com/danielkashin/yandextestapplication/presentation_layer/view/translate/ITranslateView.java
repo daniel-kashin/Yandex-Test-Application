@@ -33,9 +33,9 @@ public interface ITranslateView extends IView {
 
   void removeToggleFavoriteListener();
 
-  void setSwapLanguagesListener();
+  void setLanguagesListeners();
 
-  void removeSwapLanguagesListener();
+  void removeLanguagesListeners();
 
   void setTextWatcher();
 
@@ -59,7 +59,7 @@ public interface ITranslateView extends IView {
 
   // ------------------------------------ other view handling -------------------------------------
 
-  void setTranslation(Translation translation);
+  void setTranslation(Translation translation, boolean setOriginalText);
 
   void setToggleFavoriteValue(boolean favorite);
 

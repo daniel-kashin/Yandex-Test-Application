@@ -1,14 +1,11 @@
 package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 
-
 import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
-import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.base.IUseCase;
 
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse.PostExecuteListenerResponse;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse.RepositoryRunnableResponse;
@@ -16,7 +13,8 @@ import static com.danielkashin.yandextestapplication.domain_layer.async_task.Rep
 
 import java.util.concurrent.Executor;
 
-public class GetRefreshedTranslationUseCase implements IUseCase {
+
+public class GetRefreshedTranslationUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -34,17 +32,14 @@ public class GetRefreshedTranslationUseCase implements IUseCase {
     this.translateRepository = translateRepository;
   }
 
-  // ---------------------------------------- IUseCase --------------------------------------------
+  // -------------------------------------- public methods ----------------------------------------
 
-  @Override
   public void cancel() {
     if (isRunning()) {
       getRefreshedTranslation.cancel(false);
       getRefreshedTranslation = null;
     }
   }
-
-  // -------------------------------------- public methods ----------------------------------------
 
   public boolean isRunning() {
     return getRefreshedTranslation != null

@@ -8,7 +8,15 @@ import java.util.List;
 
 public interface IHistoryView extends IView {
 
-  void onDeleteSuccess();
+  void setRecyclerViewScrollListener();
+
+  void removeRecyclerViewScrollListener();
+
+  void setAdapterEndReached();
+
+  void onDeleteTranslationsSuccess();
+
+  void onDeleteTranslationSuccess(Translation translation);
 
   void onTranslationRefreshedSuccess();
 
@@ -26,7 +34,7 @@ public interface IHistoryView extends IView {
 
   void showEmptySearchContentInterface();
 
-  void clearTranslationAdapter();
+  void clearAdapter();
 
   void showAlertDialog(String text);
 
