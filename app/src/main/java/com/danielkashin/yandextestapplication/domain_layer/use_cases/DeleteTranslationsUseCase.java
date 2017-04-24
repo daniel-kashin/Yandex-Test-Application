@@ -4,13 +4,16 @@ import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+
 import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
 
 import java.util.concurrent.Executor;
 
-
-
+/*
+* connects presentation layer and repository. presenters implement callback
+* methods and store UseCases as private final variables
+*/
 public class DeleteTranslationsUseCase {
 
   private final Executor executor;
@@ -48,7 +51,11 @@ public class DeleteTranslationsUseCase {
   }
 
   public void run(final Callbacks callbacks) {
-    RepositoryAsyncTaskVoid.RepositoryRunnableVoid runnable =
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
+    RepositoryAsyncTaskVoid.RepositoryRunnableVoid deleteRunnable =
         new RepositoryAsyncTaskVoid.RepositoryRunnableVoid() {
           @Override
           public void run() throws ExceptionBundle {
@@ -56,32 +63,27 @@ public class DeleteTranslationsUseCase {
           }
         };
 
-    RepositoryAsyncTaskVoid.PostExecuteListenerVoid listener =
+    RepositoryAsyncTaskVoid.PostExecuteListenerVoid deleteListener =
         new RepositoryAsyncTaskVoid.PostExecuteListenerVoid() {
           @Override
           public void onResult() {
-            if (callbacks != null) {
-              callbacks.onDeleteTranslationsSuccess();
-            }
+            callbacks.onDeleteTranslationsSuccess();
           }
 
           @Override
           public void onException(ExceptionBundle exception) {
-            if (callbacks != null) {
-              callbacks.onDeleteTranslationsException(exception);
-            }
+            callbacks.onDeleteTranslationsException(exception);
           }
         };
 
-
     deleteTranslations = new RepositoryAsyncTaskVoid(
-        runnable,
-        listener
+        deleteRunnable,
+        deleteListener
     );
     deleteTranslations.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ inner classes--------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 

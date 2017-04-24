@@ -13,12 +13,16 @@ import java.util.ArrayList;
 
 import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
 
-
+/*
+* adapters belong to the chains of receivers, as they hold weak references to the fragment/activity
+* child fragments/activities, but publishing performs without them, as child view has a pointer
+* to its parent view
+*/
 public class HistoryPagerAdapter extends FragmentPagerAdapter
     implements IHistoryPagerAdapter, IDatabaseChangeReceiver {
 
-  private int mCurrentFragment = 0;
   private final int FRAGMENT_COUNT = 2;
+  private int mCurrentFragment;
   private ArrayList<WeakReference<IHistoryPage>> mPages;
   private final String[] mPageTitles;
 
@@ -45,6 +49,7 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter
       return;
     }
 
+    // adapter decides which child pages to notify
     for (int i = 0; i < mPages.size(); ++i){
       WeakReference<IHistoryPage> reference = mPages.get(i);
       if (reference != null && reference.get() != source){
@@ -62,6 +67,7 @@ public class HistoryPagerAdapter extends FragmentPagerAdapter
     if (!(createdFragment instanceof IHistoryPage)) {
       throw new IllegalStateException("Fragment must be an instance of IHistoryPage type");
     } else {
+      // hold weak reference to child pages
       mPages.set(position, new WeakReference<>((IHistoryPage) createdFragment));
     }
 

@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.RepositoryRunnableVoid;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.PostExecuteListenerVoid;
@@ -13,7 +13,7 @@ import static com.danielkashin.yandextestapplication.domain_layer.async_task.Rep
 import java.util.concurrent.Executor;
 
 
-public class SetTranslationDataUseCase {
+public class RefreshTranslationUseCase {
 
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
@@ -21,7 +21,7 @@ public class SetTranslationDataUseCase {
   private RepositoryAsyncTaskVoid refreshTranslation;
 
 
-  public SetTranslationDataUseCase(Executor executor,
+  public RefreshTranslationUseCase(Executor executor,
                                    ITranslationsRepository translateRepository) {
     if (executor == null || translateRepository == null) {
       throw new IllegalArgumentException("All arguments of use case must be non null");
@@ -46,16 +46,20 @@ public class SetTranslationDataUseCase {
         && !refreshTranslation.isCancelled();
   }
 
-  public void run(final Callbacks uiCallbacks, final Translation translation) {
+  public void run(final Callbacks callbacks, final Translation translation) {
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
     PostExecuteListenerVoid refreshTranslationListener = new PostExecuteListenerVoid() {
       @Override
       public void onResult() {
-        uiCallbacks.onRefreshTranslationSuccess();
+        callbacks.onRefreshTranslationSuccess();
       }
 
       @Override
       public void onException(ExceptionBundle exception) {
-        uiCallbacks.onRefreshTranslationException(exception);
+        callbacks.onRefreshTranslationException(exception);
       }
     };
 
@@ -66,12 +70,13 @@ public class SetTranslationDataUseCase {
       }
     };
 
-    refreshTranslation = new RepositoryAsyncTaskVoid(refreshTranslationRunnable,
+    refreshTranslation = new RepositoryAsyncTaskVoid(
+        refreshTranslationRunnable,
         refreshTranslationListener);
     refreshTranslation.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ callbacks ----------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 

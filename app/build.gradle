@@ -5,6 +5,14 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'yandex_translate_key'
+            keyPassword '2700574Qq'
+            storeFile file('C:/Users/Кашин/yandex_translate_key.jks')
+            storePassword '2700574Qq'
+        }
+    }
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
@@ -15,14 +23,12 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
     buildTypes.each {
         it.buildConfigField 'String', 'YANDEX_TRANSLATE_API_KEY', keystoreProperties['YandexTranslateApiKey'];
         it.buildConfigField 'String', 'DATABASE_NAME', keystoreProperties['DatabaseName'];
@@ -31,24 +37,19 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-
     compile 'com.android.support:appcompat-v7:25.2.0'
     compile 'com.android.support:recyclerview-v7:25.2.0'
     compile 'com.android.support:design:25.2.0'
     compile 'com.android.support:support-v4:25.2.0'
-
     compile 'com.pushtorefresh.storio:sqlite:1.12.3'
     compile 'com.pushtorefresh.storio:sqlite-annotations:1.12.3'
     annotationProcessor 'com.pushtorefresh.storio:sqlite-annotations-processor:1.12.3'
-
     compile 'com.squareup.retrofit2:retrofit:2.2.0'
     compile 'com.squareup.retrofit2:converter-gson:2.2.0'
     compile 'com.squareup.retrofit2:converter-scalars:2.2.0'
-
     testCompile 'junit:junit:4.12'
 }

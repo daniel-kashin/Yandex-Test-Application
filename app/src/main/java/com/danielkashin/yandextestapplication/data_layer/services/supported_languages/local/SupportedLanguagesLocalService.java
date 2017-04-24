@@ -16,6 +16,7 @@ import java.util.HashMap;
 public class SupportedLanguagesLocalService implements ISupportedLanguagesLocalService {
 
   private final Context context;
+  // get index of the language from its text by the constant time
   private final HashMap<String, Integer> codes;
 
 
@@ -43,6 +44,7 @@ public class SupportedLanguagesLocalService implements ISupportedLanguagesLocalS
     checkLengths();
     checkCode(code);
 
+    // storing language texts in resources allows us to easily localize them to the languages we want
     String languageText = context.getResources()
         .getStringArray(R.array.supported_languages_texts)
         [codes.get(code)];
@@ -62,6 +64,7 @@ public class SupportedLanguagesLocalService implements ISupportedLanguagesLocalS
       languages.add(new DatabaseSupportedLanguage(languageCodes[i], languageTexts[i]));
     }
 
+    // we must do that as user`s current languages can change
     Collections.sort(languages, new Comparator<DatabaseSupportedLanguage>() {
       @Override
       public int compare(DatabaseSupportedLanguage o1, DatabaseSupportedLanguage o2) {
@@ -97,6 +100,4 @@ public class SupportedLanguagesLocalService implements ISupportedLanguagesLocalS
     }
 
   }
-
-
 }

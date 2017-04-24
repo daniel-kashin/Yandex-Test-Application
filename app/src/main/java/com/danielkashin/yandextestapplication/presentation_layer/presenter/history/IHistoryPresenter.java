@@ -3,14 +3,15 @@ package com.danielkashin.yandextestapplication.presentation_layer.presenter.hist
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 
 
+
 public interface IHistoryPresenter {
 
   void onAdapterItemLongClicked(Translation translation);
 
   void onAdapterToggleClicked(Translation translation);
 
-  void deleteTranslations();
+  void onDeleteTranslations();
 
-  void uploadTranslations(int offset, String searchRequest);
+  void onUploadTranslations(int offset, String searchRequest);
 
 }

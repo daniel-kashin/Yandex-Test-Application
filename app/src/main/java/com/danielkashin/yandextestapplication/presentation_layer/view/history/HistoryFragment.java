@@ -21,12 +21,12 @@ import com.danielkashin.yandextestapplication.data_layer.services.translate.loca
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.ITranslationsRemoteService;
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.TranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationsUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetTranslationsUseCase;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.SetTranslationDataUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.RefreshTranslationUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangePublisher;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.base.IDatabaseChangeReceiver;
 import com.danielkashin.yandextestapplication.presentation_layer.adapter.translations.ITranslationsAdapter;
@@ -93,7 +93,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
       throw new IllegalStateException("Type of the HistoryFragment must be defined");
     }
 
-    // we must know the fragmentType of the fragment before its presenter will be created in base class
+    // we must know the type of the fragment before its presenter will be created in base class
     super.onCreate(savedInstanceState);
   }
 
@@ -106,7 +106,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     }
 
     if (!mRestoredState.isTranslationsAdapterInitialized()) {
-      ((IHistoryPresenter) getPresenter()).uploadTranslations(0, null);
+      ((IHistoryPresenter) getPresenter()).onUploadTranslations(0, null);
     } else {
       setAdapterCallbacks();
       setRecyclerViewScrollListener();
@@ -119,6 +119,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
 
+    // refresh and save state
     mRestoredState.setTranslationsAdapter((ITranslationsAdapter) mRecyclerView.getAdapter());
     mRestoredState.setNoContentTextVisible(mNoContentText.getVisibility() == View.VISIBLE);
     mRestoredState.setRecyclerViewVisible(mRecyclerView.getVisibility() == View.VISIBLE);
@@ -131,13 +132,15 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   public void receiveOnDataChanged(IDatabaseChangeReceiver source) {
-    ((IHistoryPresenter) getPresenter()).uploadTranslations(0, null);
+    // data refresh is needed
+    ((IHistoryPresenter) getPresenter()).onUploadTranslations(0, null);
   }
 
   // ------------------------------- IDatabaseChangePublisher -------------------------------------
 
   @Override
   public void publishOnDataChanged(IDatabaseChangePublisher source) {
+    // notificate parent fragment that database was changed
     ((IDatabaseChangePublisher) getParentFragment()).publishOnDataChanged(source);
   }
 
@@ -182,7 +185,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     } else if (mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
         && mRefreshWhenNavigatingToAnotherPage) {
       mRefreshWhenNavigatingToAnotherPage = false;
-      ((IHistoryPresenter) getPresenter()).uploadTranslations(0, null);
+      ((IHistoryPresenter) getPresenter()).onUploadTranslations(0, null);
     }
   }
 
@@ -198,7 +201,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
   @Override
   public void onDeleteButtonClicked() {
     if (mRestoredState.getFragmentType() == State.FragmentType.ALL_HISTORY
-        && ((ITranslationsAdapter) mRecyclerView.getAdapter()).isOnlyFavorite()) {
+        && ((ITranslationsAdapter) mRecyclerView.getAdapter()).containsOnlyFavoriteTranslations()) {
       showDeleteTranslationsSourceIsEmpty();
     } else {
       int messageId = mRestoredState.getFragmentType() == State.FragmentType.ONLY_FAVORITE_HISTORY
@@ -212,7 +215,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
               new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                  ((IHistoryPresenter) getPresenter()).deleteTranslations();
+                  ((IHistoryPresenter) getPresenter()).onDeleteTranslations();
                 }
               })
           .setNegativeButton(R.string.confirmation_cancel,
@@ -231,7 +234,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   @Override
   public void setAdapterEndReached() {
-    ((ITranslationsAdapter) mRecyclerView.getAdapter()).setEndReached();
+    ((ITranslationsAdapter) mRecyclerView.getAdapter()).setEndReachedTrue();
   }
 
   @Override
@@ -244,12 +247,15 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
         int lastVisibleItem = manager.findLastVisibleItemPosition();
 
         if (((ITranslationsAdapter) mRecyclerView.getAdapter()).isDataUploadingToEndNeeded(lastVisibleItem)) {
+          // try upload data to the end of adapter
+
+          String searchRequest = mSearchEdit.getText().toString();
+
           ITranslationsAdapter adapter = (ITranslationsAdapter) mRecyclerView.getAdapter();
           adapter.setDataUploadingToEndTrue();
           int translationCount = adapter.getSize();
-          String searchRequest = mSearchEdit.getText().toString();
 
-          ((IHistoryPresenter) getPresenter()).uploadTranslations(translationCount, searchRequest);
+          ((IHistoryPresenter) getPresenter()).onUploadTranslations(translationCount, searchRequest);
         }
       }
     };
@@ -283,7 +289,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
     if (mSearchEdit != null && !mSearchEdit.getText().toString().equals("")) {
       mSearchEdit.setText("");
     } else {
-      ((IHistoryPresenter) getPresenter()).uploadTranslations(0, null);
+      ((IHistoryPresenter) getPresenter()).onUploadTranslations(0, null);
     }
   }
 
@@ -395,7 +401,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
         repository,
         mRestoredState.getFragmentType());
 
-    SetTranslationDataUseCase setTranslationDataUseCase = new SetTranslationDataUseCase(
+    RefreshTranslationUseCase refreshTranslationUseCase = new RefreshTranslationUseCase(
         AsyncTask.THREAD_POOL_EXECUTOR,
         repository);
 
@@ -406,7 +412,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
     // return presenter with dependencies
     return new HistoryPresenter.Factory(getTranslationsUseCase, deleteTranslationsUseCase,
-        setTranslationDataUseCase, deleteTranslationUseCase);
+        refreshTranslationUseCase, deleteTranslationUseCase);
   }
 
   @Override
@@ -454,14 +460,6 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
 
   // ---------------------------------- private methods -------------------------------------------
 
-  public int getTranslationAdapterCount() {
-    if (mRecyclerView == null || mRecyclerView.getAdapter() == null) {
-      return 0;
-    } else {
-      return ((ITranslationsAdapter) mRecyclerView.getAdapter()).getSize();
-    }
-  }
-
   private void setListeners() {
     mSearchEdit.addTextChangedListener(new TextWatcher() {
       @Override
@@ -480,7 +478,7 @@ public class HistoryFragment extends PresenterFragment<HistoryPresenter, IHistor
           mClearImage.setVisibility(View.VISIBLE);
         }
 
-        ((IHistoryPresenter) getPresenter()).uploadTranslations(0, editable.toString());
+        ((IHistoryPresenter) getPresenter()).onUploadTranslations(0, editable.toString());
       }
     });
 

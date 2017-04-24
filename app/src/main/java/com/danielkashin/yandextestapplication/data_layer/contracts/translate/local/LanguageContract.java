@@ -1,10 +1,10 @@
 package com.danielkashin.yandextestapplication.data_layer.contracts.translate.local;
 
-
+/*
+ * languages are stored in their own table and are accessed by the index
+ * not to duplicate data
+ */
 public class LanguageContract {
-
-  private LanguageContract() {}
-
 
   public static final String TABLE_NAME = "table_name_language";
 
@@ -18,5 +18,9 @@ public class LanguageContract {
       + ");";
 
   public static String SQL_DELETE_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME;
+
+
+  private LanguageContract() {
+  }
 
 }

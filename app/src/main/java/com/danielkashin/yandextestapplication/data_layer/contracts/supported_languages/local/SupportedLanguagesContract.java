@@ -2,13 +2,15 @@ package com.danielkashin.yandextestapplication.data_layer.contracts.supported_la
 
 import java.util.HashMap;
 
-
+/*
+ * checking for new languages through the API doesn`t worth it for many reasons
+ */
 public class SupportedLanguagesContract {
 
   public static final String DEFAULT_ORIGINAL_LANGUAGE_CODE = "ru";
   public static final String DEFAULT_TRANSLATED_LANGUAGE_CODE = "en";
 
-  public static String[] SUPPORTED_LANGUAGES_CODES = new String[] {
+  public static String[] SUPPORTED_LANGUAGES_CODES = new String[]{
       "af", "am", "ar", "az", "ba", "be", "bg", "bn", "bs", "ca",
       "ceb", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et",
       "eu", "fa", "fi", "fr", "ga", "gd", "gl", "gu", "he", "hi",
@@ -21,12 +23,12 @@ public class SupportedLanguagesContract {
       "xh", "yi", "zh"
   };
 
-  public static HashMap<String, Integer> getMap(){
+  public static HashMap<String, Integer> getMap() {
+    // get index by text for the constant time
     HashMap<String, Integer> hashMap = new HashMap<>();
-    for (int i = 0; i < SUPPORTED_LANGUAGES_CODES.length; ++i){
+    for (int i = 0; i < SUPPORTED_LANGUAGES_CODES.length; ++i) {
       hashMap.put(SUPPORTED_LANGUAGES_CODES[i], i);
     }
     return hashMap;
   }
-
 }

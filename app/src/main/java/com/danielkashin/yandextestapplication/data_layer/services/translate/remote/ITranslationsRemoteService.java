@@ -5,11 +5,15 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 
 import retrofit2.Call;
 
+/*
+* creating two interfaces and two classes for exactly one API call may seem funny but
+* I think that worths it :)
+*/
 public interface ITranslationsRemoteService {
 
   Call<NetworkTranslation> translate(String text, String lang);
 
-  void checkNetworkCodesForExceptions(Exception exception) throws ExceptionBundle;
+  void parseException(Exception exception) throws ExceptionBundle;
 
   void checkNetworkCodesForExceptions(int networkResponseCode) throws ExceptionBundle;
 }

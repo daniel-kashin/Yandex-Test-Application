@@ -6,8 +6,8 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.ISupportedLanguagesRepository;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ISupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import java.util.concurrent.Executor;
 
 
@@ -17,7 +17,7 @@ public class GetLastTranslationUseCase {
   private final ITranslationsRepository translateRepository;
   private final ISupportedLanguagesRepository supportedLanguagesRepository;
 
-  private RepositoryAsyncTaskResponse<Translation> getLastTranslation;
+  private RepositoryAsyncTaskResponse<Translation> getTranslation;
 
 
   public GetLastTranslationUseCase(Executor executor,
@@ -36,26 +36,30 @@ public class GetLastTranslationUseCase {
 
   public void cancel() {
     if (isRunning()) {
-      getLastTranslation.cancel(false);
-      getLastTranslation = null;
+      getTranslation.cancel(false);
+      getTranslation = null;
     }
   }
 
   public boolean isRunning() {
-    return getLastTranslation != null
-        && getLastTranslation.getStatus() == AsyncTask.Status.RUNNING
-        && !getLastTranslation.isCancelled();
+    return getTranslation != null
+        && getTranslation.getStatus() == AsyncTask.Status.RUNNING
+        && !getTranslation.isCancelled();
   }
 
   public void run(final Callbacks callbacks) {
-    RepositoryAsyncTaskResponse.PostExecuteListenerResponse<Translation> listener =
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
+    RepositoryAsyncTaskResponse.PostExecuteListenerResponse<Translation> getTranslationListener =
         new RepositoryAsyncTaskResponse.PostExecuteListenerResponse<Translation>() {
           @Override
           public void onResult(Translation translation) {
             LanguagePair languagePair = supportedLanguagesRepository.getLanguages(
                 translation.getLanguageCodes()[0],
                 translation.getLanguageCodes()[1]);
-            callbacks.onGetLastTranslationSuccess(new Pair<>(translation, languagePair));
+              callbacks.onGetLastTranslationSuccess(new Pair<>(translation, languagePair));
           }
 
           @Override
@@ -65,7 +69,7 @@ public class GetLastTranslationUseCase {
           }
         };
 
-    RepositoryAsyncTaskResponse.RepositoryRunnableResponse<Translation> repositoryRunnable =
+    RepositoryAsyncTaskResponse.RepositoryRunnableResponse<Translation> getTranslationRunnable =
         new RepositoryAsyncTaskResponse.RepositoryRunnableResponse<Translation>() {
           @Override
           public Translation run() throws ExceptionBundle {
@@ -73,13 +77,13 @@ public class GetLastTranslationUseCase {
           }
         };
 
-    getLastTranslation = new RepositoryAsyncTaskResponse<>(
-        repositoryRunnable,
-        listener);
-    getLastTranslation.executeOnExecutor(executor);
+    getTranslation = new RepositoryAsyncTaskResponse<>(
+        getTranslationRunnable,
+        getTranslationListener);
+    getTranslation.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ inner classes--------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 

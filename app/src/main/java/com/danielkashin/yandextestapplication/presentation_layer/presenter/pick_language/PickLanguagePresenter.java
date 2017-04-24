@@ -21,6 +21,7 @@ public class PickLanguagePresenter extends Presenter<IPickLanguageView>
     implements IPickLanguagePresenter, GetAllSupportedLanguagesUseCase.Callbacks {
 
   private final GetAllSupportedLanguagesUseCase mGetAllSupportedLanguagesUseCase;
+
   private ArrayList<Language> mCachedLanguages;
 
 
@@ -50,7 +51,6 @@ public class PickLanguagePresenter extends Presenter<IPickLanguageView>
 
   @Override
   protected void onDestroyed() {
-
   }
 
   // ------------------------ GetAllSupportedLanguagesUseCase.Callbacks ---------------------------

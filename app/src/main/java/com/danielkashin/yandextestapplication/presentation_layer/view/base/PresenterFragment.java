@@ -14,31 +14,34 @@ import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.PresenterLoader;
 
 
+/*
+ * basic fragment that holds reference to presenter
+ */
 public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
     extends Fragment implements IView, LoaderManager.LoaderCallbacks<P> {
 
   private P mPresenter;
 
-  // ------------------------ provide presenter to extended classes -------------------------------
 
   protected final Presenter<V> getPresenter() {
     return this.mPresenter;
   }
 
-  // --------------------------------- Lifecycle methods ------------------------------------------
-
+  // -------------------------------------- lifecycle ---------------------------------------------
 
   @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+  public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
 
     super.onCreate(savedInstanceState);
 
+    // loader is created -> get presenter
     Loader loader = getLoaderManager().getLoader(getFragmentId());
     if (loader != null) {
       mPresenter = ((PresenterLoader<P, V>) loader).getPresenter();
     }
 
+    // init loader
     if (mPresenter == null) {
       getLoaderManager().initLoader(getFragmentId(), null, this);
     }
@@ -69,7 +72,7 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
     super.onStop();
   }
 
-  // -------------------------- LoaderManager.LoaderCallbacks methods ------------------------------
+  // ------------------------------ LoaderManager.LoaderCallbacks ---------------------------------
 
   @Override
   public Loader<P> onCreateLoader(int i, Bundle bundle) {
@@ -86,7 +89,7 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
     this.mPresenter = null;
   }
 
-  // ----------------------------------- Abstract methods -----------------------------------------
+  // --------------------------------------- abstract ---------------------------------------------
 
   protected abstract V getViewInterface();
 
@@ -97,4 +100,5 @@ public abstract class PresenterFragment<P extends Presenter<V>, V extends IView>
   protected abstract int getLayoutRes();
 
   protected abstract void initializeView(View view);
+
 }

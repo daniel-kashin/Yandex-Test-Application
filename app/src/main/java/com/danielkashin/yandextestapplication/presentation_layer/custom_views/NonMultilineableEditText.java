@@ -19,6 +19,7 @@ public class NonMultilineableEditText extends AppCompatEditText {
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent keyEvent){
     if (keyCode == KeyEvent.KEYCODE_ENTER){
+      // block next line request
       return true;
     }
 
@@ -28,6 +29,7 @@ public class NonMultilineableEditText extends AppCompatEditText {
   @Override
   public boolean onKeyPreIme(int keyCode, KeyEvent event) {
     if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+      // lose focus when soft keyboard is hidden
       this.clearFocus();
     }
 

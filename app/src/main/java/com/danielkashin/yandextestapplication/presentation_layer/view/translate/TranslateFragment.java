@@ -13,15 +13,12 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -40,10 +37,10 @@ import com.danielkashin.yandextestapplication.data_layer.services.translate.remo
 import com.danielkashin.yandextestapplication.data_layer.services.translate.remote.TranslationsRemoteService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.ISupportedLanguagesRepository;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.SupportedLanguagesRepository;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.TranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ISupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.SupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.TranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLanguagesFromTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetLastTranslationUseCase;
@@ -86,10 +83,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
   private TextWatcher mTextWatcher;
   private ToggleButton mToggleFavorite;
   private RelativeLayout mInputLayout;
-  private ScrollView mScrollView;
   private Toolbar mToolbar;
   private RelativeLayout mResultLayout;
-  private TextView mDisclaimerLink;
 
 
   private State mRestoredState;
@@ -205,12 +200,12 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
 
   @Override
   public void onAnotherPageSelected() {
-    // TODO
+    // do nothing
   }
 
   @Override
   public void onSelected() {
-    // TODO
+    // do nothing
   }
 
 
@@ -542,10 +537,8 @@ public class TranslateFragment extends PresenterFragment<TranslatePresenter, ITr
     mNoInternetLayout = (RelativeLayout) view.findViewById(R.id.layout_no_internet);
     mToggleFavorite = (ToggleButton) view.findViewById(R.id.toggle_favorite);
     mInputLayout = (RelativeLayout) view.findViewById(R.id.layout_input);
-    mScrollView = (ScrollView) view.findViewById(R.id.scroll_view);
     mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
     mResultLayout = (RelativeLayout) view.findViewById(R.id.layout_result);
-    mDisclaimerLink = (TextView) view.findViewById(R.id.disclaimer_link);
 
     if (mRestoredState.isLanguagePairInitialized()) {
       mOriginalLanguageText.setText(mRestoredState.getLanguagePair().getOriginalLanguage().getText());

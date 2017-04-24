@@ -15,7 +15,9 @@ public class NetworkManager implements INetworkManager {
 
 
   private NetworkManager(Context context) {
+    // no more leaks
     this.context = context.getApplicationContext();
+
     this.filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
   }
 
@@ -26,12 +28,14 @@ public class NetworkManager implements INetworkManager {
     final BroadcastReceiver receiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
-          if (!networkSubscriber.isDisposed()) {
-            networkSubscriber.onResult(getStatus(context));
-          }
+        // subscriber can know nothing about manager and just call "dispose" to cancel his subscribe
+        if (!networkSubscriber.isDisposed()) {
+          networkSubscriber.onResult(getStatus(context));
+        }
       }
     };
 
+    // when subscriber disposes, unregister it from our broadcast receiver
     networkSubscriber.setOnDisposeListener(new NetworkSubscriber.IDisposeListener() {
       @Override
       public void onDispose() {
@@ -43,6 +47,7 @@ public class NetworkManager implements INetworkManager {
       }
     });
 
+    // that`s it, now subscriber will be notified when the network state will change
     context.registerReceiver(receiver, filter);
   }
 
@@ -54,33 +59,34 @@ public class NetworkManager implements INetworkManager {
   // ---------------------------------- private methods --------------------------------------------
 
   private NetworkStatus getStatus(Context context) {
-    ConnectivityManager connectivityManager = (ConnectivityManager)context
+    ConnectivityManager connectivityManager = (ConnectivityManager) context
         .getSystemService(Context.CONNECTIVITY_SERVICE);
-    if(connectivityManager != null) {
-      NetworkInfo info = connectivityManager.getActiveNetworkInfo();
-      if(info != null) {
-        if(info.getType() == ConnectivityManager.TYPE_WIFI) {
-          return NetworkStatus.CONNECTED;
-        } else if(info.getType() == ConnectivityManager.TYPE_MOBILE) {
-          return NetworkStatus.CONNECTED;
-        } else {
-          return NetworkStatus.DISCONNECTED;
-        }
+
+    if (connectivityManager == null) {
+      return NetworkStatus.UNKNOWN;
+    }
+
+    NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+    if (info != null) {
+      if (info.getType() == ConnectivityManager.TYPE_WIFI
+          || info.getType() == ConnectivityManager.TYPE_MOBILE) {
+        return NetworkStatus.CONNECTED;
       } else {
         return NetworkStatus.DISCONNECTED;
       }
     } else {
-      return NetworkStatus.UNKNOWN;
+      return NetworkStatus.DISCONNECTED;
     }
   }
 
-  // ------------------------------------- factory ------------------------------------------------
+  // -------------------------------------- inner types -------------------------------------------
 
   public static class Factory {
 
-    private Factory() {}
+    private Factory() {
+    }
 
-    public static INetworkManager create(Context context){
+    public static INetworkManager create(Context context) {
       return new NetworkManager(context);
     }
 

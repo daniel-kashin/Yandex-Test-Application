@@ -24,7 +24,9 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   private static final String KEY_TRANSLATIONS = "KEY_TRANSLATIONS";
   private ITranslationsAdapter.Callbacks mCallbacks;
   private ArrayList<Translation> mTranslations;
+  // stop uploading data to end
   private boolean mEndReached;
+  // upload to end once at the moment of time
   private boolean mDataUploadingToEnd;
 
 
@@ -39,11 +41,6 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   // ------------------------------ ITranslationsAdapter methods ------------------------------------
 
   @Override
-  public void setDataUploadingToEndTrue() {
-    mDataUploadingToEnd = true;
-  }
-
-  @Override
   public void addCallbacks(ITranslationsAdapter.Callbacks callbacks) {
     mCallbacks = callbacks;
   }
@@ -51,6 +48,11 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   @Override
   public void removeCallbacks() {
     mCallbacks = null;
+  }
+
+  @Override
+  public void setDataUploadingToEndTrue() {
+    mDataUploadingToEnd = true;
   }
 
   @Override
@@ -78,7 +80,7 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
   }
 
   @Override
-  public void setEndReached() {
+  public void setEndReachedTrue() {
     mEndReached = true;
     mDataUploadingToEnd = false;
   }
@@ -100,14 +102,12 @@ public class TranslationsAdapter extends RecyclerView.Adapter<TranslationsAdapte
 
   @Override
   public boolean isDataUploadingToEndNeeded(int lastVisibleItem) {
-    boolean result = !mDataUploadingToEnd && !mEndReached && !(mTranslations == null)
+    return !mDataUploadingToEnd && !mEndReached && !(mTranslations == null)
         && (lastVisibleItem > mTranslations.size() - ITEM_DIFFERENCE_START_UPLOADING_TO_END);
-
-    return result;
   }
 
   @Override
-  public boolean isOnlyFavorite() {
+  public boolean containsOnlyFavoriteTranslations() {
     if (mTranslations == null) {
       return false;
     }

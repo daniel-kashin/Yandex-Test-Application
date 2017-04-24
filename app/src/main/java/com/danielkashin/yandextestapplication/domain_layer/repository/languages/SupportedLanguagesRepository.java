@@ -1,4 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.repository.languages;
+package com.danielkashin.yandextestapplication.domain_layer.repository.languages;
 
 import com.danielkashin.yandextestapplication.data_layer.entities.supported_languages.local.DatabaseSupportedLanguage;
 import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
@@ -6,19 +6,25 @@ import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.LanguagePair;
 import java.util.ArrayList;
 
-
+/*
+ * Repository returns and receives data of the needed type, no matter what source it has
+ * connects UseCases/Interactors with Services
+ * all methods are synchronous, as UseCases is responsible for multithreading
+ */
 public class SupportedLanguagesRepository implements ISupportedLanguagesRepository {
 
   private final ISupportedLanguagesLocalService localService;
 
 
-  public SupportedLanguagesRepository(ISupportedLanguagesLocalService localService){
+  private SupportedLanguagesRepository(ISupportedLanguagesLocalService localService){
     if (localService == null) {
-      throw new IllegalArgumentException("All arguments must be non null");
+      throw new IllegalArgumentException("All arguments of Repository must be non null");
     }
 
     this.localService = localService;
   }
+
+  // ------------------------------- ISupportedLanguagesRepository --------------------------------
 
   @Override
   public LanguagePair getDefaultLanguages() {
@@ -61,6 +67,7 @@ public class SupportedLanguagesRepository implements ISupportedLanguagesReposito
     return languages;
   }
 
+  // -------------------------------------- inner types -------------------------------------------
 
   public static class Factory {
 

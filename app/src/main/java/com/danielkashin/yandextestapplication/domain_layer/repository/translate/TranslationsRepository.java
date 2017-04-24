@@ -1,5 +1,4 @@
-package com.danielkashin.yandextestapplication.data_layer.repository.translate;
-
+package com.danielkashin.yandextestapplication.domain_layer.repository.translate;
 
 import android.support.v4.util.Pair;
 
@@ -14,18 +13,21 @@ import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.operations.get.PreparedGetListOfObjects;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
-import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Response;
 
-
+/*
+ * Repository returns and receives data of the needed type, no matter what source it has
+ * connects UseCases/Interactors with Services
+ * all methods are synchronous, as UseCases is responsible for multithreading
+ */
 public class TranslationsRepository implements ITranslationsRepository {
 
+  // services are responsible for exception throwing, as well as repository
   private final ITranslationsLocalService localService;
-
   private final ITranslationsRemoteService remoteService;
 
 
@@ -35,18 +37,24 @@ public class TranslationsRepository implements ITranslationsRepository {
     this.remoteService = remoteService;
   }
 
-  // ------------------------------ ITranslationRepository methods ----------------------------------
+  // --------------------------------- ITranslationRepository -------------------------------------
 
-  //                          -------------- delete ----------------
+  //                            -------------- delete ----------------
 
   @Override
   public void deleteTranslation(Translation translation) throws ExceptionBundle {
+    // languages are stored in their own table
     Long languageId = getLanguageIdByText(translation.getLanguageCodePair());
 
     DatabaseTranslation databaseTranslation = localService.getTranslation(
         translation.getOriginalText(),
         languageId.intValue())
         .executeAsBlocking();
+
+    // services are responsible for exception throwing, as well as repository
+    if (databaseTranslation == null) {
+      throw new ExceptionBundle(Reason.DELETE_DENIED);
+    }
 
     DeleteResult deleteResult = localService.deleteTranslation(databaseTranslation)
         .executeAsBlocking();
@@ -63,15 +71,20 @@ public class TranslationsRepository implements ITranslationsRepository {
         translation.setFavorite(0);
       }
 
+      // unique translations will be overwritten when putting
       localService.putTranslations(translations)
           .executeAsBlocking();
     } else {
+      // check that translations contain at least one non-favorite translation
       DatabaseTranslation lastTranslation = localService.getLastTranslationOfType(false)
           .executeAsBlocking();
-      if (lastTranslation == null) throw new ExceptionBundle(Reason.DELETE_SOURCE_IS_EMPTY);
+      if (lastTranslation == null) {
+        throw new ExceptionBundle(Reason.DELETE_SOURCE_IS_EMPTY);
+      }
 
-      DeleteResult deleteResult = localService.deleteNotFavoriteTranslations()
+      DeleteResult deleteResult = localService.deleteNonFavoriteTranslations()
           .executeAsBlocking();
+      // services are responsible for exception throwing, as well as repository
       localService.checkDeleteResultForExceptions(deleteResult);
     }
   }
@@ -80,10 +93,9 @@ public class TranslationsRepository implements ITranslationsRepository {
 
   @Override
   public void saveTranslation(Translation translation) throws ExceptionBundle {
-    // we store language in another table, so must get it before saving translation
+    // language are stored in their own table, so it is needed to get it`s index before saving translation
     Long languageId = getLanguageIdByText(translation.getLanguageCodePair());
 
-    // create new database translation using picked id and input translation`s information
     DatabaseTranslation databaseTranslation = new DatabaseTranslation(
         null,
         translation.getOriginalText(),
@@ -92,18 +104,15 @@ public class TranslationsRepository implements ITranslationsRepository {
         translation.ifFavorite() ? 1 : 0
     );
 
-    // put created translation to database
     PutResult result = localService.putTranslation(databaseTranslation)
         .executeAsBlocking();
     localService.checkPutResultForExceptions(result);
   }
 
   @Override
-  public void refreshTranslation(Translation translation)
-      throws ExceptionBundle {
+  public void refreshTranslation(Translation translation) throws ExceptionBundle {
     Long languageId = getLanguageIdByText(translation.getLanguageCodePair());
 
-    // get translation and throw exception if it is not valid
     DatabaseTranslation databaseTranslation = localService.getTranslation(
         translation.getOriginalText(),
         languageId.intValue())
@@ -116,7 +125,6 @@ public class TranslationsRepository implements ITranslationsRepository {
         databaseTranslation.getLanguageId(),
         translation.ifFavorite() ? 1 : 0);
 
-    // put created translation to database
     PutResult result = localService.putTranslation(translationToSave)
         .executeAsBlocking();
     localService.checkPutResultForExceptions(result);
@@ -124,12 +132,10 @@ public class TranslationsRepository implements ITranslationsRepository {
 
   //                          ---------------- get -----------------
 
-
   @Override
   public Translation getRefreshedTranslation(Translation translation) throws ExceptionBundle {
     Long languageId = getLanguageIdByText(translation.getLanguageCodePair());
 
-    // get translation and throw exception if it is not valid
     DatabaseTranslation databaseTranslation = localService.getTranslation(
         translation.getOriginalText(),
         languageId.intValue())
@@ -149,11 +155,10 @@ public class TranslationsRepository implements ITranslationsRepository {
       try {
         // get cached translation from the local service if possible
 
-        // get id of the language as languages are stored in another table
         Long languageId = getLanguageIdByText(languageText);
 
-        // get translation and throw exception if it is not valid
-        DatabaseTranslation databaseTranslation = localService.getTranslation(originalText, languageId.intValue())
+        DatabaseTranslation databaseTranslation = localService
+            .getTranslation(originalText, languageId.intValue())
             .executeAsBlocking();
         localService.checkDatabaseTranslationForExceptions(databaseTranslation);
 
@@ -169,6 +174,7 @@ public class TranslationsRepository implements ITranslationsRepository {
             databaseTranslation.isFavorite() == 1);
 
 
+        // return translation from the local service
         return new Pair<>(translation, Translation.Source.LOCAL);
       } catch (ExceptionBundle exceptionBundle) {
         // database does not contain translation -> get it from the remote service
@@ -178,13 +184,13 @@ public class TranslationsRepository implements ITranslationsRepository {
         remoteService.checkNetworkCodesForExceptions(response.code());
 
         NetworkTranslation networkTranslation = response.body();
-
         Translation translation = new Translation(originalText,
             networkTranslation.getText(),
             networkTranslation.getLanguage(),
             false);
 
 
+        // return translation from the remote service
         return new Pair<>(translation, Translation.Source.REMOTE);
       }
     } catch (ExceptionBundle exceptionBundle) {
@@ -192,7 +198,7 @@ public class TranslationsRepository implements ITranslationsRepository {
       throw exceptionBundle;
     } catch (Exception exception) {
       // parse network exception
-      remoteService.checkNetworkCodesForExceptions(exception);
+      remoteService.parseException(exception);
       return null;
     }
   }
@@ -218,10 +224,10 @@ public class TranslationsRepository implements ITranslationsRepository {
   @Override
   public ArrayList<Translation> getTranslations(int offset, int count, boolean onlyFavourite,
                                                 String searchRequest) throws ExceptionBundle {
-    // get list of database translation
-    PreparedGetListOfObjects<DatabaseTranslation> preparedList;
-    preparedList = localService.getTranslations(offset, count, onlyFavourite, searchRequest);
-    List<DatabaseTranslation> databaseTranslations = preparedList.executeAsBlocking();
+    // get list of database translations
+    List<DatabaseTranslation> databaseTranslations = localService
+        .getTranslations(offset, count, onlyFavourite, searchRequest)
+        .executeAsBlocking();
     if (databaseTranslations.size() == 0) throw new ExceptionBundle(Reason.EMPTY_TRANSLATIONS);
 
     // parse it into common translations
@@ -260,7 +266,7 @@ public class TranslationsRepository implements ITranslationsRepository {
           .executeAsBlocking();
       localService.checkInsertResultForExceptions(result);
 
-      // get id of the language we put
+      // get id of the language we inserted
       id = result.insertedId();
     }
 
@@ -268,6 +274,7 @@ public class TranslationsRepository implements ITranslationsRepository {
   }
 
   private DatabaseTranslation getDatabaseTranslationCopy(DatabaseTranslation databaseTranslation) {
+    // remove index of translation
     return new DatabaseTranslation(null,
         databaseTranslation.getOriginalText(),
         databaseTranslation.getTranslatedText(),

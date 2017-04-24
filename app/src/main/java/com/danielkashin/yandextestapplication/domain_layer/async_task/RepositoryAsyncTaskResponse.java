@@ -4,7 +4,13 @@ import android.util.Pair;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 
-
+/*
+* generic asynctask is acceptable and elegant way to solve out problem:
+* no exceptions different from ExceptionBundle must be here,
+* as in UseCases we get data through the repository
+* asynctask also supports easy cancelling
+* T is the type returned by runnable.run()
+*/
 public class RepositoryAsyncTaskResponse<T> extends VoidAsyncTask<Pair<T, ExceptionBundle>> {
 
   private final RepositoryRunnableResponse<T> repositoryRunnable;
@@ -13,10 +19,15 @@ public class RepositoryAsyncTaskResponse<T> extends VoidAsyncTask<Pair<T, Except
 
   public RepositoryAsyncTaskResponse(RepositoryRunnableResponse<T> repositoryRunnable,
                                      PostExecuteListenerResponse<T> postExecuteListener) {
+    if (repositoryRunnable == null) {
+      throw new IllegalStateException("Runnable in AsyncTask must be non null");
+    }
+
     this.repositoryRunnable = repositoryRunnable;
     this.postExecuteListener = postExecuteListener;
   }
 
+  // --------------------------------------- AsyncTask --------------------------------------------
 
   @Override
   protected void onCancelled() {
@@ -43,6 +54,7 @@ public class RepositoryAsyncTaskResponse<T> extends VoidAsyncTask<Pair<T, Except
     }
   }
 
+  // ------------------------------------ inner types ---------------------------------------------
 
   public interface PostExecuteListenerResponse<T> {
 

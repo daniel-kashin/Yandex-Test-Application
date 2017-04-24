@@ -7,7 +7,7 @@ import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBun
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse.RepositoryRunnableResponse;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.RepositoryRunnableVoid;
@@ -50,21 +50,27 @@ public class TranslateUseCase {
         && !getTranslation.isCancelled();
   }
 
-  public void run(final Callbacks uiCallbacks, final String originalText, final String language) {
+  public void run(final Callbacks callbacks, final String originalText, final String language) {
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
     PostExecuteListenerResponse<Pair<Translation, Translation.Source>> translateListener =
         new PostExecuteListenerResponse<Pair<Translation, Translation.Source>>() {
           @Override
           public void onException(ExceptionBundle exception) {
-            uiCallbacks.onTranslateException(new Pair<>(exception, originalText));
+            callbacks.onTranslateException(new Pair<>(exception, originalText));
           }
 
           @Override
           public void onResult(final Pair<Translation, Translation.Source> result) {
-            uiCallbacks.onTranslateSuccess(result.first);
+            callbacks.onTranslateSuccess(result.first);
 
             if (result.second == Translation.Source.LOCAL) {
-              uiCallbacks.onSaveTranslationAfterGettingSuccess();
+              callbacks.onSaveTranslationAfterGettingSuccess();
             } else if (result.second == Translation.Source.REMOTE) {
+              // inner async task -- save the translation we got
+
               RepositoryRunnableVoid saveTranslationRunnable = new RepositoryRunnableVoid() {
                 @Override
                 public void run() throws ExceptionBundle {
@@ -75,16 +81,16 @@ public class TranslateUseCase {
               PostExecuteListenerVoid saveTranslationListener = new PostExecuteListenerVoid() {
                 @Override
                 public void onResult() {
-                  uiCallbacks.onSaveTranslationAfterGettingSuccess();
+                  callbacks.onSaveTranslationAfterGettingSuccess();
                 }
 
                 @Override
                 public void onException(ExceptionBundle exception) {
-                  uiCallbacks.onSaveTranslationAfterGettingException(exception);
+                  callbacks.onSaveTranslationAfterGettingException(exception);
                 }
               };
 
-              new RepositoryAsyncTaskVoid<>(saveTranslationRunnable, saveTranslationListener)
+              new RepositoryAsyncTaskVoid(saveTranslationRunnable, saveTranslationListener)
                   .executeOnExecutor(executor);
             }
           }
@@ -103,7 +109,7 @@ public class TranslateUseCase {
     getTranslation.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ callbacks ----------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 

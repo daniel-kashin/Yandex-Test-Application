@@ -5,13 +5,14 @@ import android.os.AsyncTask;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
 
 import static com.danielkashin.yandextestapplication.presentation_layer.view.history.HistoryFragment.State.FragmentType;
-
+import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse.PostExecuteListenerResponse;
+import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse.RepositoryRunnableResponse;
 
 public class GetTranslationsUseCase {
 
@@ -19,7 +20,7 @@ public class GetTranslationsUseCase {
   private final ITranslationsRepository translateRepository;
   private final FragmentType fragmentType;
 
-  private RepositoryAsyncTaskResponse<ArrayList<Translation>> getTranslationsAsyncTask;
+  private RepositoryAsyncTaskResponse<ArrayList<Translation>> getTranslations;
 
 
   public GetTranslationsUseCase(Executor executor,
@@ -38,37 +39,37 @@ public class GetTranslationsUseCase {
 
   public void cancel() {
     if (isRunning()) {
-      getTranslationsAsyncTask.cancel(false);
-      getTranslationsAsyncTask = null;
+      getTranslations.cancel(false);
+      getTranslations = null;
     }
   }
 
   public boolean isRunning() {
-    return getTranslationsAsyncTask != null
-        && getTranslationsAsyncTask.getStatus() == AsyncTask.Status.RUNNING
-        && !getTranslationsAsyncTask.isCancelled();
+    return getTranslations != null
+        && getTranslations.getStatus() == AsyncTask.Status.RUNNING
+        && !getTranslations.isCancelled();
   }
 
   public void run(final Callbacks callbacks, final int offset,
                   final int count, final String searchRequest) {
-    RepositoryAsyncTaskResponse.PostExecuteListenerResponse<ArrayList<Translation>> listener =
-        new RepositoryAsyncTaskResponse.PostExecuteListenerResponse<ArrayList<Translation>>() {
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
+    PostExecuteListenerResponse<ArrayList<Translation>> getTranslationsListener =
+        new PostExecuteListenerResponse<ArrayList<Translation>>() {
           @Override
           public void onResult(ArrayList<Translation> result) {
-            if (callbacks != null) {
-              callbacks.onGetTranslationsSuccess(result, offset, searchRequest);
-            }
+            callbacks.onGetTranslationsSuccess(result, offset, searchRequest);
           }
 
           @Override
           public void onException(ExceptionBundle exception) {
-            if (callbacks != null) {
-              callbacks.onGetTranslationsException(exception, offset, searchRequest);
-            }
+            callbacks.onGetTranslationsException(exception, offset, searchRequest);
           }
         };
 
-    RepositoryAsyncTaskResponse.RepositoryRunnableResponse<ArrayList<Translation>> runnable =
+    RepositoryRunnableResponse<ArrayList<Translation>> getTranslationsRunnable =
         new RepositoryAsyncTaskResponse.RepositoryRunnableResponse<ArrayList<Translation>>() {
           @Override
           public ArrayList<Translation> run() throws ExceptionBundle {
@@ -80,14 +81,14 @@ public class GetTranslationsUseCase {
           }
         };
 
-    getTranslationsAsyncTask = new RepositoryAsyncTaskResponse<>(
-        runnable,
-        listener
+    getTranslations = new RepositoryAsyncTaskResponse<>(
+        getTranslationsRunnable,
+        getTranslationsListener
     );
-    getTranslationsAsyncTask.executeOnExecutor(executor);
+    getTranslations.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ inner classes--------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 

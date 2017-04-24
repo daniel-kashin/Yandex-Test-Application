@@ -13,16 +13,18 @@ public interface ILanguagesAdapter {
 
   void removeCallbacks();
 
+
+  void addLanguages(ArrayList<Language> languages);
+
   boolean isInitialized();
+
 
   void onSaveInstanceState(Bundle outState);
 
-  void addLanguages(ArrayList<Language> languages);
 
   interface Callbacks {
 
     void onItemClicked(Language language);
 
   }
-
 }

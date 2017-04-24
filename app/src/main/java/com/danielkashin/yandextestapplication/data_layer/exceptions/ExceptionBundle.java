@@ -1,8 +1,11 @@
 package com.danielkashin.yandextestapplication.data_layer.exceptions;
 
-
 import android.os.Bundle;
 
+/*
+ * in clean architecture something like that can be used for elegant exception-handling.
+ * allows to get exception type and some additional information
+ */
 public class ExceptionBundle extends Exception {
 
   private ExceptionBundle.Reason reason;
@@ -14,12 +17,9 @@ public class ExceptionBundle extends Exception {
     this.extras = new Bundle();
   }
 
+
   public Reason getReason() {
     return reason;
-  }
-
-  public void addThrowable(String key, Throwable throwable) {
-    this.extras.putSerializable(key, throwable);
   }
 
   public void addStringExtra(String key, String value) {
@@ -28,10 +28,6 @@ public class ExceptionBundle extends Exception {
 
   public void addIntExtra(String key, int extra) {
     this.extras.putInt(key, extra);
-  }
-
-  public Throwable getThrowable(String key) {
-    return (Throwable) this.extras.getSerializable(key);
   }
 
   public String getStringExtra(String key) {
@@ -43,17 +39,23 @@ public class ExceptionBundle extends Exception {
   }
 
 
+  // reason of the exception. codes in future can be used
+  // for getting the source of exception: api, database
   public enum Reason {
 
+    // general exceptions
     UNKNOWN(-001),
     NETWORK_UNAVAILABLE(000),
+    SERVICE_UNSUPPORTED(001),
 
+    // api exceptions
     WRONG_KEY(401),
     LIMIT_EXPIRED(404),
     TEXT_LIMIT_EXPIRED(413),
     WRONG_TEXT(422),
     WRONG_LANGS(501),
 
+    // database exceptions
     EMPTY_TRANSLATION(600),
     EMPTY_LANGUAGE(601),
     EMPTY_TRANSLATIONS(602),
@@ -62,9 +64,8 @@ public class ExceptionBundle extends Exception {
     NULL_POINTER(605),
     DELETE_DENIED(606),
     DELETE_SOURCE_IS_EMPTY(607),
-    DATABASE_CLOSED(608),
+    DATABASE_CLOSED(608);
 
-    SERVICE_UNSUPPORTED(800);
 
     private final int code;
 

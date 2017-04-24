@@ -2,7 +2,9 @@ package com.danielkashin.yandextestapplication.presentation_layer.presenter.base
 
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
-
+/*
+ * generic presenter that holds view and allow subclasses to implement presenter lifecycle
+ */
 public abstract class Presenter<V extends IView> implements IPresenter<V> {
 
   private V view;

@@ -6,7 +6,7 @@ public abstract class NetworkSubscriber {
   private boolean disposed;
   private IDisposeListener disposeListener;
 
-  // ----------------------------------------------------------------------------------------------
+  // ---------------------------------------- public ----------------------------------------------
 
   public final boolean isDisposed() {
     return disposed;
@@ -17,7 +17,7 @@ public abstract class NetworkSubscriber {
   }
 
   public final void dispose() {
-    if (!disposed){
+    if (!disposed) {
       disposed = true;
 
       if (disposeListener != null) {
@@ -26,16 +26,15 @@ public abstract class NetworkSubscriber {
     }
   }
 
-  // ----------------------------------------------------------------------------------------------
+  // --------------------------------------- abstract ---------------------------------------------
 
   public abstract void onResult(NetworkStatus networkStatus);
 
-  // ----------------------------------------------------------------------------------------------
+  // -------------------------------------- inner types -------------------------------------------
 
   public interface IDisposeListener {
 
     void onDispose();
 
   }
-
 }

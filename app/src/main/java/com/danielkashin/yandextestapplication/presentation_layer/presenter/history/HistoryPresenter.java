@@ -6,7 +6,7 @@ import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.DeleteTranslationsUseCase;
 import com.danielkashin.yandextestapplication.domain_layer.use_cases.GetTranslationsUseCase;
-import com.danielkashin.yandextestapplication.domain_layer.use_cases.SetTranslationDataUseCase;
+import com.danielkashin.yandextestapplication.domain_layer.use_cases.RefreshTranslationUseCase;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.IPresenterFactory;
 import com.danielkashin.yandextestapplication.presentation_layer.presenter.base.Presenter;
 import com.danielkashin.yandextestapplication.presentation_layer.view.history.IHistoryView;
@@ -16,15 +16,19 @@ import java.util.ArrayList;
 
 public class HistoryPresenter extends Presenter<IHistoryView> implements IHistoryPresenter,
     GetTranslationsUseCase.Callbacks, DeleteTranslationsUseCase.Callbacks,
-    SetTranslationDataUseCase.Callbacks, DeleteTranslationUseCase.Callbacks {
+    RefreshTranslationUseCase.Callbacks, DeleteTranslationUseCase.Callbacks {
 
+  // count of translations uploading at once
   private static final int TRANSLATIONS_PER_UPLOAD = 50;
 
+  // use cases
   private final GetTranslationsUseCase mGetTranslationsUseCase;
   private final DeleteTranslationsUseCase mDeleteTranslationsUseCase;
-  private final SetTranslationDataUseCase mSetTranslationDataUseCase;
+  private final RefreshTranslationUseCase mRefreshTranslationUseCase;
   private final DeleteTranslationUseCase mDeleteTranslationUseCase;
 
+  // when view is not attached to the presenter, callbacks can be triggered,
+  // so it is needed to cache results to restore them if view will be attached later
   private ArrayList<Translation> mCachedTranslations;
   private Translation mCachedTranslationDeleted;
   private boolean mCachedTranslationsClearBeforeAdd;
@@ -37,16 +41,16 @@ public class HistoryPresenter extends Presenter<IHistoryView> implements IHistor
 
   private HistoryPresenter(GetTranslationsUseCase getTranslationsUseCase,
                            DeleteTranslationsUseCase deleteTranslationsUseCase,
-                           SetTranslationDataUseCase setTranslationDataUseCase,
+                           RefreshTranslationUseCase refreshTranslationUseCase,
                            DeleteTranslationUseCase deleteTranslationUseCase) {
     if (getTranslationsUseCase == null || deleteTranslationsUseCase == null
-        || setTranslationDataUseCase == null || deleteTranslationUseCase == null) {
+        || refreshTranslationUseCase == null || deleteTranslationUseCase == null) {
       throw new IllegalArgumentException("All presenter arguments must be non null");
     }
 
     mGetTranslationsUseCase = getTranslationsUseCase;
     mDeleteTranslationsUseCase = deleteTranslationsUseCase;
-    mSetTranslationDataUseCase = setTranslationDataUseCase;
+    mRefreshTranslationUseCase = refreshTranslationUseCase;
     mDeleteTranslationUseCase = deleteTranslationUseCase;
   }
 
@@ -60,6 +64,8 @@ public class HistoryPresenter extends Presenter<IHistoryView> implements IHistor
 
   @Override
   protected void onViewAttached() {
+    // restore cached results
+
     if (mCachedTranslations != null) {
       getView().showNotEmptyContentInterface();
       getView().addTranslationsToAdapter(mCachedTranslations, mCachedTranslationsClearBeforeAdd);
@@ -150,7 +156,7 @@ public class HistoryPresenter extends Presenter<IHistoryView> implements IHistor
     }
   }
 
-  // --------------------------- SetTranslationDataUseCase callbacks ------------------------------
+  // --------------------------- RefreshTranslationUseCase callbacks ------------------------------
 
   @Override
   public void onRefreshTranslationSuccess() {
@@ -163,7 +169,7 @@ public class HistoryPresenter extends Presenter<IHistoryView> implements IHistor
 
   @Override
   public void onRefreshTranslationException(ExceptionBundle exceptionBundle) {
-    // TODO
+    // do nothing
   }
 
   // ----------------------------- GetTranslationUseCase callbacks -------------------------------
@@ -225,16 +231,16 @@ public class HistoryPresenter extends Presenter<IHistoryView> implements IHistor
 
   @Override
   public void onAdapterToggleClicked(Translation translation) {
-    mSetTranslationDataUseCase.run(this, translation);
+    mRefreshTranslationUseCase.run(this, translation);
   }
 
   @Override
-  public void deleteTranslations() {
+  public void onDeleteTranslations() {
     mDeleteTranslationsUseCase.run(this);
   }
 
   @Override
-  public void uploadTranslations(int offset, String searchRequest) {
+  public void onUploadTranslations(int offset, String searchRequest) {
     mGetTranslationsUseCase.cancel();
     mGetTranslationsUseCase.run(this, offset, TRANSLATIONS_PER_UPLOAD, searchRequest);
   }
@@ -246,24 +252,24 @@ public class HistoryPresenter extends Presenter<IHistoryView> implements IHistor
 
     private final GetTranslationsUseCase getTranslationsUseCase;
     private final DeleteTranslationsUseCase deleteTranslationsUseCase;
-    private final SetTranslationDataUseCase setTranslationDataUseCase;
+    private final RefreshTranslationUseCase refreshTranslationUseCase;
     private final DeleteTranslationUseCase deleteTranslationUseCase;
 
 
     public Factory(GetTranslationsUseCase getTranslationsUseCase,
                    DeleteTranslationsUseCase deleteTranslationsUseCase,
-                   SetTranslationDataUseCase setTranslationDataUseCase,
+                   RefreshTranslationUseCase refreshTranslationUseCase,
                    DeleteTranslationUseCase deleteTranslationUseCase) {
       this.getTranslationsUseCase = getTranslationsUseCase;
       this.deleteTranslationsUseCase = deleteTranslationsUseCase;
-      this.setTranslationDataUseCase = setTranslationDataUseCase;
+      this.refreshTranslationUseCase = refreshTranslationUseCase;
       this.deleteTranslationUseCase = deleteTranslationUseCase;
     }
 
     @Override
     public HistoryPresenter create() {
       return new HistoryPresenter(getTranslationsUseCase, deleteTranslationsUseCase,
-          setTranslationDataUseCase, deleteTranslationUseCase);
+          refreshTranslationUseCase, deleteTranslationUseCase);
     }
   }
 }

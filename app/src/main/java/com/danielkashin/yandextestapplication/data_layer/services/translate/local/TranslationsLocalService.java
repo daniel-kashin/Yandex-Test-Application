@@ -21,7 +21,10 @@ import com.pushtorefresh.storio.sqlite.queries.Query;
 
 import java.util.List;
 
-
+/*
+* StorIO makes life a lot easier
+* from services we return prepared values: they are executed in repository
+*/
 public class TranslationsLocalService extends DatabaseService implements ITranslationsLocalService {
 
   private TranslationsLocalService(StorIOSQLite sqLite) {
@@ -72,7 +75,7 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
   }
 
   @Override
-  public PreparedDeleteByQuery deleteNotFavoriteTranslations() {
+  public PreparedDeleteByQuery deleteNonFavoriteTranslations() {
     return getSQLite().delete()
         .byQuery(DeleteQuery.builder()
             .table(TranslationContract.TABLE_NAME)
@@ -217,7 +220,7 @@ public class TranslationsLocalService extends DatabaseService implements ITransl
     }
   }
 
-  // -------------------------------------- factory -----------------------------------------------
+  // ----------------------------------- inner types ----------------------------------------------
 
   public static class Factory {
 

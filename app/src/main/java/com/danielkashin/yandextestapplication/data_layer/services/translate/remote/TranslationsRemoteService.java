@@ -17,7 +17,10 @@ import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 
-
+/*
+* Retrofit makes life a lot easier
+* from services we return prepared values: they are executed in repository
+*/
 public class TranslationsRemoteService extends NetworkService<ITranslationRemoteContract>
     implements ITranslationsRemoteService {
 
@@ -38,7 +41,7 @@ public class TranslationsRemoteService extends NetworkService<ITranslationRemote
   }
 
   @Override
-  public void checkNetworkCodesForExceptions(Exception exception) throws ExceptionBundle {
+  public void parseException(Exception exception) throws ExceptionBundle {
     if (exception instanceof ExceptionBundle) {
       throw (ExceptionBundle) exception;
     } else if (exception instanceof ConnectException || exception instanceof SocketTimeoutException
@@ -68,7 +71,7 @@ public class TranslationsRemoteService extends NetworkService<ITranslationRemote
     }
   }
 
-  // -------------------------------------- Factory -----------------------------------------------
+  // ----------------------------------- inner types ----------------------------------------------
 
   public static final class Factory {
 

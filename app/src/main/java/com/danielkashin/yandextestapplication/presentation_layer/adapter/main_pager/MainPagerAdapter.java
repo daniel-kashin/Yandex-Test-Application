@@ -15,11 +15,15 @@ import com.danielkashin.yandextestapplication.presentation_layer.view.translate.
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-
+/*
+* adapters belong to the chains of receivers, as they hold weak references to the fragment/activity
+* child fragments/activities, but publishing performs without them, as child view has a pointer
+* to its parent view
+*/
 public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPagerAdapter {
 
-  private final int FRAGMENT_COUNT = 3;
   private final int TRANSLATE_HOLDER_POSITION = 0;
+  private final int FRAGMENT_COUNT = 3;
   private int mCurrentFragment;
   private ArrayList<WeakReference<IMainPage>> mPages;
   private WeakReference<ITranslateHolder> mTranslateHolder;
@@ -85,6 +89,7 @@ public class MainPagerAdapter extends FragmentPagerAdapter implements IMainPager
       return;
     }
 
+    // adapter decides which child pages to notify
     for (int i = 0; i < mPages.size(); ++i) {
       WeakReference<IMainPage> reference = mPages.get(i);
       if (reference != null && reference.get() != source) {

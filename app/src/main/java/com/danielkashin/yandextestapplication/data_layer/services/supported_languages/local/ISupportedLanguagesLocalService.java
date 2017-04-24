@@ -7,12 +7,12 @@ import java.util.ArrayList;
 
 public interface ISupportedLanguagesLocalService {
 
-  public DatabaseSupportedLanguage getDefaultOriginalLanguage();
+  DatabaseSupportedLanguage getDefaultOriginalLanguage();
 
-  public DatabaseSupportedLanguage getDefaultTranslatedLanguage();
+  DatabaseSupportedLanguage getDefaultTranslatedLanguage();
 
-  public DatabaseSupportedLanguage getLanguage(String code);
+  DatabaseSupportedLanguage getLanguage(String code);
 
-  public ArrayList<DatabaseSupportedLanguage> getAllLanguages();
+  ArrayList<DatabaseSupportedLanguage> getAllLanguages();
 
 }

@@ -2,8 +2,13 @@ package com.danielkashin.yandextestapplication.domain_layer.async_task;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 
-
-public class RepositoryAsyncTaskVoid<T> extends VoidAsyncTask<ExceptionBundle> {
+/*
+* generic asynctask is acceptable and elegant way to solve out problem:
+* no exceptions different from ExceptionBundle must be here,
+* as in UseCases we get data through the repository
+* asynctask also supports easy cancelling
+*/
+public class RepositoryAsyncTaskVoid extends VoidAsyncTask<ExceptionBundle> {
 
   private final RepositoryRunnableVoid repositoryRunnable;
   private final PostExecuteListenerVoid postExecuteListener;
@@ -15,6 +20,7 @@ public class RepositoryAsyncTaskVoid<T> extends VoidAsyncTask<ExceptionBundle> {
     this.postExecuteListener = postExecuteListener;
   }
 
+  // --------------------------------------- AsyncTask --------------------------------------------
 
   @Override
   protected void onCancelled() {
@@ -43,6 +49,7 @@ public class RepositoryAsyncTaskVoid<T> extends VoidAsyncTask<ExceptionBundle> {
     }
   }
 
+  // ------------------------------------ inner types ---------------------------------------------
 
   public interface PostExecuteListenerVoid {
 

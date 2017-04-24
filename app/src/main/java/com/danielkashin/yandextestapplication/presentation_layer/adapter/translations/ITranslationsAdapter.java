@@ -9,29 +9,31 @@ import java.util.List;
 
 public interface ITranslationsAdapter {
 
-  void addCallbacks(ITranslationsAdapter.Callbacks callbacks);
+  void addCallbacks(Callbacks callbacks);
 
   void removeCallbacks();
 
+
   void addTranslations(List<Translation> translations, boolean clear);
+
+  void deleteTranslation(Translation translation);
 
   void clear();
 
   int getSize();
 
-  void onSaveInstanceState(Bundle outState);
-
   boolean isInitialized();
+
+  boolean containsOnlyFavoriteTranslations();
 
   boolean isDataUploadingToEndNeeded(int lastVisibleItem);
 
-  void setEndReached();
-
-  void deleteTranslation(Translation translation);
+  void setEndReachedTrue();
 
   void setDataUploadingToEndTrue();
 
-  boolean isOnlyFavorite();
+
+  void onSaveInstanceState(Bundle outState);
 
 
   interface Callbacks {

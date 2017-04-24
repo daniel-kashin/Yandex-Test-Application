@@ -6,7 +6,6 @@ public class TranslationContract {
   private TranslationContract() {
   }
 
-
   // -------------------------------------- constants ---------------------------------------------
 
   public static final String TABLE_NAME = "table_name_translations";
@@ -28,7 +27,7 @@ public class TranslationContract {
       + COLUMN_NAME_LANGUAGE + " INTEGER NOT NULL, "
       + COLUMN_NAME_IS_FAVOURITE + " TEXT NOT NULL, "
       + "UNIQUE(" + COLUMN_NAME_ORIGINAL_TEXT + ", " + COLUMN_NAME_LANGUAGE + ") ON CONFLICT REPLACE"
-      + ");";
+      + ");"; // pair "original text" + "language" is unique
 
   public static String SQL_DELETE_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME;
 
@@ -37,7 +36,7 @@ public class TranslationContract {
   // --------------------------------------- public -----------------------------------------------
 
   public static String getGetTranslationSearchQuery(String originalText, int languageCode) {
-    String result =  new StringBuilder().append(COLUMN_NAME_ORIGINAL_TEXT)
+    return new StringBuilder().append(COLUMN_NAME_ORIGINAL_TEXT)
         .append(" = \'")
         .append(getEscapedString(originalText))
         .append("\'\n")
@@ -46,16 +45,12 @@ public class TranslationContract {
         .append(" = ")
         .append(languageCode)
         .toString();
-
-    return result;
   }
-
-
 
   public static String getGetTranslationsSearchQuery(boolean onlyFavorite, String searchRequest) {
     StringBuilder searchBuilder = new StringBuilder();
 
-    // add query to get only favorite translations
+    // add query to get only favorite translations if needed
     if (onlyFavorite) {
       searchBuilder.append(TranslationContract.COLUMN_NAME_IS_FAVOURITE)
           .append(" = ")
@@ -97,7 +92,9 @@ public class TranslationContract {
     return searchBuilder.toString();
   }
 
-  public static String getEscapedString(String string) {
+  // --------------------------------------- private ----------------------------------------------
+
+  private static String getEscapedString(String string) {
     return string.replace(ESCAPE_CHAR, ESCAPE_CHAR + ESCAPE_CHAR)
         .replace("'", "''")
         .replace("%", ESCAPE_CHAR + "%")

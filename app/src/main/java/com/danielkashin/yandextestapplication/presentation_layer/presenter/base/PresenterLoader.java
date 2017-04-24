@@ -1,29 +1,36 @@
 package com.danielkashin.yandextestapplication.presentation_layer.presenter.base;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.support.v4.content.Loader;
 
 import com.danielkashin.yandextestapplication.presentation_layer.view.base.IView;
 
-
+/*
+ * loaders were created to retain configuration state changes of fragment/activity and
+ * are recommended by some of the google developers as a basic class to implement
+ * presenters that retain configuration state changes, so I created my own kind of
+ * MVP library
+ */
 public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Loader<P> {
 
-  @NonNull
   private final IPresenterFactory<P, V> factory;
-
   private P presenter;
 
 
-  public PresenterLoader(Context context, @NonNull IPresenterFactory<P, V> factory){
+  public PresenterLoader(Context context, IPresenterFactory<P, V> factory) {
     super(context);
+
+    if (factory == null) {
+      throw new IllegalStateException("Presenter factory must be non null");
+    }
+
     this.factory = factory;
   }
 
-
   // ---------------------------------- public methods --------------------------------------------
 
-  public final P getPresenter(){
+  // get presenter that was already uploaded
+  public final P getPresenter() {
     return presenter;
   }
 
@@ -32,9 +39,10 @@ public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Lo
   @Override
   protected void onStartLoading() {
     if (presenter != null) {
-      int i = this.hashCode();
+      // return created presenter
       deliverResult(presenter);
     } else {
+      // create presenter using factory and return it
       forceLoad();
     }
   }
@@ -47,6 +55,7 @@ public class PresenterLoader<P extends Presenter<V>, V extends IView> extends Lo
 
   @Override
   protected void onReset() {
+    // called when activity/fragment is destroyed forever
     if (presenter != null) {
       presenter.destroy();
     }

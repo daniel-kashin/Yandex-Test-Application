@@ -1,6 +1,5 @@
 package com.danielkashin.yandextestapplication.presentation_layer.adapter.languages;
 
-
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
@@ -13,6 +12,7 @@ import com.danielkashin.yandextestapplication.R;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
 
 import java.util.ArrayList;
+
 
 public class LanguagesAdapter extends RecyclerView.Adapter<LanguagesAdapter.TranslationViewHolder>
     implements ILanguagesAdapter {
@@ -43,16 +43,6 @@ public class LanguagesAdapter extends RecyclerView.Adapter<LanguagesAdapter.Tran
   }
 
   @Override
-  public boolean isInitialized() {
-    return mLanguages != null;
-  }
-
-  @Override
-  public void onSaveInstanceState(Bundle outState) {
-      outState.putParcelableArrayList(KEY_LANGUAGES, mLanguages);
-  }
-
-  @Override
   public void addLanguages(ArrayList<Language> languages) {
     if (languages != null) {
       for (Language language : languages) {
@@ -60,6 +50,16 @@ public class LanguagesAdapter extends RecyclerView.Adapter<LanguagesAdapter.Tran
         notifyItemInserted(mLanguages.size() - 1);
       }
     }
+  }
+
+  @Override
+  public boolean isInitialized() {
+    return mLanguages != null;
+  }
+
+  @Override
+  public void onSaveInstanceState(Bundle outState) {
+    outState.putParcelableArrayList(KEY_LANGUAGES, mLanguages);
   }
 
   // ---------------------------------- RecyclerView.Adapter --------------------------------------
@@ -113,7 +113,7 @@ public class LanguagesAdapter extends RecyclerView.Adapter<LanguagesAdapter.Tran
     return result;
   }
 
-  // ------------------------------------- inner classes ------------------------------------------
+  // ------------------------------------- inner types --------------------------------------------
 
   static class TranslationViewHolder extends RecyclerView.ViewHolder {
 

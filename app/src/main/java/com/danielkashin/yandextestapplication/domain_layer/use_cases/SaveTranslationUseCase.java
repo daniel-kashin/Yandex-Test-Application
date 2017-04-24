@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.RepositoryRunnableVoid;
 import static com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid.PostExecuteListenerVoid;
 
@@ -45,31 +45,35 @@ public class SaveTranslationUseCase {
         && !saveTranslation.isCancelled();
   }
 
-  public void run(final Callbacks uiCallbacks, final Translation translation) {
-    RepositoryRunnableVoid setTranslationRunnable = new RepositoryRunnableVoid() {
+  public void run(final Callbacks callbacks, final Translation translation) {
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
+    RepositoryRunnableVoid saveTranslationRunnable = new RepositoryRunnableVoid() {
       @Override
       public void run() throws ExceptionBundle {
         translateRepository.saveTranslation(translation);
       }
     };
 
-    PostExecuteListenerVoid setTranslationListener = new PostExecuteListenerVoid() {
+    PostExecuteListenerVoid saveTranslationListener = new PostExecuteListenerVoid() {
       @Override
       public void onResult() {
-        uiCallbacks.onSaveTranslationSuccess();
+        callbacks.onSaveTranslationSuccess();
       }
 
       @Override
       public void onException(ExceptionBundle exception) {
-        uiCallbacks.onSaveTranslationException(exception);
+        callbacks.onSaveTranslationException(exception);
       }
     };
 
-    saveTranslation = new RepositoryAsyncTaskVoid(setTranslationRunnable, setTranslationListener);
+    saveTranslation = new RepositoryAsyncTaskVoid(saveTranslationRunnable, saveTranslationListener);
     saveTranslation.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ callbacks ----------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 
@@ -78,5 +82,4 @@ public class SaveTranslationUseCase {
     void onSaveTranslationException(ExceptionBundle exceptionBundle);
 
   }
-
 }

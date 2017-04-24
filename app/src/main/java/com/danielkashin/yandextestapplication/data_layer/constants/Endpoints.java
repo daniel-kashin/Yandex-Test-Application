@@ -11,8 +11,6 @@ public class Endpoints {
 
   public static final String KEY_TR_JSON = "/tr.json";
 
-  public static final String GET_LANGS = "/getLangs";
-
   public static final String KEY_TRANSLATE = "/translate";
 
 }

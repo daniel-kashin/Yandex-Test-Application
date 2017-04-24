@@ -3,7 +3,7 @@ package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskVoid;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 
@@ -47,6 +47,11 @@ public class DeleteTranslationUseCase {
   }
 
   public void run(final Callbacks callbacks, final Translation translation) {
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
+
     PostExecuteListenerVoid deleteListener = new PostExecuteListenerVoid() {
       @Override
       public void onResult() {
@@ -70,7 +75,7 @@ public class DeleteTranslationUseCase {
     deleteTranslation.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ inner classes--------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 
@@ -79,5 +84,4 @@ public class DeleteTranslationUseCase {
     void onDeleteTranslationException(ExceptionBundle exception);
 
   }
-
 }

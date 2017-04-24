@@ -3,7 +3,7 @@ package com.danielkashin.yandextestapplication.domain_layer.use_cases;
 import android.os.AsyncTask;
 
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
-import com.danielkashin.yandextestapplication.data_layer.repository.translate.ITranslationsRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.translate.ITranslationsRepository;
 import com.danielkashin.yandextestapplication.domain_layer.async_task.RepositoryAsyncTaskResponse;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Translation;
 
@@ -19,7 +19,7 @@ public class GetRefreshedTranslationUseCase {
   private final Executor executor;
   private final ITranslationsRepository translateRepository;
 
-  private RepositoryAsyncTaskResponse<Translation> getRefreshedTranslation;
+  private RepositoryAsyncTaskResponse<Translation> getTranslation;
 
 
   public GetRefreshedTranslationUseCase(Executor executor,
@@ -36,32 +36,36 @@ public class GetRefreshedTranslationUseCase {
 
   public void cancel() {
     if (isRunning()) {
-      getRefreshedTranslation.cancel(false);
-      getRefreshedTranslation = null;
+      getTranslation.cancel(false);
+      getTranslation = null;
     }
   }
 
   public boolean isRunning() {
-    return getRefreshedTranslation != null
-        && getRefreshedTranslation.getStatus() == AsyncTask.Status.RUNNING
-        && !getRefreshedTranslation.isCancelled();
+    return getTranslation != null
+        && getTranslation.getStatus() == AsyncTask.Status.RUNNING
+        && !getTranslation.isCancelled();
   }
 
-  public void run(final Callbacks uiCallbacks, final Translation translation) {
-    PostExecuteListenerResponse<Translation> getRefreshedTranslationListener
+  public void run(final Callbacks callbacks, final Translation translation) {
+    if (callbacks == null) {
+      throw new IllegalStateException("Callbacks in UseCase must be non null");
+    }
+
+    PostExecuteListenerResponse<Translation> getTranslationListener
         = new PostExecuteListenerResponse<Translation>() {
       @Override
       public void onResult(Translation refreshedTranslation) {
-        uiCallbacks.onGetRefreshedTranslationResult(refreshedTranslation);
+        callbacks.onGetRefreshedTranslationResult(refreshedTranslation);
       }
 
       @Override
       public void onException(ExceptionBundle exception) {
-        uiCallbacks.onGetRefreshedTranslationException(exception);
+        callbacks.onGetRefreshedTranslationException(exception);
       }
     };
 
-    RepositoryRunnableResponse<Translation> getRefreshedTranslationRunnable =
+    RepositoryRunnableResponse<Translation> getTranslationRunnable =
         new RepositoryRunnableResponse<Translation>() {
           @Override
           public Translation run() throws ExceptionBundle {
@@ -69,13 +73,13 @@ public class GetRefreshedTranslationUseCase {
           }
         };
 
-    getRefreshedTranslation = new RepositoryAsyncTaskResponse<>(
-        getRefreshedTranslationRunnable,
-        getRefreshedTranslationListener);
-    getRefreshedTranslation.executeOnExecutor(executor);
+    getTranslation = new RepositoryAsyncTaskResponse<>(
+        getTranslationRunnable,
+        getTranslationListener);
+    getTranslation.executeOnExecutor(executor);
   }
 
-  // ------------------------------------ callbacks ----------------------------------------------
+  // ------------------------------------ inner types --------------------------------------------
 
   public interface Callbacks {
 
@@ -84,6 +88,4 @@ public class GetRefreshedTranslationUseCase {
     void onGetRefreshedTranslationException(ExceptionBundle exceptionBundle);
 
   }
-
-
 }

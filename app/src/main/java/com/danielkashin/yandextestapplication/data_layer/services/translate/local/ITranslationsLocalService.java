@@ -1,6 +1,5 @@
 package com.danielkashin.yandextestapplication.data_layer.services.translate.local;
 
-
 import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseLanguage;
 import com.danielkashin.yandextestapplication.data_layer.entities.translate.local.DatabaseTranslation;
 import com.danielkashin.yandextestapplication.data_layer.exceptions.ExceptionBundle;
@@ -18,6 +17,7 @@ import com.pushtorefresh.storio.sqlite.operations.put.PutResults;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public interface ITranslationsLocalService {
 
   // -------------------------------- languages ---------------------------------------------------
@@ -34,7 +34,7 @@ public interface ITranslationsLocalService {
 
   PreparedDeleteObject<DatabaseTranslation> deleteTranslation(DatabaseTranslation translation);
 
-  PreparedDeleteByQuery deleteNotFavoriteTranslations();
+  PreparedDeleteByQuery deleteNonFavoriteTranslations();
 
   //                    ---------------- get ----------------
 

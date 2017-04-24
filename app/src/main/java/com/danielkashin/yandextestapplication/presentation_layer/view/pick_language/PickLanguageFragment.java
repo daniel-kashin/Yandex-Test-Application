@@ -7,8 +7,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.danielkashin.yandextestapplication.R;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.ISupportedLanguagesRepository;
-import com.danielkashin.yandextestapplication.data_layer.repository.languages.SupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.ISupportedLanguagesRepository;
+import com.danielkashin.yandextestapplication.domain_layer.repository.languages.SupportedLanguagesRepository;
 import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.ISupportedLanguagesLocalService;
 import com.danielkashin.yandextestapplication.data_layer.services.supported_languages.local.SupportedLanguagesLocalService;
 import com.danielkashin.yandextestapplication.domain_layer.pojo.Language;
